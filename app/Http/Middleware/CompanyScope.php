@@ -17,7 +17,7 @@ class CompanyScope
     {
         $usuario = $request->user();
 
-        if (usuario){
+        if (!$usuario){
             return redirect()->route('login');
         }
 
@@ -25,7 +25,7 @@ class CompanyScope
             return $next($request);
         }
 
-        this->verificarParametrosRuta($request, $usuario);
+        $this->verificarParametrosRuta($request, $usuario);
 
         $request->merge(['_empresa_id' => $usuario->empresa_id]);
 
@@ -50,7 +50,7 @@ class CompanyScope
         if ($archivoId = $request->route('archivo') ?? $request->route('archivo_id')) {
             $id = is_object($archivoId) ? $archivoId->id : $archivoId;
 
-            $existe = \App\Models\Archivo::where('archivo_id', $id)
+            $existe = \App\Models\Archivo::where('archivos.id', $id)
                 ->join('carpetas', 'archivos.carpeta_id', '=', 'carpetas.id')
                 ->where('carpetas.empresa_id', $usuario->empresa_id)
                 ->exists();

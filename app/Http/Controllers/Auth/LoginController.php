@@ -42,8 +42,8 @@ class LoginController extends Controller
             'password.required' => 'La contraseña es obligatoria.',
         ]);
 
-        // 1. Rate limiting por IP (capa previa al usuario)
-        if ($this->demasiادosIntentosPorIP($request)) {
+        // 1. Rate limiting por IP (capa previa al usuario) ->ME FALTA SU CONTROLLER NO FUNCIONA
+        if ($this->demasiadosIntentosPorIP($request)) {
             return back()
                 ->withInput($request->only('email'))
                 ->withErrors(['email' => 'Demasiados intentos. Espera un momento e intenta de nuevo.']);

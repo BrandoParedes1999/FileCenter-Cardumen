@@ -6,6 +6,7 @@ use App\Models\Archivo;
 use App\Models\Carpeta;
 use App\Policies\ArchivoPolicy;
 use App\Policies\FolderPolicy;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
