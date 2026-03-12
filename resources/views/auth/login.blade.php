@@ -1,7 +1,7 @@
 <x-guest-layout>
     <div class="mb-10">
         <h2 class="text-4xl font-black text-gray-900 tracking-tight">Bienvenido</h2>
-        <p class="text-gray-500 mt-2 text-lg">Inicia sesión para acceder al repositorio QHSE</p>
+        <p class="text-gray-500 mt-2 text-lg">Inicia sesión para acceder al Sistema de Gestion Corporativo</p>
     </div>
 
     <x-auth-session-status class="mb-4" :status="session('status')" />
