@@ -2,24 +2,27 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
 
+    //SIRVE PARA SUBIR LOS CONTENIDOS A LAS TABLAS VACIAS
     /**
-     * Seed the application's database.
+     * Orden obligatorio — respetar dependencias FK:
+     *
+     *  1. empresas           (sin dependencias)
+     *  2. usuarios           (depende: empresas)
+     *  3. roles de Spatie    (depende: usuarios)
+     *  4. carpetas           (depende: empresas, usuarios)
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $this->call([
+            EmpresasSeeder::class,
+            UsuariosSeeder::class,
+            RolesSeeder::class,
+            //CarpetasSeeder::class,
         ]);
     }
 }
