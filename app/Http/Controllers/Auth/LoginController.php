@@ -42,7 +42,7 @@ class LoginController extends Controller
             'password.required' => 'La contraseña es obligatoria.',
         ]);
 
-        // 1. Rate limiting por IP (capa previa al usuario) ->ME FALTA SU CONTROLLER NO FUNCIONA
+        // 1. Rate limiting por IP (capa previa al usuario)
         if ($this->demasiadosIntentosPorIP($request)) {
             return back()
                 ->withInput($request->only('email'))
@@ -154,7 +154,7 @@ class LoginController extends Controller
     private function redireccionPorRol(Usuario $usuario): string
     {
         return match ($usuario->rol) {
-            'Superadmin' => route('admin.dashboard'),
+            'Superadmin' => route('dashboard'),
             'Aux_QHSE'   => route('qhse.dashboard'),
             'Admin'      => route('empresa.dashboard'),
             default      => route('dashboard'),
@@ -175,7 +175,7 @@ class LoginController extends Controller
     /**
      * Verifica rate limiting por IP (máx 10 intentos / minuto).
      */
-    private function demasiادosIntentosPorIP(Request $request): bool
+    private function demasiadosIntentosPorIP(Request $request): bool
     {
         return RateLimiter::tooManyAttempts(
             'login-ip:' . $request->ip(),
