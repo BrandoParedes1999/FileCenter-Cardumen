@@ -1,0 +1,164 @@
+/* ================================================
+   SIDEBAR GLOBAL
+   ================================================ */
+
+.fc-sidebar {
+    width: 240px;
+    min-width: 240px;
+    background: #13151f;
+    border-right: 1px solid #1e2130;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.fc-sidebar::-webkit-scrollbar {
+    display: none;
+}
+
+/* LOGO AREA */
+.fc-logo-area {
+    padding: 20px 18px;
+    border-bottom: 1px solid #1e2130;
+}
+
+.fc-logo-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.fc-logo-icon {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.fc-logo-text {
+    font-size: 14px;
+    font-weight: 700;
+    color: #f1f5f9;
+}
+
+.fc-logo-sub {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+/* NAV SECTIONS */
+
+.fc-nav-section {
+    padding: 14px 10px 4px;
+}
+
+.fc-nav-label {
+    font-size: 11px;
+    color: #475569;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    padding: 0 10px;
+    margin-bottom: 6px;
+}
+
+.fc-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #94a3b8;
+    margin-bottom: 2px;
+    transition: background .15s, color .15s;
+    text-decoration: none;
+}
+
+.fc-nav-item:hover {
+    background: #1e2130;
+    color: #e2e8f0;
+}
+
+.fc-nav-item.active {
+    background: #312e81;
+    color: #a5b4fc;
+}
+
+.fc-nav-item svg {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+    opacity: .75;
+}
+
+.fc-nav-item.active svg {
+    opacity: 1;
+}
+
+.fc-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* FOOTER USER */
+
+.fc-sidebar-footer {
+    margin-top: auto;
+    padding: 14px;
+    border-top: 1px solid #1e2130;
+}
+
+.fc-user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.fc-avatar {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.fc-user-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.fc-user-role {
+    font-size: 11px;
+    color: #64748b;
+}
+
+.fc-badge-role {
+    font-size: 10px;
+    background: #7c3aed22;
+    color: #a78bfa;
+    border: 1px solid #7c3aed44;
+    border-radius: 4px;
+    padding: 2px 7px;
+    margin-top: 3px;
+    display: inline-block;
+}
