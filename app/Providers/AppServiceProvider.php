@@ -2,23 +2,27 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use App\Models\Archivo;
+use App\Models\Carpeta;
+use App\Policies\ArchivoPolicy;
+use App\Policies\FolderPolicy;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
-class AppServiceProvider extends ServiceProvider
+class AuthServiceProvider extends ServiceProvider
 {
     /**
-     * Register any application services.
+     * Mapeo de modelos → policies.
+     * Laravel lo usa automáticamente con $this->authorize() y authorizeResource().
      */
-    public function register(): void
-    {
-        //
-    }
+    protected $policies = [
+        Carpeta::class => FolderPolicy::class,
+        Archivo::class => ArchivoPolicy::class,
+    ];
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        //
+        $this->registerPolicies();
+         Schema::defaultStringLength(191);
     }
 }

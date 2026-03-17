@@ -30,6 +30,11 @@ return [
 
     'disks' => [
 
+        'filecenter' => [
+            'driver' => 'local',
+            'root' => storage_path('app/filecenter'),
+        ],
+
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
