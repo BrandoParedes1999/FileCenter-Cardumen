@@ -1,24 +1,99 @@
 <?php
+
+use App\Http\Controllers\ArchivoController;
+use App\Http\Controllers\CarpetaController;
+use App\Http\Controllers\PermisoCarpetaController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SolicitudAccesoController;
 use Illuminate\Support\Facades\Route;
 
+// ─────────────────────────────────────────────
+// PÁGINA DE INICIO
+// ─────────────────────────────────────────────
+
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// ─────────────────────────────────────────────
+// DASHBOARDS POR ROL
+// ─────────────────────────────────────────────
 
-// ✅ AGREGA ESTA LÍNEA — ruta para la sección Nosotros
-Route::get('/nosotros', function () {
-    return view('nosotros');
-})->middleware(['auth', 'verified'])->name('nosotros');
+Route::middleware(['auth', 'company.scope'])->group(function () {
 
-Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+
+    Route::get('/admin/dashboard', function () {
+        return view('dashboard');
+    })->name('admin.dashboard');
+
+    Route::get('/qhse/dashboard', function () {
+        return view('dashboard');
+    })->name('qhse.dashboard');
+
+    Route::get('/empresa/dashboard', function () {
+        return view('dashboard');
+    })->name('empresa.dashboard');
+
+    Route::get('/nosotros', function () {
+        return view('nosotros');
+    })->middleware(['auth', 'verified'])->name('nosotros');
+
+    // ─────────────────────────────────────────
+    // PERFIL
+    // ─────────────────────────────────────────
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // ─────────────────────────────────────────
+    // CARPETAS
+    // ─────────────────────────────────────────
+
+    Route::resource('carpetas', CarpetaController::class);
+
+    // ─────────────────────────────────────────
+    // ARCHIVOS
+    // ─────────────────────────────────────────
+
+    Route::resource('archivos', ArchivoController::class);
+
+    Route::get('archivos/{archivo}/descargar', [ArchivoController::class, 'descargar'])
+        ->name('archivos.descargar');
+
+    Route::post('archivos/{archivo}/restaurar-version', [ArchivoController::class, 'restaurarVersion'])
+        ->name('archivos.restaurar-version');
+
+    // ─────────────────────────────────────────
+    // SOLICITUDES DE ACCESO
+    // ─────────────────────────────────────────
+
+    Route::resource('solicitudes', SolicitudAccesoController::class)
+        ->only(['index', 'show', 'create', 'store']);
+
+    Route::post('solicitudes/{solicitud}/aprobar', [SolicitudAccesoController::class, 'aprobar'])
+        ->name('solicitudes.aprobar');
+
+    Route::post('solicitudes/{solicitud}/rechazar', [SolicitudAccesoController::class, 'rechazar'])
+        ->name('solicitudes.rechazar');
+
+    // ─────────────────────────────────────────
+    // PERMISOS DE CARPETA (anidados bajo carpetas)
+    // ─────────────────────────────────────────
+
+    Route::prefix('carpetas/{carpeta}')->name('permisos.')->group(function () {
+        Route::get('permisos',                              [PermisoCarpetaController::class, 'index'])
+            ->name('index');
+        Route::post('permisos',                             [PermisoCarpetaController::class, 'store'])
+            ->name('store');
+        Route::put('permisos/{permiso}',                    [PermisoCarpetaController::class, 'update'])
+            ->name('update');
+        Route::delete('permisos/{permiso}',                 [PermisoCarpetaController::class, 'destroy'])
+            ->name('destroy');
+    });
 });
 
 require __DIR__.'/auth.php';

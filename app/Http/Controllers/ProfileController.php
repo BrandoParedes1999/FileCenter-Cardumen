@@ -26,7 +26,15 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $validated = $request->validated();
+
+        $request->user()->fill([
+            'nombre'       => $validated['nombre'],
+            'paterno'      => $validated['paterno'],
+            'materno'      => $validated['materno'] ?? null,
+            'departamento' => $validated['departamento'] ?? null,
+            'email'        => $validated['email'],
+        ]);
 
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
@@ -38,7 +46,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Delete the user's account.
+     * Delete the user's account (soft delete).
      */
     public function destroy(Request $request): RedirectResponse
     {
@@ -50,7 +58,7 @@ class ProfileController extends Controller
 
         Auth::logout();
 
-        $user->delete();
+        $user->delete(); // SoftDeletes — no borra físicamente
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

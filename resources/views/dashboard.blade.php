@@ -241,10 +241,10 @@
                     <div class="fc-notif-badge">2</div>
                 </div>
                 <div class="fc-topbar-avatar">
-                    {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+                    {{ strtoupper(substr(Auth::user()->nombre, 0, 1)) . strtoupper(substr(Auth::user()->paterno, 0, 1)) }}
                 </div>
                 <div>
-                    <div class="fc-topbar-name">{{ Auth::user()->name }}</div>
+                    <div class="fc-topbar-name">{{ Auth::user()->nombre_completo }}</div>
                     <div class="fc-topbar-role">Super Admin</div>
                 </div>
             </div>
