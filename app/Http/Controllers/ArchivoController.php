@@ -16,16 +16,6 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ArchivoController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-        $this->authorizeResource(Archivo::class, 'archivo');
-    }
-
-    // ─────────────────────────────────────────────
-    // INDEX — archivos de una carpeta
-    // ─────────────────────────────────────────────
-
     public function index(Request $request): View
     {
         $carpetaId = $request->query('carpeta_id');
@@ -38,7 +28,6 @@ class ArchivoController extends Controller
         if ($carpeta) {
             $query->where('carpeta_id', $carpeta->id);
         } elseif (!in_array($usuario->rol, ['Superadmin', 'Aux_QHSE'])) {
-            // Limitar a archivos de la empresa del usuario
             $query->whereHas('carpeta', fn($q) => $q->where('empresa_id', $usuario->empresa_id));
         }
 
@@ -47,26 +36,29 @@ class ArchivoController extends Controller
         return view('archivos.index', compact('archivos', 'carpeta'));
     }
 
-    // ─────────────────────────────────────────────
-    // SHOW — detalle del archivo
-    // ─────────────────────────────────────────────
-
     public function show(Archivo $archivo): View
     {
-        $archivo->load(['carpeta', 'subidoPor', 'versiones.subidoPor']);
+        $this->authorize('view', $archivo);
+
+        $archivo->load(['carpeta.padre', 'subidoPor', 'versiones.subidoPor']);
+
+        // Construir migas desde la carpeta contenedora
+        $migas  = [];
+        $actual = $archivo->carpeta;
+        while ($actual) {
+            array_unshift($migas, ['nombre' => $actual->nombre, 'id' => $actual->id]);
+            $actual = $actual->padre;
+        }
 
         RegistroActividad::registrar('ver', 'archivo', $archivo->id, "Vista detalle: {$archivo->nombre_original}");
 
-        return view('archivos.show', compact('archivo'));
+        return view('archivos.show', compact('archivo', 'migas'));
     }
-
-    // ─────────────────────────────────────────────
-    // CREATE / STORE — subir archivo
-    // ─────────────────────────────────────────────
 
     public function create(Request $request): View
     {
         $carpeta = Carpeta::findOrFail($request->query('carpeta_id'));
+        $this->authorize('uploadTo', $carpeta);
 
         return view('archivos.create', compact('carpeta'));
     }
@@ -75,7 +67,7 @@ class ArchivoController extends Controller
     {
         $request->validate([
             'carpeta_id'  => ['required', 'exists:carpetas,id'],
-            'archivo'     => ['required', 'file', 'max:102400'], // 100 MB máx
+            'archivo'     => ['required', 'file', 'max:102400'],
             'descripcion' => ['nullable', 'string', 'max:500'],
         ], [
             'archivo.required' => 'Debes seleccionar un archivo.',
@@ -86,12 +78,9 @@ class ArchivoController extends Controller
         $carpeta = Carpeta::findOrFail($request->carpeta_id);
         $file    = $request->file('archivo');
 
-        // Verificar permiso de subida
-        if (!$carpeta->usuarioPuedeSubir($usuario)) {
-            abort(403, 'No tienes permiso para subir archivos en esta carpeta.');
-        }
+        $this->authorize('uploadTo', $carpeta);
 
-        // Verificar si ya existe un archivo con el mismo nombre en la misma carpeta
+        // ¿Ya existe un archivo con el mismo nombre? → nueva versión
         $archivoExistente = Archivo::where('carpeta_id', $carpeta->id)
             ->where('nombre_original', $file->getClientOriginalName())
             ->where('esta_eliminado', false)
@@ -101,8 +90,8 @@ class ArchivoController extends Controller
             return $this->crearNuevaVersion($archivoExistente, $file, $usuario, $carpeta);
         }
 
-        // Nuevo archivo
-        $nombreAlmacenamiento = $this->generarNombreAlmacenamiento($file);
+        // Archivo nuevo
+        $nombreAlmacenamiento = Str::uuid() . '.' . strtolower($file->getClientOriginalExtension());
         $rutaDisco            = "empresa_{$carpeta->empresa_id}/carpeta_{$carpeta->id}/{$nombreAlmacenamiento}";
         $hash                 = hash_file('sha256', $file->getRealPath());
 
@@ -122,7 +111,6 @@ class ArchivoController extends Controller
             'version'               => 1,
         ]);
 
-        // Registrar en versiones_archivos
         VersionArchivo::create([
             'archivo_id'            => $archivo->id,
             'version'               => 1,
@@ -133,6 +121,7 @@ class ArchivoController extends Controller
             'tamanio_bytes'         => $archivo->tamanio_bytes,
             'subido_por'            => $usuario->id,
             'nota_version'          => 'Versión inicial',
+            'activo'                => true,
         ]);
 
         RegistroActividad::registrar('subir', 'archivo', $archivo->id, "Subió: {$archivo->nombre_original}");
@@ -142,17 +131,16 @@ class ArchivoController extends Controller
             ->with('success', "Archivo \"{$archivo->nombre_original}\" subido correctamente.");
     }
 
-    // ─────────────────────────────────────────────
-    // EDIT / UPDATE — editar metadata
-    // ─────────────────────────────────────────────
-
     public function edit(Archivo $archivo): View
     {
+        $this->authorize('update', $archivo);
         return view('archivos.edit', compact('archivo'));
     }
 
     public function update(Request $request, Archivo $archivo): RedirectResponse
     {
+        $this->authorize('update', $archivo);
+
         $validated = $request->validate([
             'descripcion' => ['nullable', 'string', 'max:500'],
         ]);
@@ -166,12 +154,10 @@ class ArchivoController extends Controller
             ->with('success', 'Archivo actualizado.');
     }
 
-    // ─────────────────────────────────────────────
-    // DESTROY — soft delete
-    // ─────────────────────────────────────────────
-
     public function destroy(Archivo $archivo): RedirectResponse
     {
+        $this->authorize('delete', $archivo);
+
         $carpetaId = $archivo->carpeta_id;
         $nombre    = $archivo->nombre_original;
 
@@ -185,21 +171,9 @@ class ArchivoController extends Controller
             ->with('success', "Archivo \"{$nombre}\" eliminado.");
     }
 
-    // ─────────────────────────────────────────────
-    // DESCARGAR
-    // ─────────────────────────────────────────────
-
     public function descargar(Archivo $archivo): StreamedResponse
     {
-        $usuario = Auth::user();
-        $carpeta = $archivo->carpeta;
-
-        // Verificar permiso de descarga
-        if (!in_array($usuario->rol, ['Superadmin', 'Aux_QHSE'])) {
-            if (!$carpeta->usuarioPuedeDescargar($usuario)) {
-                abort(403, 'No tienes permiso para descargar este archivo.');
-            }
-        }
+        $this->authorize('download', $archivo);
 
         if (!Storage::disk('filecenter')->exists($archivo->ruta_disco)) {
             abort(404, 'El archivo no se encuentra en el disco.');
@@ -218,10 +192,6 @@ class ArchivoController extends Controller
         );
     }
 
-    // ─────────────────────────────────────────────
-    // RESTAURAR VERSIÓN ANTERIOR
-    // ─────────────────────────────────────────────
-
     public function restaurarVersion(Request $request, Archivo $archivo): RedirectResponse
     {
         $this->authorize('update', $archivo);
@@ -234,7 +204,6 @@ class ArchivoController extends Controller
             ->where('archivo_id', $archivo->id)
             ->firstOrFail();
 
-        // Actualizar archivo principal a los datos de la versión
         $archivo->update([
             'nombre_almacenamiento' => $version->nombre_almacenamiento,
             'ruta_disco'            => $version->ruta_disco,
@@ -253,28 +222,19 @@ class ArchivoController extends Controller
             ->with('success', "Versión {$version->version} restaurada correctamente.");
     }
 
-    // ─────────────────────────────────────────────
-    // HELPERS PRIVADOS
-    // ─────────────────────────────────────────────
-
-    private function generarNombreAlmacenamiento($file): string
-    {
-        return Str::uuid() . '.' . strtolower($file->getClientOriginalExtension());
-    }
+    // ── Helper privado ────────────────────────────
 
     private function crearNuevaVersion(Archivo $archivo, $file, $usuario, Carpeta $carpeta): RedirectResponse
     {
         $nuevaVersion         = $archivo->version + 1;
-        $nombreAlmacenamiento = $this->generarNombreAlmacenamiento($file);
+        $nombreAlmacenamiento = Str::uuid() . '.' . strtolower($file->getClientOriginalExtension());
         $rutaDisco            = "empresa_{$carpeta->empresa_id}/carpeta_{$carpeta->id}/{$nombreAlmacenamiento}";
         $hash                 = hash_file('sha256', $file->getRealPath());
 
         Storage::disk('filecenter')->put($rutaDisco, file_get_contents($file->getRealPath()));
 
-        // Desactivar versión anterior
         VersionArchivo::where('archivo_id', $archivo->id)->update(['activo' => false]);
 
-        // Crear nueva versión
         VersionArchivo::create([
             'archivo_id'            => $archivo->id,
             'version'               => $nuevaVersion,
@@ -288,7 +248,6 @@ class ArchivoController extends Controller
             'activo'                => true,
         ]);
 
-        // Actualizar el archivo principal
         $archivo->update([
             'nombre_almacenamiento' => $nombreAlmacenamiento,
             'ruta_disco'            => $rutaDisco,

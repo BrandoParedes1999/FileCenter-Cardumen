@@ -331,7 +331,7 @@
                 <div class="fc-topbar-avatar">{{ strtoupper(substr(Auth::user()->nombre, 0, 1)) . strtoupper(substr(Auth::user()->paterno, 0, 1)) }}</div>
                 <div>
                     <div class="fc-topbar-name">{{ Auth::user()->nombre_completo }}</div>
-                    <div class="fc-topbar-role">Super Admin</div>
+                    <div class="fc-topbar-role"> {{ Auth::user()->rol }} </div>
                 </div>
             </div>
         </header>

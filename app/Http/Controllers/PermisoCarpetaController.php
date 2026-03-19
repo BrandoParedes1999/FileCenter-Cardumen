@@ -14,16 +14,6 @@ use Illuminate\View\View;
 
 class PermisoCarpetaController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-        $this->middleware('role:Superadmin|Aux_QHSE|Admin|Gerente');
-    }
-
-    // ─────────────────────────────────────────────
-    // INDEX — permisos de una carpeta
-    // ─────────────────────────────────────────────
-
     public function index(Carpeta $carpeta): View
     {
         $this->autorizarGestionar($carpeta);
@@ -32,16 +22,11 @@ class PermisoCarpetaController extends Controller
             ->with(['usuario', 'empresa', 'concedidoPor'])
             ->get();
 
-        $usuario   = Auth::user();
-        $usuarios  = Usuario::deEmpresa($carpeta->empresa_id)->activos()->orderBy('paterno')->get();
-        $empresas  = Empresa::where('activo', true)->orderBy('nombre')->get();
+        $usuarios = Usuario::deEmpresa($carpeta->empresa_id)->activos()->orderBy('paterno')->get();
+        $empresas = Empresa::where('activo', true)->orderBy('nombre')->get();
 
         return view('permisos.index', compact('carpeta', 'permisos', 'usuarios', 'empresas'));
     }
-
-    // ─────────────────────────────────────────────
-    // STORE — otorgar permiso
-    // ─────────────────────────────────────────────
 
     public function store(Request $request, Carpeta $carpeta): RedirectResponse
     {
@@ -59,17 +44,15 @@ class PermisoCarpetaController extends Controller
             'heredar'         => ['boolean'],
         ]);
 
-        // Debe especificarse usuario O (empresa + rol), no ambos ni ninguno
         if (!$validated['usuario_id'] && !($validated['empresa_id'] && $validated['rol'])) {
             return back()->withErrors(['error' => 'Debes especificar un usuario, o una empresa con rol.']);
         }
 
-        // Evitar duplicados
         $existe = PermisoCarpeta::where('carpeta_id', $carpeta->id)
             ->when($validated['usuario_id'], fn($q) => $q->where('usuario_id', $validated['usuario_id']))
             ->when(!$validated['usuario_id'], fn($q) =>
                 $q->where('empresa_id', $validated['empresa_id'])
-                  ->where('rol', $validated['rol'])
+                    ->where('rol', $validated['rol'])
             )->exists();
 
         if ($existe) {
@@ -90,20 +73,11 @@ class PermisoCarpetaController extends Controller
             'concedido_por'   => Auth::id(),
         ]);
 
-        $desc = $validated['usuario_id']
-            ? "Permiso otorgado a usuario_id={$validated['usuario_id']}"
-            : "Permiso otorgado a rol={$validated['rol']} empresa_id={$validated['empresa_id']}";
+        RegistroActividad::registrar('editar', 'carpeta', $carpeta->id,
+            "Permiso otorgado en carpeta: {$carpeta->nombre}");
 
-        RegistroActividad::registrar('editar', 'carpeta', $carpeta->id, $desc);
-
-        return redirect()
-            ->route('permisos.index', $carpeta)
-            ->with('success', 'Permiso otorgado correctamente.');
+        return redirect()->route('permisos.index', $carpeta)->with('success', 'Permiso otorgado correctamente.');
     }
-
-    // ─────────────────────────────────────────────
-    // UPDATE — modificar permiso existente
-    // ─────────────────────────────────────────────
 
     public function update(Request $request, Carpeta $carpeta, PermisoCarpeta $permiso): RedirectResponse
     {
@@ -120,19 +94,11 @@ class PermisoCarpetaController extends Controller
 
         $permiso->update($validated);
 
-        RegistroActividad::registrar(
-            'editar', 'carpeta', $carpeta->id,
-            "Permiso actualizado (id={$permiso->id}) en carpeta: {$carpeta->nombre}"
-        );
+        RegistroActividad::registrar('editar', 'carpeta', $carpeta->id,
+            "Permiso actualizado (id={$permiso->id}) en: {$carpeta->nombre}");
 
-        return redirect()
-            ->route('permisos.index', $carpeta)
-            ->with('success', 'Permiso actualizado.');
+        return redirect()->route('permisos.index', $carpeta)->with('success', 'Permiso actualizado.');
     }
-
-    // ─────────────────────────────────────────────
-    // DESTROY — revocar permiso
-    // ─────────────────────────────────────────────
 
     public function destroy(Carpeta $carpeta, PermisoCarpeta $permiso): RedirectResponse
     {
@@ -140,19 +106,11 @@ class PermisoCarpetaController extends Controller
 
         $permiso->delete();
 
-        RegistroActividad::registrar(
-            'editar', 'carpeta', $carpeta->id,
-            "Permiso revocado (id={$permiso->id}) en carpeta: {$carpeta->nombre}"
-        );
+        RegistroActividad::registrar('editar', 'carpeta', $carpeta->id,
+            "Permiso revocado (id={$permiso->id}) en: {$carpeta->nombre}");
 
-        return redirect()
-            ->route('permisos.index', $carpeta)
-            ->with('success', 'Permiso revocado.');
+        return redirect()->route('permisos.index', $carpeta)->with('success', 'Permiso revocado.');
     }
-
-    // ─────────────────────────────────────────────
-    // HELPER PRIVADO
-    // ─────────────────────────────────────────────
 
     private function autorizarGestionar(Carpeta $carpeta): void
     {
@@ -160,7 +118,6 @@ class PermisoCarpetaController extends Controller
 
         if (in_array($usuario->rol, ['Superadmin', 'Aux_QHSE'])) return;
 
-        // Admin/Gerente solo en su empresa
         if (in_array($usuario->rol, ['Admin', 'Gerente'])
             && $carpeta->empresa_id === $usuario->empresa_id) return;
 

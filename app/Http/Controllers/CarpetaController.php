@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Carpeta;
+use App\Models\Empresa;
 use App\Models\RegistroActividad;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,21 +12,10 @@ use Illuminate\View\View;
 
 class CarpetaController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-        $this->authorizeResource(Carpeta::class, 'carpeta');
-    }
-
-    // ─────────────────────────────────────────────
-    // INDEX — árbol de carpetas de la empresa
-    // ─────────────────────────────────────────────
-
     public function index(): View
     {
         $usuario = Auth::user();
 
-        // Superadmin/Aux_QHSE ven todas las empresas
         if (in_array($usuario->rol, ['Superadmin', 'Aux_QHSE'])) {
             $carpetas = Carpeta::with(['empresa', 'hijos', 'creadoPor'])
                 ->whereNull('padre_id')
@@ -43,15 +33,10 @@ class CarpetaController extends Controller
         return view('carpetas.index', compact('carpetas'));
     }
 
-    // ─────────────────────────────────────────────
-    // SHOW — contenido de una carpeta
-    // ─────────────────────────────────────────────
-
     public function show(Carpeta $carpeta): View
     {
         $usuario = Auth::user();
 
-        // Verificar permiso de lectura usando el modelo
         if (!$carpeta->usuarioPuedeLeer($usuario)) {
             abort(403, 'No tienes permiso para ver esta carpeta.');
         }
@@ -71,37 +56,45 @@ class CarpetaController extends Controller
         return view('carpetas.show', compact('carpeta', 'archivos', 'migas'));
     }
 
-    // ─────────────────────────────────────────────
-    // CREATE / STORE
-    // ─────────────────────────────────────────────
-
     public function create(Request $request): View
     {
-        $usuario   = Auth::user();
-        $padreId   = $request->query('padre_id');
-        $padre     = $padreId ? Carpeta::findOrFail($padreId) : null;
+        $usuario  = Auth::user();
+        $padre    = $request->query('padre_id') ? Carpeta::findOrFail($request->query('padre_id')) : null;
+        $empresas = collect();
 
-        return view('carpetas.create', compact('padre', 'usuario'));
+        // Superadmin y Aux_QHSE pueden elegir la empresa destino
+        if (in_array($usuario->rol, ['Superadmin', 'Aux_QHSE']) && !$padre) {
+            $empresas = Empresa::where('activo', true)
+                ->orderByDesc('es_corporativo') // Corporativo primero
+                ->orderBy('nombre')
+                ->get();
+        }
+
+        return view('carpetas.create', compact('padre', 'usuario', 'empresas'));
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', Carpeta::class);
+
         $usuario = Auth::user();
 
         $validated = $request->validate([
-            'nombre'    => ['required', 'string', 'max:245'],
-            'padre_id'  => ['nullable', 'exists:carpetas,id'],
+            'nombre'     => ['required', 'string', 'max:245'],
+            'empresa_id' => ['nullable', 'exists:empresas,id'],
+            'padre_id'   => ['nullable', 'exists:carpetas,id'],
             'es_publico' => ['boolean'],
         ], [
             'nombre.required' => 'El nombre de la carpeta es obligatorio.',
             'nombre.max'      => 'El nombre no puede superar 245 caracteres.',
         ]);
 
-        // Calcular path automáticamente
         $path = $this->calcularPath($validated['padre_id'] ?? null, $validated['nombre']);
 
         $carpeta = Carpeta::create([
-            'empresa_id' => $usuario->empresa_id,
+            'empresa_id' => in_array($usuario->rol, ['Superadmin', 'Aux_QHSE'])
+                ? ($validated['empresa_id'] ?? $usuario->empresa_id)
+                : $usuario->empresa_id,
             'padre_id'   => $validated['padre_id'] ?? null,
             'nombre'     => $validated['nombre'],
             'path'       => $path,
@@ -116,17 +109,16 @@ class CarpetaController extends Controller
             ->with('success', "Carpeta \"{$carpeta->nombre}\" creada correctamente.");
     }
 
-    // ─────────────────────────────────────────────
-    // EDIT / UPDATE
-    // ─────────────────────────────────────────────
-
     public function edit(Carpeta $carpeta): View
     {
+        $this->authorize('update', $carpeta);
         return view('carpetas.edit', compact('carpeta'));
     }
 
     public function update(Request $request, Carpeta $carpeta): RedirectResponse
     {
+        $this->authorize('update', $carpeta);
+
         $validated = $request->validate([
             'nombre'     => ['required', 'string', 'max:245'],
             'es_publico' => ['boolean'],
@@ -142,7 +134,7 @@ class CarpetaController extends Controller
 
         RegistroActividad::registrar(
             'editar', 'carpeta', $carpeta->id,
-            "Renombró carpeta: \"{$nombreAnterior}\" → \"{$carpeta->nombre}\""
+            "Renombró: \"{$nombreAnterior}\" → \"{$carpeta->nombre}\""
         );
 
         return redirect()
@@ -150,60 +142,47 @@ class CarpetaController extends Controller
             ->with('success', 'Carpeta actualizada correctamente.');
     }
 
-    // ─────────────────────────────────────────────
-    // DESTROY — soft delete
-    // ─────────────────────────────────────────────
-
     public function destroy(Carpeta $carpeta): RedirectResponse
     {
+        $this->authorize('delete', $carpeta);
+
         $padreId = $carpeta->padre_id;
         $nombre  = $carpeta->nombre;
 
-        // No permitir borrar si tiene hijos activos
         if ($carpeta->hijos()->whereNull('deleted_at')->exists()) {
-            return back()->withErrors(['error' => 'No puedes eliminar una carpeta que tiene subcarpetas. Elimínalas primero.']);
+            return back()->withErrors(['error' => 'No puedes eliminar una carpeta que tiene subcarpetas.']);
         }
 
-        // No permitir borrar si tiene archivos activos
         if ($carpeta->archivos()->where('esta_eliminado', false)->exists()) {
-            return back()->withErrors(['error' => 'No puedes eliminar una carpeta con archivos activos. Mueve o elimina los archivos primero.']);
+            return back()->withErrors(['error' => 'No puedes eliminar una carpeta con archivos activos.']);
         }
 
         $carpeta->delete();
 
         RegistroActividad::registrar('eliminar', 'carpeta', $carpeta->id, "Eliminó carpeta: \"{$nombre}\"");
 
-        $redirect = $padreId
-            ? route('carpetas.show', $padreId)
-            : route('carpetas.index');
-
-        return redirect($redirect)->with('success', "Carpeta \"{$nombre}\" eliminada.");
+        return redirect(
+            $padreId ? route('carpetas.show', $padreId) : route('carpetas.index')
+        )->with('success', "Carpeta \"{$nombre}\" eliminada.");
     }
 
-    // ─────────────────────────────────────────────
-    // HELPERS PRIVADOS
-    // ─────────────────────────────────────────────
+    // ── Helpers privados ──────────────────────────
 
     private function calcularPath(?int $padreId, string $nombre): string
     {
-        if (!$padreId) {
-            return '/' . $nombre;
-        }
-
+        if (!$padreId) return '/' . $nombre;
         $padre = Carpeta::find($padreId);
         return rtrim($padre->path, '/') . '/' . $nombre;
     }
 
     private function generarMigas(Carpeta $carpeta): array
     {
-        $migas   = [];
-        $actual  = $carpeta;
-
+        $migas  = [];
+        $actual = $carpeta;
         while ($actual) {
             array_unshift($migas, ['nombre' => $actual->nombre, 'id' => $actual->id]);
             $actual = $actual->padre;
         }
-
         return $migas;
     }
 }

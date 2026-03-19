@@ -245,7 +245,7 @@
                 </div>
                 <div>
                     <div class="fc-topbar-name">{{ Auth::user()->nombre_completo }}</div>
-                    <div class="fc-topbar-role">Super Admin</div>
+                    <div class="fc-topbar-role"> {{ Auth::user()->rol }} </div>
                 </div>
             </div>
         </header>
