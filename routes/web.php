@@ -18,13 +18,18 @@ Route::get('/', function () {
 });
 
 // ─────────────────────────────────────────────
-// DASHBOARDS POR ROL
+// RUTAS PROTEGIDAS
 // ─────────────────────────────────────────────
 
 Route::middleware(['auth', 'company.scope'])->group(function () {
 
-    Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->name('dashboard');
+    // ─────────────────────────────────────────
+    // DASHBOARDS POR ROL
+    // ─────────────────────────────────────────
+
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
 
     Route::get('/admin/dashboard', function () {
         return view('dashboard');
@@ -38,9 +43,42 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
         return view('dashboard');
     })->name('empresa.dashboard');
 
+    Route::get('/areas', function () {
+        return view('areas');
+    })->name('areas');
+
+    // ─────────────────────────────────────────
+    // CORPORATIVO
+    // ─────────────────────────────────────────
+
     Route::get('/nosotros', function () {
         return view('nosotros');
     })->middleware(['auth', 'verified'])->name('nosotros');
+
+    Route::get('/cardumen', function () {
+        return view('cardumen');
+    })->name('cardumen');
+
+    // ─────────────────────────────────────────
+    // ÁREAS
+    // ─────────────────────────────────────────
+
+    Route::get('/seaward', function () {
+        return view('seaward');
+    })->name('seaward');
+
+    Route::get('/omc', function () {
+        return view('omc');
+    })->name('omc');
+
+    Route::get('/seatools', function () {
+        return view('seatools');
+    })->name('seatools');
+
+    Route::get('/tws', function () {
+        return view('tws');
+    })->name('tws');
+
     // ─────────────────────────────────────────
     // PERFIL
     // ─────────────────────────────────────────
@@ -81,31 +119,28 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
         ->name('solicitudes.rechazar');
 
     // ─────────────────────────────────────────
-    // Empleados
+    // USUARIOS (CRUD)
     // ─────────────────────────────────────────
 
     Route::resource('usuarios', UsuarioController::class);
 
     Route::post('usuarios/{usuario}/toogle-activo', [UsuarioController::class, 'toggleActivo'])
         ->name('usuarios.toogle-activo');
+
     Route::post('usuarios/{usuario}/desbloquear', [UsuarioController::class, 'desbloquear'])
         ->name('usuarios.desbloquear');
 
-
     // ─────────────────────────────────────────
-    // PERMISOS DE CARPETA (anidados bajo carpetas)
+    // PERMISOS DE CARPETA
     // ─────────────────────────────────────────
 
     Route::prefix('carpetas/{carpeta}')->name('permisos.')->group(function () {
-        Route::get('permisos',                              [PermisoCarpetaController::class, 'index'])
-            ->name('index');
-        Route::post('permisos',                             [PermisoCarpetaController::class, 'store'])
-            ->name('store');
-        Route::put('permisos/{permiso}',                    [PermisoCarpetaController::class, 'update'])
-            ->name('update');
-        Route::delete('permisos/{permiso}',                 [PermisoCarpetaController::class, 'destroy'])
-            ->name('destroy');
+        Route::get('permisos', [PermisoCarpetaController::class, 'index'])->name('index');
+        Route::post('permisos', [PermisoCarpetaController::class, 'store'])->name('store');
+        Route::put('permisos/{permiso}', [PermisoCarpetaController::class, 'update'])->name('update');
+        Route::delete('permisos/{permiso}', [PermisoCarpetaController::class, 'destroy'])->name('destroy');
     });
+
 });
 
 require __DIR__.'/auth.php';

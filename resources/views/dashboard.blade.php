@@ -1,25 +1,376 @@
 <x-app-layout>
-    <div class="fc-wrapper">
+<style>
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
-        {{-- ══════════════════════════════
-            SIDEBAR
-            ══════════════════════════════ --}}
-    @include('components.sidebar')
+.fc-wrapper {
+    display: flex;
+    height: 100dvh;
+    width: 100%;
+    background: #ffffff; /* CAMBIADO: Fondo principal blanco */
+    color: #1e293b; /* CAMBIADO: Texto oscuro principal para contraste */
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 15px;
+    overflow: hidden;
+}
 
-        {{-- ══════════════════════════════
-            ÁREA PRINCIPAL
-            ══════════════════════════════ --}}
-        <div class="fc-main">
 
-            {{-- Topbar --}}
-            <header class="fc-topbar">
-                <input class="fc-search" placeholder="Buscar archivos, carpetas..." />
-                <div class="fc-topbar-right">
-                    <div class="fc-notif">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#64748b">
-                            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
-                        </svg>
-                        <div class="fc-notif-badge">2</div>
+/* ================================================
+   ÁREA PRINCIPAL
+   ================================================ */
+.fc-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    overflow: hidden;
+    min-width: 0;
+    background: #f8fafc; 
+}
+
+.fc-topbar {
+    height: 58px;
+    background: #ffffff; 
+    border-bottom: 1px solid #e2e8f0; 
+    display: flex; align-items: center;
+    padding: 0 24px; gap: 14px;
+    flex-shrink: 0;
+}
+.fc-search {
+    flex: 1; max-width: 460px;
+    background: #f1f5f9; border: 1px solid #e2e8f0; 
+    border-radius: 9px; padding: 9px 16px;
+    color: #1e293b; font-size: 14px; outline: none; 
+}
+.fc-search::placeholder { color: #94a3b8; } 
+.fc-topbar-right { display: flex; align-items: center; gap: 16px; margin-left: auto; }
+.fc-notif {
+    position: relative; cursor: pointer;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+}
+.fc-notif-badge {
+    position: absolute; top: 2px; right: 2px;
+    width: 16px; height: 16px; background: #ef4444;
+    border-radius: 50%; font-size: 9px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700;
+}
+.fc-topbar-avatar {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: #fff;
+}
+.fc-topbar-name { font-size: 13px; font-weight: 600; color: #0f172a; } 
+.fc-topbar-role { font-size: 11px; color: #7c3aed; }
+
+.fc-content {
+    flex: 1; overflow-y: auto;
+    padding: 22px; display: flex; gap: 18px;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent; 
+}
+.fc-content-main { flex: 1; min-width: 0; }
+.fc-content-side { width: 300px; min-width: 300px; }
+
+/* Hero Banner */
+.fc-hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%); 
+    border-radius: 14px; padding: 24px 28px; margin-bottom: 18px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    box-shadow: 0 10px 15px -3px rgba(30, 27, 75, 0.2); 
+}
+.fc-hero-badge {
+    font-size: 12px; color: #c7d2fe; 
+    display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
+}
+.fc-hero-title { font-size: 26px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+.fc-hero-sub   { font-size: 13px; color: #c7d2fe; } 
+.fc-hero-btns  { display: flex; gap: 10px; flex-shrink: 0; }
+.fc-btn-outline {
+    background: transparent; border: 1px solid rgba(255,255,255,0.3); color: #fff; 
+    padding: 9px 18px; border-radius: 8px; font-size: 13px; cursor: pointer;
+    white-space: nowrap; transition: background .15s;
+}
+.fc-btn-outline:hover { background: rgba(255,255,255,0.1); } 
+.fc-btn-solid {
+    background: #ffffff; border: 1px solid #ffffff; color: #312e81; 
+    padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+    white-space: nowrap; transition: background .15s;
+}
+.fc-btn-solid:hover { background: #f1f5f9; } 
+
+/* Estadísticas */
+.fc-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px; margin-bottom: 18px;
+}
+.fc-stat {
+    background: #ffffff; border: 1px solid #e2e8f0; /* CAMBIADO: Fondo card blanco, borde claro */
+    border-radius: 12px; padding: 18px 20px; position: relative;
+    box-shadow: 6px 6px 12px #e2e8f0, -4px -4px 10px #ffffff; /* AÑADIDO: Relieve suave neumórfico */
+    transition: transform 0.2s ease, box-shadow 0.2s ease; /* AÑADIDO: Transición suave */
+}
+.fc-stat:hover { 
+    transform: translateY(-3px); /* AÑADIDO: Elevación hover */
+    box-shadow: 10px 10px 20px #d1d9e6, -6px -6px 15px #ffffff; /* AÑADIDO: Sombra hover resaltada */
+}
+.fc-stat-icon {
+    width: 36px; height: 36px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 10px;
+}
+.fc-stat-arrow { position: absolute; top: 14px; right: 14px; color: #94a3b8; font-size: 18px; } /* CAMBIADO: Flecha estadística clara */
+.fc-stat-num   { font-size: 30px; font-weight: 700; color: #0f172a; line-height: 1; } /* CAMBIADO: Número estadística oscuro */
+.fc-stat-label { font-size: 12px; color: #64748b; margin-top: 5px; } /* MODIFICADO: Color label estadística claro */
+.fc-stat-trend { font-size: 12px; margin-top: 7px; }
+.fc-stat-trend.pos     { color: #16a34a; } /* MODIFICADO: Color tendencia pos verde claro */
+.fc-stat-trend.neutral { color: #64748b; }
+
+/* Gráfica */
+.fc-chart-box {
+    background: #ffffff; border: 1px solid #e2e8f0; /* CAMBIADO: Fondo gráfica blanco, borde claro */
+    border-radius: 12px; padding: 18px 20px; margin-bottom: 18px;
+    box-shadow: 6px 6px 12px #e2e8f0, -4px -4px 10px #ffffff; /* AÑADIDO: Relieve suave neumórfico */
+}
+.fc-chart-header {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; margin-bottom: 14px;
+}
+.fc-chart-title { font-size: 15px; font-weight: 600; color: #0f172a; } /* CAMBIADO: Título gráfica oscuro */
+.fc-chart-sub   { font-size: 12px; color: #64748b; margin-top: 2px; } /* MODIFICADO: Subtítulo gráfica claro */
+
+/* Áreas */
+.fc-areas-header {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 12px;
+}
+.fc-areas-title { font-size: 15px; font-weight: 600; color: #0f172a; } /* CAMBIADO: Título áreas oscuro */
+.fc-areas-link  { font-size: 13px; color: #6366f1; cursor: pointer; text-decoration: none; }
+.fc-areas-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.fc-area-card {
+    background: #ffffff; border: 1px solid #e2e8f0; /* CAMBIADO: Fondo card blanco, borde claro */
+    border-radius: 12px; padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; text-decoration: none;
+    box-shadow: 4px 4px 8px #e2e8f0, -2px -2px 6px #ffffff; /* AÑADIDO: Relieve suave neumórfico */
+    transition: transform 0.2s ease, box-shadow 0.2s ease; /* AÑADIDO: Transición suave */
+}
+.fc-area-card:hover { 
+    transform: translateY(-2px); /* AÑADIDO: Elevación hover */
+    box-shadow: 6px 6px 12px #cbd5e1, -4px -4px 10px #ffffff; /* AÑADIDO: Sombra hover resaltada */
+}
+.fc-area-dot  { width: 11px; height: 11px; border-radius: 50%; }
+.fc-area-name { font-size: 14px; font-weight: 600; color: #1e293b; } /* CAMBIADO: Nombre área oscuro */
+.fc-area-meta { font-size: 12px; color: #64748b; margin-top: 2px; } /* MODIFICADO: Meta área claro */
+.fc-area-chevron { color: #94a3b8; font-size: 20px; } /* CAMBIADO: Chevron claro */
+
+/* Actividad */
+.fc-activity-card {
+    background: #ffffff; border: 1px solid #e2e8f0; /* CAMBIADO: Fondo actividad blanco, borde claro */
+    border-radius: 12px; padding: 16px; margin-bottom: 14px;
+    box-shadow: 6px 6px 12px #e2e8f0, -4px -4px 10px #ffffff; /* AÑADIDO: Relieve suave neumórfico */
+}
+.fc-activity-title {
+    font-size: 14px; font-weight: 600; color: #0f172a; /* CAMBIADO: Título actividad oscuro */
+    margin-bottom: 14px; display: flex; align-items: center; gap: 7px;
+}
+.fc-act-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 8px 0; border-bottom: 1px solid #f1f5f9; /* CAMBIADO: Borde item claro */
+}
+.fc-act-item:last-child { border-bottom: none; }
+.fc-act-icon {
+    width: 28px; height: 28px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+}
+.fc-act-name { font-size: 13px; color: #475569; line-height: 1.4; } /* MODIFICADO: Color nombre item claro */
+.fc-act-name strong { color: #0f172a; font-weight: 600; } /* CAMBIADO: Strong item oscuro */
+.fc-act-file { font-size: 12px; color: #6366f1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; } /* CAMBIADO: Color archivo item azul claro, peso */
+.fc-act-time { font-size: 11px; color: #94a3b8; margin-top: 2px; } /* MODIFICADO: Color tiempo item claro */
+
+/* Roles */
+.fc-roles-card {
+    background: #feffff; border: 1px solid #e2e8f0; /* CAMBIADO: Fondo roles blanco, borde claro */
+    border-radius: 12px; padding: 16px;
+    box-shadow: 6px 6px 12px #e2e8f0, -4px -4px 10px #ffffff; /* AÑADIDO: Relieve suave neumórfico */
+}
+.fc-roles-title { font-size: 14px; font-weight: 600; color: #0a0a0a; margin-bottom: 14px; }
+.fc-role-row    { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.fc-role-name   { font-size: 12px; color: #475569; width: 55px; } /* MODIFICADO: Color nombre rol claro */
+.fc-role-bar-bg { flex: 1; height: 7px; background: #f1f5f9; border-radius: 4px; overflow: hidden; box-shadow: inset 1px 1px 3px #d1d9e6; } /* CAMBIADO: Fondo barra claro, sombra interna */
+.fc-role-bar    { height: 100%; border-radius: 4px; }
+.fc-role-count  { font-size: 12px; color: #0a0a0a; width: 20px; text-align: right; font-weight: 600; } /* MODIFICADO: Color count rol claro, peso */
+
+/* Iconos SVG subida/descarga dentro de ítem de actividad */
+.icon-up   { fill: #10b981; } /* MODIFICADO: Color icono up verde claro */
+.icon-down { fill: #f59e0b; } /* MODIFICADO: Color icono down naranja claro */
+.icon-plus { fill: #6366f1; } /* MODIFICADO: Color icono plus azul claro */
+.bg-up     { background: rgba(16, 185, 129, 0.1); } /* MODIFICADO: Fondo icono up verde claro */
+.bg-down   { background: rgba(245, 158, 11, 0.1);  } /* MODIFICADO: Fondo icono down naranja claro */
+.bg-plus   { background: rgba(99, 102, 241, 0.1); } /* MODIFICADO: Fondo icono plus azul claro */
+
+/* ══ MODO OSCURO — dashboard ══ */
+.dark .fc-wrapper      { background: #0d0c1d; }
+.dark .fc-main         { background: #0d0c1d; }
+.dark .fc-content      { background: #0d0c1d; scrollbar-color: #1e1b4b transparent; }
+
+/* Topbar */
+.dark .fc-topbar       { background: #13111f; border-color: #1e1b4b; }
+.dark .fc-topbar-name  { color: #e0e7ff; }
+.dark .fc-topbar-role  { color: #a5b4fc; }
+.dark .fc-search {
+    background: #1e1b4b;
+    border-color: #2d2a5e;
+    color: #e0e7ff;
+}
+.dark .fc-search::placeholder { color: #4f46e5; }
+
+/* Stats */
+.dark .fc-stat {
+    background: #13111f;
+    border-color: #1e1b4b;
+    box-shadow: 4px 4px 10px #0a0918, -2px -2px 8px #1a1830;
+}
+.dark .fc-stat:hover {
+    box-shadow: 6px 6px 16px #0a0918, -4px -4px 12px #1a1830;
+}
+.dark .fc-stat-num   { color: #e0e7ff; }
+.dark .fc-stat-label { color: #6366f1; }
+.dark .fc-stat-arrow { color: #4f46e5; }
+.dark .fc-stat-trend.pos     { color: #34d399; }
+.dark .fc-stat-trend.neutral { color: #6366f1; }
+
+/* Gráfica */
+.dark .fc-chart-box {
+    background: #13111f;
+    border-color: #1e1b4b;
+    box-shadow: 4px 4px 10px #0a0918, -2px -2px 8px #1a1830;
+}
+.dark .fc-chart-title { color: #e0e7ff; }
+.dark .fc-chart-sub   { color: #6366f1; }
+.dark .fc-chart-box span[style*="color:#475569"] { color: #4f46e5 !important; }
+
+/* Áreas */
+.dark .fc-areas-title { color: #e0e7ff; }
+.dark .fc-area-card {
+    background: #13111f;
+    border-color: #1e1b4b;
+    box-shadow: 3px 3px 8px #0a0918, -2px -2px 6px #1a1830;
+}
+.dark .fc-area-card:hover {
+    box-shadow: 5px 5px 14px #0a0918, -3px -3px 10px #1a1830;
+    border-color: #4f46e5;
+}
+.dark .fc-area-name    { color: #e0e7ff; }
+.dark .fc-area-meta    { color: #6366f1; }
+.dark .fc-area-chevron { color: #4f46e5; }
+
+/* Actividad */
+.dark .fc-activity-card {
+    background: #13111f;
+    border-color: #1e1b4b;
+    box-shadow: 4px 4px 10px #0a0918, -2px -2px 8px #1a1830;
+}
+.dark .fc-activity-title { color: #e0e7ff; }
+.dark .fc-act-item       { border-color: #1e1b4b; }
+.dark .fc-act-name       { color: #a5b4fc; }
+.dark .fc-act-name strong { color: #e0e7ff; }
+.dark .fc-act-file       { color: #818cf8; }
+.dark .fc-act-time       { color: #4f46e5; }
+
+/* Roles */
+.dark .fc-roles-card {
+    background: #13111f;
+    border-color: #1e1b4b;
+    box-shadow: 4px 4px 10px #0a0918, -2px -2px 8px #1a1830;
+}
+.dark .fc-roles-title  { color: #e0e7ff; }
+.dark .fc-role-name    { color: #a5b4fc; }
+.dark .fc-role-count   { color: #e0e7ff; }
+.dark .fc-role-bar-bg  {
+    background: #1e1b4b;
+    box-shadow: inset 1px 1px 3px #0a0918;
+}
+</style>
+
+<div class="fc-wrapper">
+
+    {{-- ══════════════════════════════
+         SIDEBAR
+         ══════════════════════════════ --}}
+@include('components.sidebar')
+
+    {{-- ══════════════════════════════
+         ÁREA PRINCIPAL
+         ══════════════════════════════ --}}
+    <div class="fc-main">
+
+        {{-- Topbar --}}
+        <header class="fc-topbar">
+            <input class="fc-search" placeholder="Buscar archivos, carpetas..." />
+            <div class="fc-topbar-right">
+                <div class="fc-notif">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#64748b">
+                        <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+                    </svg>
+                    <div class="fc-notif-badge">2</div>
+                </div>
+                <div class="fc-topbar-avatar">
+                    {{ strtoupper(substr(Auth::user()->nombre, 0, 1)) . strtoupper(substr(Auth::user()->paterno, 0, 1)) }}
+                </div>
+                <div>
+                    <div class="fc-topbar-name">{{ Auth::user()->nombre_completo }}</div>
+                    <div class="fc-topbar-role"> {{ Auth::user()->rol }} </div>
+                </div>
+            </div>
+        </header>
+        {{-- Contenido --}}
+        <div class="fc-content">
+
+            {{-- Columna principal --}}
+            <div class="fc-content-main">
+
+                {{-- ── Hero ── --}}
+                <div class="fc-hero">
+                    <div>
+                        <div class="fc-hero-badge">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="#a5b4fc">
+                                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                            </svg>
+                            Super Administrador
+                        </div>
+                        <div class="fc-hero-title">Panel de Control Global</div>
+                        <div class="fc-hero-sub">
+                            Tienes acceso completo a todas las áreas y configuraciones del sistema.
+                        </div>
+                    </div>
+                    <div class="fc-hero-btns">
+                        <button class="fc-btn-outline">Gestionar Usuarios</button>
+                        <button class="fc-btn-solid">Ver Permisos</button>
+                    </div>
+                </div>
+
+                {{-- ── Estadísticas ── --}}
+                <div class="fc-stats">
+
+                    <div class="fc-stat">
+                        <div class="fc-stat-icon" style="background:rgba(124,58,237,0.13)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="#a78bfa">
+                                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                            </svg>
+                        </div>
+                        <div class="fc-stat-arrow">↗</div>
+                        <div class="fc-stat-num">15</div>
+                        <div class="fc-stat-label">Usuarios activos</div>
+                        <div class="fc-stat-trend pos">+2 este mes</div>
                     </div>
                     <div class="fc-topbar-avatar">
                         {{ strtoupper(substr(Auth::user()->nombre, 0, 1)) . strtoupper(substr(Auth::user()->paterno, 0, 1)) }}

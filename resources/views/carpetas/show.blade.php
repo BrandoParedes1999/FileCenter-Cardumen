@@ -307,6 +307,41 @@
     background: #dc2626; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;
 }
 .fc-modal-confirm:hover { background: #b91c1c; }
+
+/* ══ MODO OSCURO — mis carpetas ══ */
+.dark .fc-wrapper  { background: #0d0c1d; }
+.dark .fc-main     { background: #0d0c1d; }
+.dark .fc-content  { background: #0d0c1d; }
+
+.dark .fc-topbar       { background: #13111f; border-color: #1e1b4b; }
+.dark .fc-topbar-title { color: #e0e7ff; }
+.dark .fc-topbar-name  { color: #e0e7ff; }
+
+.dark .fc-actionbar { background: #13111f; border-color: #1e1b4b; }
+.dark .fc-search-wrap input {
+    background: #1e1b4b; border-color: #2d2a5e; color: #e0e7ff;
+}
+.dark .fc-btn-outline {
+    background: #1e1b4b; border-color: #2d2a5e; color: #a5b4fc;
+}
+.dark .fc-view-btns { background: #1e1b4b; border-color: #2d2a5e; }
+.dark .fc-view-btn.active { background: #2d2a5e; color: #a5b4fc; }
+
+.dark .fc-folder-card       { background: #13111f; border-color: #1e1b4b; }
+.dark .fc-folder-name       { color: #e0e7ff; }
+.dark .fc-folder-meta       { color: #6366f1; }
+
+.dark .fc-section-title        { color: #4f46e5; }
+.dark .fc-section-title::after { background: #1e1b4b; }
+.dark .fc-section-count        { background: #1e1b4b; color: #a5b4fc; }
+
+.dark .fc-empty-title { color: #e0e7ff; }
+.dark .fc-empty-sub   { color: #6366f1; }
+.dark .fc-empty-icon  { background: rgba(79,70,229,0.15); }
+
+.dark .fc-breadcrumb .fc-bread-current { color: #a5b4fc; }
+.dark .fc-bread-sep { color: #2d2a5e; }
+
 </style>
 
 <div class="fc-wrapper">
