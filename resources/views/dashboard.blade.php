@@ -332,7 +332,6 @@
                 </div>
             </div>
         </header>
-
         {{-- Contenido --}}
         <div class="fc-content">
 

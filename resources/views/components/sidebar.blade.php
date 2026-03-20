@@ -8,7 +8,6 @@
             </div>
         </div>
     </div>
-
     {{-- ── Principal ── --}}
     <div class="fc-nav-section">
         <div class="fc-nav-label">Principal</div>
