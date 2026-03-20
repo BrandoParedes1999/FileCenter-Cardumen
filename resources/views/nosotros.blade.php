@@ -307,6 +307,68 @@
 .modal-stat { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; }
 .modal-stat-label { font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 4px; font-weight: 600; }
 .modal-stat-value { font-size: 15px; font-weight: 700; color: #1e293b; }
+
+/* ══ MODO OSCURO — nosotros ══ */
+.dark .fc-wrapper  { background: #0d0c1d; }
+.dark .fc-main     { background: #0d0c1d; }
+.dark .fc-content  { background: #0d0c1d; }
+.dark .fc-topbar   { background: #13111f; border-color: #1e1b4b; }
+.dark .fc-topbar-title { color: #e0e7ff; }
+.dark .fc-topbar-sub   { color: #6366f1; }
+.dark .fc-topbar-name  { color: #e0e7ff; }
+
+/* Slider */
+.dark .slider-wrap { border-color: #1e1b4b; }
+
+/* Cards MVV */
+.dark .mvv-card         { background: #13111f; border-color: #1e1b4b; }
+.dark .mvv-title        { color: #e0e7ff; }
+.dark .mvv-text         { color: #a5b4fc; }
+.dark .valor-row        { border-color: #1e1b4b; }
+.dark .valor-name       { color: #e0e7ff; }
+.dark .valor-desc       { color: #6366f1; }
+
+/* Empresas */
+.dark .emp-card         { background: #13111f; border-color: #1e1b4b; }
+.dark .emp-img-wrap     { background: #1e1b4b; border-color: #2d2a5e; }
+.dark .emp-name         { color: #e0e7ff; }
+.dark .emp-desc         { color: #a5b4fc; }
+.dark .emp-footer       { border-color: #1e1b4b; }
+
+/* Footer */
+.dark .nos-footer              { border-color: #1e1b4b; }
+.dark .nos-footer-inner        { color: #e0e7ff; }
+.dark .footer-brand-name       { color: #e0e7ff; }
+.dark .footer-brand-desc       { color: #a5b4fc; }
+.dark .footer-brand-logo       { background: #1e1b4b; border-color: #2d2a5e; }
+.dark .footer-col-title        { color: #4f46e5; }
+.dark .footer-col-title::after { background: #1e1b4b; }
+.dark .footer-social-link      { background: #13111f; border-color: #1e1b4b; }
+.dark .footer-social-link:hover{ background: #1e1b4b; border-color: #4f46e5; }
+.dark .footer-social-name      { color: #e0e7ff; }
+.dark .footer-social-handle    { color: #6366f1; }
+.dark .footer-address-item     { background: #13111f; border-color: #1e1b4b; }
+.dark .footer-address-label    { color: #4f46e5; }
+.dark .footer-address-value    { color: #a5b4fc; }
+.dark .footer-bottom           { border-color: #1e1b4b; }
+.dark .footer-copy             { color: #6366f1; }
+.dark .footer-copy span        { color: #a5b4fc; }
+
+/* Modales */
+.dark .modal-box          { background: #13111f; border-color: #1e1b4b; }
+.dark .modal-header-img   { background: #1e1b4b; border-color: #2d2a5e; }
+.dark .modal-close        { background: #1e1b4b; border-color: #2d2a5e; color: #a5b4fc; }
+.dark .modal-company-name { color: #e0e7ff; }
+.dark .modal-company-sub  { color: #6366f1; }
+.dark .modal-divider      { background: #1e1b4b; }
+.dark .modal-text         { color: #a5b4fc; }
+.dark .modal-stat         { background: #1e1b4b; border-color: #2d2a5e; }
+.dark .modal-stat-label   { color: #6366f1; }
+.dark .modal-stat-value   { color: #e0e7ff; }
+
+/* Section labels */
+.dark .section-label-text { color: #a5b4fc; }
+.dark .section-label-line { background: #1e1b4b; }
 </style>
 
 <div class="fc-wrapper">

@@ -216,6 +216,89 @@
 .bg-up     { background: rgba(16, 185, 129, 0.1); } /* MODIFICADO: Fondo icono up verde claro */
 .bg-down   { background: rgba(245, 158, 11, 0.1);  } /* MODIFICADO: Fondo icono down naranja claro */
 .bg-plus   { background: rgba(99, 102, 241, 0.1); } /* MODIFICADO: Fondo icono plus azul claro */
+
+/* ══ MODO OSCURO — dashboard ══ */
+.dark .fc-wrapper      { background: #0d0c1d; }
+.dark .fc-main         { background: #0d0c1d; }
+.dark .fc-content      { background: #0d0c1d; scrollbar-color: #1e1b4b transparent; }
+
+/* Topbar */
+.dark .fc-topbar       { background: #13111f; border-color: #1e1b4b; }
+.dark .fc-topbar-name  { color: #e0e7ff; }
+.dark .fc-topbar-role  { color: #a5b4fc; }
+.dark .fc-search {
+    background: #1e1b4b;
+    border-color: #2d2a5e;
+    color: #e0e7ff;
+}
+.dark .fc-search::placeholder { color: #4f46e5; }
+
+/* Stats */
+.dark .fc-stat {
+    background: #13111f;
+    border-color: #1e1b4b;
+    box-shadow: 4px 4px 10px #0a0918, -2px -2px 8px #1a1830;
+}
+.dark .fc-stat:hover {
+    box-shadow: 6px 6px 16px #0a0918, -4px -4px 12px #1a1830;
+}
+.dark .fc-stat-num   { color: #e0e7ff; }
+.dark .fc-stat-label { color: #6366f1; }
+.dark .fc-stat-arrow { color: #4f46e5; }
+.dark .fc-stat-trend.pos     { color: #34d399; }
+.dark .fc-stat-trend.neutral { color: #6366f1; }
+
+/* Gráfica */
+.dark .fc-chart-box {
+    background: #13111f;
+    border-color: #1e1b4b;
+    box-shadow: 4px 4px 10px #0a0918, -2px -2px 8px #1a1830;
+}
+.dark .fc-chart-title { color: #e0e7ff; }
+.dark .fc-chart-sub   { color: #6366f1; }
+.dark .fc-chart-box span[style*="color:#475569"] { color: #4f46e5 !important; }
+
+/* Áreas */
+.dark .fc-areas-title { color: #e0e7ff; }
+.dark .fc-area-card {
+    background: #13111f;
+    border-color: #1e1b4b;
+    box-shadow: 3px 3px 8px #0a0918, -2px -2px 6px #1a1830;
+}
+.dark .fc-area-card:hover {
+    box-shadow: 5px 5px 14px #0a0918, -3px -3px 10px #1a1830;
+    border-color: #4f46e5;
+}
+.dark .fc-area-name    { color: #e0e7ff; }
+.dark .fc-area-meta    { color: #6366f1; }
+.dark .fc-area-chevron { color: #4f46e5; }
+
+/* Actividad */
+.dark .fc-activity-card {
+    background: #13111f;
+    border-color: #1e1b4b;
+    box-shadow: 4px 4px 10px #0a0918, -2px -2px 8px #1a1830;
+}
+.dark .fc-activity-title { color: #e0e7ff; }
+.dark .fc-act-item       { border-color: #1e1b4b; }
+.dark .fc-act-name       { color: #a5b4fc; }
+.dark .fc-act-name strong { color: #e0e7ff; }
+.dark .fc-act-file       { color: #818cf8; }
+.dark .fc-act-time       { color: #4f46e5; }
+
+/* Roles */
+.dark .fc-roles-card {
+    background: #13111f;
+    border-color: #1e1b4b;
+    box-shadow: 4px 4px 10px #0a0918, -2px -2px 8px #1a1830;
+}
+.dark .fc-roles-title  { color: #e0e7ff; }
+.dark .fc-role-name    { color: #a5b4fc; }
+.dark .fc-role-count   { color: #e0e7ff; }
+.dark .fc-role-bar-bg  {
+    background: #1e1b4b;
+    box-shadow: inset 1px 1px 3px #0a0918;
+}
 </style>
 
 <div class="fc-wrapper">

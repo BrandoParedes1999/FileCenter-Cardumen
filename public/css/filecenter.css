@@ -690,6 +690,7 @@
 .fc-ml-auto     { margin-left: auto; }
 
 
+
 /* ================================================
    SUBIDA DE ARCHIVOS (CREATE)
    ================================================ */
@@ -935,3 +936,82 @@
 .fc-file-chip-meta { font-size: 11px; color: #94a3b8; margin-top: 2px; }
 
 .fc-field label { display: block; font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 7px; text-transform: uppercase; letter-spacing: .06em; }
+
+/* ══ MODO OSCURO — filecenter.css ══ */
+
+/* Sidebar ya es oscuro de base, solo ajustamos en dark */
+.dark .fc-sidebar        { background: #0a0918; border-color: #1a1830; }
+.dark .fc-logo-area      { border-color: #1a1830; }
+.dark .fc-nav-label      { color: #3d3a6b; }
+.dark .fc-nav-item       { color: #6366f1; }
+.dark .fc-nav-item:hover { background: #1a1830; color: #a5b4fc; }
+.dark .fc-nav-item.active { background: #312e81; color: #a5b4fc; }
+.dark .fc-sidebar-footer { border-color: #1a1830; }
+
+/* Wrapper y main */
+.dark .fc-wrapper { background: #0d0c1d; }
+.dark .fc-main    { background: #0d0c1d; }
+
+/* Topbar */
+.dark .fc-topbar       { background: #13111f; border-color: #1e1b4b; }
+.dark .fc-topbar-title { color: #e0e7ff; }
+.dark .fc-topbar-name  { color: #e0e7ff; }
+
+/* Contenido */
+.dark .fc-content { background: #0d0c1d; scrollbar-color: #1e1b4b transparent; }
+
+/* Cards */
+.dark .fc-card        { background: #13111f; border-color: #1e1b4b; }
+.dark .fc-card-header { border-color: #1e1b4b; color: #e0e7ff; }
+
+/* Carpetas */
+.dark .fc-folder-card       { background: #13111f; border-color: #1e1b4b; }
+.dark .fc-folder-name       { color: #e0e7ff; }
+.dark .fc-folder-meta       { color: #6366f1; }
+.dark .fc-folder-row        { background: #13111f; border-color: #1e1b4b; }
+.dark .fc-folder-row-name   { color: #e0e7ff; }
+
+/* Archivos */
+.dark .fc-file-card    { background: #13111f; border-color: #1e1b4b; }
+.dark .fc-file-preview { background: linear-gradient(135deg, #1a1830, #13111f); border-color: #1e1b4b; }
+.dark .fc-file-name    { color: #e0e7ff; }
+.dark .fc-file-meta    { color: #6366f1; }
+.dark .fc-file-btn     { background: #1e1b4b; border-color: #2d2a5e; color: #a5b4fc; }
+.dark .fc-file-row     { background: #13111f; border-color: #1e1b4b; }
+.dark .fc-file-row-name{ color: #e0e7ff; }
+
+/* Inputs */
+.dark .fc-search-wrap input {
+    background: #1e1b4b; border-color: #2d2a5e; color: #e0e7ff;
+}
+.dark .fc-actionbar { background: #13111f; border-color: #1e1b4b; }
+
+/* Botones outline */
+.dark .fc-btn-outline {
+    background: #1e1b4b; border-color: #2d2a5e; color: #a5b4fc;
+}
+
+/* Flash */
+.dark .fc-flash.success { background: rgba(5,150,105,0.15); border-color: rgba(5,150,105,0.3); color: #6ee7b7; }
+.dark .fc-flash.error   { background: rgba(220,38,38,0.15); border-color: rgba(220,38,38,0.3); color: #fca5a5; }
+
+/* Estado vacío */
+.dark .fc-empty-title { color: #e0e7ff; }
+.dark .fc-empty-sub   { color: #6366f1; }
+
+/* Modales */
+.dark .fc-modal         { background: #13111f; border: 1px solid #1e1b4b; }
+.dark .fc-modal-title   { color: #e0e7ff; }
+.dark .fc-modal-sub     { color: #a5b4fc; }
+.dark .fc-modal-cancel  { background: #1e1b4b; border-color: #2d2a5e; color: #a5b4fc; }
+
+/* Section title */
+.dark .fc-section-title        { color: #4f46e5; }
+.dark .fc-section-title::after { background: #1e1b4b; }
+.dark .fc-section-count        { background: #1e1b4b; color: #a5b4fc; }
+
+/* Folder header */
+.dark .fc-folder-header      { background: #13111f; border-color: #1e1b4b; }
+.dark .fc-folder-header-name { color: #e0e7ff; }
+.dark .fc-folder-header-path { color: #6366f1; }
+

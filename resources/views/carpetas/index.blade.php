@@ -165,5 +165,7 @@ function filtrarCarpetas(q) {
         el.style.display = el.dataset.nombre.toLowerCase().includes(t) ? '' : 'none';
     });
 }
+
+
 </script>
 </x-app-layout>
