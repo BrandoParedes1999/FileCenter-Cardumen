@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ArchivoController;
+use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\CarpetaController;
 use App\Http\Controllers\PermisoCarpetaController;
 use App\Http\Controllers\ProfileController;
@@ -40,7 +41,6 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
     Route::get('/nosotros', function () {
         return view('nosotros');
     })->middleware(['auth', 'verified'])->name('nosotros');
-
     // ─────────────────────────────────────────
     // PERFIL
     // ─────────────────────────────────────────
@@ -79,6 +79,18 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
 
     Route::post('solicitudes/{solicitud}/rechazar', [SolicitudAccesoController::class, 'rechazar'])
         ->name('solicitudes.rechazar');
+
+    // ─────────────────────────────────────────
+    // Empleados
+    // ─────────────────────────────────────────
+
+    Route::resource('usuarios', UsuarioController::class);
+
+    Route::post('usuarios/{usuario}/toogle-activo', [UsuarioController::class, 'toggleActivo'])
+        ->name('usuarios.toogle-activo');
+    Route::post('usuarios/{usuario}/desbloquear', [UsuarioController::class, 'desbloquear'])
+        ->name('usuarios.desbloquear');
+
 
     // ─────────────────────────────────────────
     // PERMISOS DE CARPETA (anidados bajo carpetas)
