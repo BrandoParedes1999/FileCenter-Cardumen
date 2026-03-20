@@ -1,6 +1,4 @@
 <x-app-layout>
-    
-
     <div class="fc-wrapper">
         @include('components.sidebar')
         <div class="fc-main">

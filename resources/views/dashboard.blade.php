@@ -10,7 +10,7 @@
     display: flex;
     height: 100dvh;
     width: 100%;
-    background: #ffffff; /* CAMBIADO: Fondo principal blanco */
+    background: #524b4b; /* CAMBIADO: Fondo principal blanco */
     color: #1e293b; /* CAMBIADO: Texto oscuro principal para contraste */
     font-family: 'Segoe UI', system-ui, sans-serif;
     font-size: 15px;
@@ -315,8 +315,11 @@
 
         {{-- Topbar --}}
         <header class="fc-topbar">
+
             <input class="fc-search" placeholder="Buscar archivos, carpetas..." />
+            
             <div class="fc-topbar-right">
+                
                 <div class="fc-notif">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="#64748b">
                         <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
@@ -353,32 +356,13 @@
                         </div>
                     </div>
                     <div class="fc-hero-btns">
-                        <button class="fc-btn-outline">Gestionar Usuarios</button>
+                        <button  href= "#" class="fc-btn-outline">Gestionar Usuarios</button>
                         <button class="fc-btn-solid">Ver Permisos</button>
                     </div>
                 </div>
 
                 {{-- ── Estadísticas ── --}}
                 <div class="fc-stats">
-
-                    <div class="fc-stat">
-                        <div class="fc-stat-icon" style="background:rgba(124,58,237,0.13)">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="#a78bfa">
-                                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-                            </svg>
-                        </div>
-                        <div class="fc-stat-arrow">↗</div>
-                        <div class="fc-stat-num">15</div>
-                        <div class="fc-stat-label">Usuarios activos</div>
-                        <div class="fc-stat-trend pos">+2 este mes</div>
-                    </div>
-                    <div class="fc-topbar-avatar">
-                        {{ strtoupper(substr(Auth::user()->nombre, 0, 1)) . strtoupper(substr(Auth::user()->paterno, 0, 1)) }}
-                    </div>
-                    <div>
-                        <div class="fc-topbar-name">{{ Auth::user()->nombre_completo }}</div>
-                        <div class="fc-topbar-role"> {{ Auth::user()->rol }} </div>
-                    </div>
                 </div>
             </header>
 
@@ -387,28 +371,6 @@
 
                 {{-- Columna principal --}}
                 <div class="fc-content-main">
-
-                    {{-- ── Hero ── --}}
-                    <div class="fc-hero">
-                        <div>
-                            <div class="fc-hero-badge">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="#a5b4fc">
-                                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-                                </svg>
-                                Super Administrador
-                            </div>
-                            <div class="fc-hero-title">Panel de Control Global</div>
-                            <div class="fc-hero-sub">
-                                Tienes acceso completo a todas las áreas y configuraciones del sistema.
-                            </div>
-                        </div>
-                        <div class="fc-hero-btns">
-                            <a href="{{ route('usuarios.index') }}" class=" {{ request()->routeIs('usuarios') ? 'active' : '' }}" }}>
-                                <button class="fc-btn-outline" > Gestionar Usuarios </button>
-                            </a>
-                            <button class="fc-btn-solid">Ver Permisos</button>
-                        </div>
-                    </div>
 
                     {{-- ── Estadísticas ── --}}
                     <div class="fc-stats">

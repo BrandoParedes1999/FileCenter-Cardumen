@@ -582,5 +582,4 @@ document.getElementById('searchAreas').addEventListener('input', function() {
     });
 });
 </script>
-
 </x-app-layout>
