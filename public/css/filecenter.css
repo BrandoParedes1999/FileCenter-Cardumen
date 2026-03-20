@@ -689,3 +689,249 @@
 .fc-monospace   { font-family: monospace; }
 .fc-ml-auto     { margin-left: auto; }
 
+
+/* ================================================
+   SUBIDA DE ARCHIVOS (CREATE)
+   ================================================ */
+.fc-dropzone {
+    border: 2px dashed #c7d2fe; border-radius: 14px;
+    background: #fafbff; padding: 40px 24px;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; text-align: center; cursor: pointer;
+    transition: border-color .2s, background .2s;
+    position: relative;
+}
+
+.fc-drop-icon {
+    width: 56px; height: 56px; border-radius: 16px;
+    background: rgba(99,102,241,0.1);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 14px;
+}
+
+.fc-drop-title { font-size: 15px; font-weight: 600; color: #1e293b; margin-bottom: 6px; }
+.fc-drop-sub { font-size: 13px; color: #94a3b8; margin-bottom: 14px; }
+
+.fc-drop-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: #fff; border: none; border-radius: 9px;
+    padding: 9px 18px; font-size: 13px; font-weight: 600;
+    cursor: pointer; pointer-events: none;
+    box-shadow: 0 4px 12px rgba(79,70,229,0.3);
+}
+
+.fc-drop-limit { font-size: 11px; color: #cbd5e1; margin-top: 10px; }
+
+
+.fc-file-prev-icon {
+    width: 42px; height: 42px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+.fc-file-prev-name { font-size: 13px; font-weight: 600; color: #1e293b; }
+.fc-file-prev-size { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+
+.fc-file-prev-remove {
+    margin-left: auto; width: 28px; height: 28px; border-radius: 7px;
+    border: 1px solid #e2e8f0; background: #fff; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #94a3b8; transition: all .15s;
+}
+
+.fc-tipos {
+    display: flex; flex-wrap: wrap; gap: 6px;
+}
+
+.fc-tipo-badge {
+    font-size: 10px; font-weight: 700; padding: 3px 9px;
+    border-radius: 20px; background: #f1f5f9; color: #475569;
+    text-transform: uppercase; letter-spacing: .06em;
+}
+
+.fc-progress-wrap { display: none; }
+.fc-progress-label {
+    display: flex; justify-content: space-between;
+    font-size: 12px; color: #475569; margin-bottom: 7px; font-weight: 600;
+}
+
+.fc-progress-bar-bg {
+    height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;
+}
+
+.fc-progress-bar {
+    height: 100%; border-radius: 4px;
+    background: linear-gradient(90deg, #4f46e5, #7c3aed);
+    width: 0%; transition: width .3s;
+}
+
+.fc-dest-card {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; background: rgba(79,70,229,0.05);
+    border: 1px solid rgba(99,102,241,0.2); border-radius: 12px;
+}
+
+.fc-dest-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: rgba(79,70,229,0.1);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+.fc-dest-label { font-size: 10px; font-weight: 700; color: #6366f1;
+    text-transform: uppercase; letter-spacing: .08em; margin-bottom: 2px; }
+
+.fc-dest-name { font-size: 14px; font-weight: 600; color: #1e293b; }
+.fc-dest-path { font-size: 11px; color: #94a3b8; font-family: monospace; margin-top: 2px; }
+
+.fc-form-footer-left { font-size: 12px; color: #94a3b8; }
+.fc-form-footer-right { display: flex; gap: 10px; }
+
+.fc-btn-cancel {
+    padding: 10px 20px; border-radius: 10px; border: 1px solid #e2e8f0;
+    background: #f8fafc; color: #475569; font-size: 13px; cursor: pointer;
+    text-decoration: none; transition: background .15s;
+}
+
+.fc-btn-submit {
+    padding: 10px 22px; border-radius: 10px; border: none;
+    background: linear-gradient(135deg, #059669, #10b981);
+    color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;
+    box-shadow: 0 4px 12px rgba(5,150,105,0.3);
+    transition: opacity .15s, transform .1s;
+    display: flex; align-items: center; gap: 7px;
+}
+
+/* ================================================
+   DETALLE DE ARCHIVO (SHOW)
+   ================================================ */
+.fc-file-header {
+    background: #fff; border: 1px solid #e2e8f0;
+    border-radius: 16px; overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+
+.fc-file-header-top {
+    padding: 24px 26px; display: flex; align-items: flex-start; gap: 18px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.fc-file-icon-wrap {
+    width: 64px; height: 64px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+.fc-file-name { font-size: 18px; font-weight: 700; color: #1e293b;
+    margin-bottom: 5px; word-break: break-word; line-height: 1.3; }
+
+.fc-file-meta-row {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;
+}
+
+.fc-file-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.fc-action-btn {
+    display: flex; align-items: center; gap: 7px;
+    padding: 9px 16px; border-radius: 9px; font-size: 13px; font-weight: 600;
+    cursor: pointer; text-decoration: none; transition: all .15s; border: 1px solid;
+}
+
+.fc-file-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 0; border-top: 1px solid #f1f5f9;
+}
+
+.fc-file-stat {
+    padding: 16px 20px; border-right: 1px solid #f1f5f9; text-align: center;
+}
+
+.fc-stat-val { font-size: 18px; font-weight: 700; color: #1e293b; }
+
+.fc-stat-lbl { font-size: 11px; color: #94a3b8; margin-top: 3px; font-weight: 500; }
+
+.fc-section-card {
+    background: #fff; border: 1px solid #e2e8f0;
+    border-radius: 14px; overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.fc-section-header {
+    padding: 16px 20px; border-bottom: 1px solid #f1f5f9;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; font-weight: 700; color: #1e293b;
+}
+
+.fc-section-icon {
+    width: 28px; height: 28px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.fc-section-body { padding: 18px 20px; }
+.fc-desc-text {
+    font-size: 13px; color: #475569; line-height: 1.8;
+}
+
+.fc-desc-empty { font-size: 13px; color: #94a3b8; font-style: italic; }
+
+
+.fc-edit-desc-form { display: none; }
+.fc-edit-desc-btns { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; }
+
+.fc-mini-btn {
+    padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1px solid #e2e8f0; background: #f8fafc; color: #475569;
+    transition: all .15s;
+}
+
+.fc-hash-box {
+    padding: 10px 14px; background: #f8fafc; border-radius: 8px;
+    font-family: monospace; font-size: 10px; color: #64748b;
+    word-break: break-all; line-height: 1.5; border: 1px solid #e2e8f0;
+    cursor: pointer; transition: background .15s;
+}
+
+.fc-ver-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border-bottom: 1px solid #f8fafc;
+    transition: background .15s;
+}
+
+.fc-ver-num {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(99,102,241,0.1); color: #4f46e5;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800; flex-shrink: 0;
+}
+
+.fc-ver-name { font-size: 13px; font-weight: 600; color: #1e293b; }
+.fc-ver-meta { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+
+.fc-ver-nota { font-size: 11px; color: #6366f1; margin-top: 2px;
+    font-style: italic; }
+
+.fc-ver-actions { margin-left: auto; display: flex; gap: 6px; }
+.fc-ver-btn {
+    padding: 5px 10px; border-radius: 7px; font-size: 11px; font-weight: 600;
+    cursor: pointer; border: 1px solid #e2e8f0; background: #f8fafc; color: #475569;
+    text-decoration: none; transition: all .15s; white-space: nowrap;
+}
+
+.fc-ver-badge-current {
+    font-size: 9px; font-weight: 700; color: #059669;
+    background: rgba(5,150,105,0.1); padding: 2px 7px;
+    border-radius: 20px; letter-spacing: .04em;
+}
+
+.fc-badge-pub  { background: rgba(5,150,105,0.1); color: #059669; }
+.fc-badge-priv { background: rgba(100,116,139,0.1); color: #475569; }
+
+
+/* ================================================
+   CHIPS DE ARCHIVO (EDIT+CREATE)
+   ================================================ */
+.fc-file-chip { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; }
+.fc-file-chip-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+.fc-file-chip-name { font-size: 13px; font-weight: 600; color: #1e293b; }
+
+.fc-file-chip-meta { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+
+.fc-field label { display: block; font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 7px; text-transform: uppercase; letter-spacing: .06em; }

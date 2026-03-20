@@ -17,15 +17,32 @@ class CarpetaController extends Controller
         $usuario = Auth::user();
 
         if (in_array($usuario->rol, ['Superadmin', 'Aux_QHSE'])) {
+            // Ven TODO: todas las empresas
             $carpetas = Carpeta::with(['empresa', 'hijos', 'creadoPor'])
                 ->whereNull('padre_id')
+                ->orderByRaw('(SELECT es_corporativo FROM empresas WHERE empresas.id = carpetas.empresa_id) DESC')
                 ->orderBy('empresa_id')
                 ->orderBy('nombre')
                 ->get();
         } else {
-            $carpetas = Carpeta::with(['hijos', 'creadoPor'])
-                ->where('empresa_id', $usuario->empresa_id)
+            // Usuarios normales: su empresa + carpetas del Corporativo (es_corporativo=1)
+            $carpetas = Carpeta::with(['empresa', 'hijos', 'creadoPor'])
                 ->whereNull('padre_id')
+                ->where(function ($q) use ($usuario) {
+                    // Su propia empresa
+                    $q->where('empresa_id', $usuario->empresa_id)
+                    // O el Corporativo (visible para todos)
+                    ->orWhereHas('empresa', fn($e) => $e->where('es_corporativo', true));
+                })
+                // Solo las de su empresa o las públicas del Corporativo
+                ->where(function ($q) use ($usuario) {
+                    $q->where('empresa_id', $usuario->empresa_id)
+                        ->orWhere(function ($q2) {
+                            $q2->whereHas('empresa', fn($e) => $e->where('es_corporativo', true))
+                                ->where('es_publico', true);
+                        });
+                })
+                ->orderByRaw('(SELECT es_corporativo FROM empresas WHERE empresas.id = carpetas.empresa_id) DESC')
                 ->orderBy('nombre')
                 ->get();
         }
@@ -62,10 +79,9 @@ class CarpetaController extends Controller
         $padre    = $request->query('padre_id') ? Carpeta::findOrFail($request->query('padre_id')) : null;
         $empresas = collect();
 
-        // Superadmin y Aux_QHSE pueden elegir la empresa destino
         if (in_array($usuario->rol, ['Superadmin', 'Aux_QHSE']) && !$padre) {
             $empresas = Empresa::where('activo', true)
-                ->orderByDesc('es_corporativo') // Corporativo primero
+                ->orderByDesc('es_corporativo')
                 ->orderBy('nombre')
                 ->get();
         }
@@ -89,12 +105,14 @@ class CarpetaController extends Controller
             'nombre.max'      => 'El nombre no puede superar 245 caracteres.',
         ]);
 
+        $empresaId = in_array($usuario->rol, ['Superadmin', 'Aux_QHSE'])
+            ? ($validated['empresa_id'] ?? $usuario->empresa_id)
+            : $usuario->empresa_id;
+
         $path = $this->calcularPath($validated['padre_id'] ?? null, $validated['nombre']);
 
         $carpeta = Carpeta::create([
-            'empresa_id' => in_array($usuario->rol, ['Superadmin', 'Aux_QHSE'])
-                ? ($validated['empresa_id'] ?? $usuario->empresa_id)
-                : $usuario->empresa_id,
+            'empresa_id' => $empresaId,
             'padre_id'   => $validated['padre_id'] ?? null,
             'nombre'     => $validated['nombre'],
             'path'       => $path,
@@ -152,7 +170,6 @@ class CarpetaController extends Controller
         if ($carpeta->hijos()->whereNull('deleted_at')->exists()) {
             return back()->withErrors(['error' => 'No puedes eliminar una carpeta que tiene subcarpetas.']);
         }
-
         if ($carpeta->archivos()->where('esta_eliminado', false)->exists()) {
             return back()->withErrors(['error' => 'No puedes eliminar una carpeta con archivos activos.']);
         }
@@ -165,8 +182,6 @@ class CarpetaController extends Controller
             $padreId ? route('carpetas.show', $padreId) : route('carpetas.index')
         )->with('success', "Carpeta \"{$nombre}\" eliminada.");
     }
-
-    // ── Helpers privados ──────────────────────────
 
     private function calcularPath(?int $padreId, string $nombre): string
     {
