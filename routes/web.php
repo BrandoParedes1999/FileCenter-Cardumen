@@ -3,9 +3,10 @@
 use App\Http\Controllers\ArchivoController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\CarpetaController;
-use App\Http\Controllers\PermisoCarpetaController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SolicitudAccesoController;
+use App\Http\Controllers\PermisoCarpetaController;
 use Illuminate\Support\Facades\Route;
 
 // ─────────────────────────────────────────────

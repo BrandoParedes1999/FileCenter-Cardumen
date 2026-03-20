@@ -1,56 +1,5 @@
 <x-app-layout>
-    <style>
-    .fc-profile-header {
-        background: #fff; border: 1px solid #e2e8f0; border-radius: 16px;
-        overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-        margin-bottom: 20px;
-    }
-    .fc-profile-cover {
-        height: 80px;
-        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%);
-    }
-    .fc-profile-body {
-        padding: 0 28px 24px; display: flex; align-items: flex-end;
-        gap: 20px; margin-top: -32px;
-    }
-    .fc-profile-avatar {
-        width: 72px; height: 72px; border-radius: 50%;
-        background: linear-gradient(135deg, #4f46e5, #7c3aed);
-        border: 4px solid #fff;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 22px; font-weight: 700; color: #fff; flex-shrink: 0;
-        box-shadow: 0 4px 16px rgba(79,70,229,0.3);
-    }
-    .fc-profile-info { flex: 1; padding-bottom: 4px; }
-    .fc-profile-name { font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
-    .fc-profile-email { font-size: 13px; color: #94a3b8; margin-bottom: 8px; }
-    .fc-profile-badges { display: flex; gap: 8px; flex-wrap: wrap; }
-    .fc-profile-actions { display: flex; gap: 8px; padding-bottom: 4px; }
-
-    .fc-act-item {
-        display: flex; align-items: flex-start; gap: 12px;
-        padding: 12px 0; border-bottom: 1px solid #f8fafc;
-    }
-    .fc-act-item:last-child { border-bottom: none; }
-    .fc-act-icon {
-        width: 30px; height: 30px; border-radius: 8px;
-        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
-    .fc-act-desc { font-size: 13px; color: #475569; line-height: 1.5; }
-    .fc-act-desc strong { color: #1e293b; font-weight: 600; }
-    .fc-act-time { font-size: 11px; color: #94a3b8; margin-top: 2px; }
-
-    .fc-rol-badge {
-        font-size: 11px; font-weight: 700; padding: 3px 10px;
-        border-radius: 20px; letter-spacing: .05em; text-transform: uppercase;
-    }
-    .rol-superadmin { background: rgba(124,58,237,0.12); color: #6d28d9; }
-    .rol-aux_qhse   { background: rgba(6,182,212,0.12);  color: #0e7490; }
-    .rol-admin      { background: rgba(79,70,229,0.12);  color: #4338ca; }
-    .rol-gerente    { background: rgba(5,150,105,0.12);  color: #065f46; }
-    .rol-auxiliar   { background: rgba(245,158,11,0.12); color: #92400e; }
-    .rol-empleado   { background: rgba(100,116,139,0.12);color: #334155; }
-    </style>
+    
 
     <div class="fc-wrapper">
         @include('components.sidebar')
