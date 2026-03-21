@@ -5,6 +5,7 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\CarpetaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\SolicitudAccesoController;
 use App\Http\Controllers\PermisoCarpetaController;
 use Illuminate\Support\Facades\Route;
@@ -140,6 +141,17 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
         Route::delete('permisos/{permiso}', [PermisoCarpetaController::class, 'destroy'])->name('destroy');
     });
 
+
+    // ─────────────────────────────────────────
+    // EMPRESAS
+    // ─────────────────────────────────────────
+
+    Route::resource('empresas', EmpresaController::class);
+    
+    Route::post('empresas/{empresa}/toggle-activo', [EmpresaController::class, 'toggleActivo'])
+        ->name('empresas.toggle-activo');
+
+        
 });
 
 require __DIR__.'/auth.php';
