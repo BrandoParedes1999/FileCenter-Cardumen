@@ -21,7 +21,7 @@
         | IMPORTANTE: Se eliminaron estas líneas que causaban
         | la doble navbar y el padding gris de fondo:
         |
-        |   ❌ @include('layouts.navigation')   ← navbar Breeze
+        |   ❌ @include('layouts.navigation')   ← navbar Breeze|
         |   ❌ div.min-h-screen.bg-gray-100     ← fondo gris
         |   ❌ @isset($header) ... @endisset    ← cabecera extra
         |

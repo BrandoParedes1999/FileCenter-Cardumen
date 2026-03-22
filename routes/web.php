@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AreaController;
 use App\Http\Controllers\ArchivoController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\CarpetaController;
@@ -31,22 +32,6 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])
     ->name('dashboard');
 
-    Route::get('/admin/dashboard', function () {
-        return view('dashboard');
-    })->name('admin.dashboard');
-
-    Route::get('/qhse/dashboard', function () {
-        return view('dashboard');
-    })->name('qhse.dashboard');
-
-    Route::get('/empresa/dashboard', function () {
-        return view('dashboard');
-    })->name('empresa.dashboard');
-
-    Route::get('/areas', function () {
-        return view('areas');
-    })->name('areas');
-
     // ─────────────────────────────────────────
     // CORPORATIVO
     // ─────────────────────────────────────────
@@ -55,29 +40,13 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
         return view('nosotros');
     })->middleware(['auth', 'verified'])->name('nosotros');
 
-    Route::get('/cardumen', function () {
-        return view('cardumen');
-    })->name('cardumen');
-
     // ─────────────────────────────────────────
     // ÁREAS
     // ─────────────────────────────────────────
 
-    Route::get('/seaward', function () {
-        return view('seaward');
-    })->name('seaward');
+    Route::get('/areas',              [AreaController::class, 'index'])->name('areas.index');
+    Route::get('/areas/{empresa}',    [AreaController::class, 'show'])->name('areas.show');
 
-    Route::get('/omc', function () {
-        return view('omc');
-    })->name('omc');
-
-    Route::get('/seatools', function () {
-        return view('seatools');
-    })->name('seatools');
-
-    Route::get('/tws', function () {
-        return view('tws');
-    })->name('tws');
 
     // ─────────────────────────────────────────
     // PERFIL
@@ -124,8 +93,8 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
 
     Route::resource('usuarios', UsuarioController::class);
 
-    Route::post('usuarios/{usuario}/toogle-activo', [UsuarioController::class, 'toggleActivo'])
-        ->name('usuarios.toogle-activo');
+    Route::post('usuarios/{usuario}/toggle-activo', [UsuarioController::class, 'toggleActivo'])
+        ->name('usuarios.toggle-activo');
 
     Route::post('usuarios/{usuario}/desbloquear', [UsuarioController::class, 'desbloquear'])
         ->name('usuarios.desbloquear');

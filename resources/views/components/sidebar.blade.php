@@ -112,6 +112,13 @@
             </svg>
             Solicitudes
         </a>
+        <a href="{{ route('areas.index') }}" 
+            class="fc-nav-item {{ request()->routeIs('areas.*') ? 'active' : '' }}">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M10 3H3v7h7V3zm11 0h-7v7h7V3zM10 14H3v7h7v-7zm11 3h-7v4h7v-4z"/>
+            </svg>
+            Mis Áreas
+        </a>
     </div>
 
     {{-- Sección corporativo/empresas --}}
