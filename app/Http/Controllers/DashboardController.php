@@ -112,9 +112,40 @@ class DashboardController extends Controller
             }
         }
 
+                $stats = [
+            [
+                'iconSvg' => '<svg width="18" height="18" viewBox="0 0 24 24" fill="#a78bfa"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z"/></svg>',
+                'value' => $totalUsuarios ?? 0,
+                'label' => 'Usuarios activos',
+                'trendText' => 'en el sistema',
+                'iconBg' => 'rgba(124,58,237,0.13)',
+            ],
+            [
+                'iconSvg' => '<svg width="18" height="18" viewBox="0 0 24 24" fill="#2dd4bf"><path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8z"/></svg>',
+                'value' => $totalEmpresas ?? 0,
+                'label' => 'Áreas activas',
+                'trendText' => 'empresas',
+                'iconBg' => 'rgba(13,148,136,0.13)',
+            ],
+            [
+                'iconSvg' => '<svg width="18" height="18" viewBox="0 0 24 24" fill="#fbbf24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg>',
+                'value' => $totalArchivos ?? 0,
+                'label' => 'Total archivos',
+                'trendText' => 'activos',
+                'iconBg' => 'rgba(217,119,6,0.13)',
+            ],
+            [
+                'iconSvg' => '<svg width="18" height="18" viewBox="0 0 24 24" fill="#60a5fa"><path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8z"/></svg>',
+                'value' => $totalCarpetas ?? 0,
+                'label' => 'Total carpetas',
+                'trendText' => 'en el sistema',
+                'iconBg' => 'rgba(29,78,216,0.13)',
+            ],
+        ];
+
         return view('dashboard', compact(
             'usuario', 'rol', 'esAdmin', 'esGestor', 'esEmpleado',
-            'totalUsuarios', 'totalEmpresas', 'totalArchivos', 'totalCarpetas',
+            'stats',
             'empresas', 'maxArchivos',
             'actividad', 'archivosRecientes',
             'usuariosPorRol', 'maxRol',

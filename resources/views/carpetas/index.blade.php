@@ -80,53 +80,61 @@
                     {{-- Vista Superadmin: carpetas agrupadas por empresa --}}
                     @php $porEmpresa = $carpetas->groupBy('empresa_id'); @endphp
 
-                    @foreach($porEmpresa as $empresaId => $grupo)
-                        @php $empresa = $grupo->first()->empresa; @endphp
+                    {{-- CONTENEDOR GRID PARA PONER LAS EMPRESAS LADO A LADO --}}
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; align-items: start;">
 
-                        <div class="fc-empresa-header">
-                            {{-- Chip de empresa con su color primario --}}
-                            @if($empresa && $empresa->es_corporativo)
-                                <span class="fc-empresa-badge corporativo">
-                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-                                    </svg>
-                                    {{ $empresa->nombre }}
-                                    <span style="font-size:9px;background:rgba(27,58,107,0.15);padding:1px 6px;border-radius:10px;">CORP</span>
-                                </span>
-                                <span style="font-size:12px;color:#94a3b8">Visible por todas las empresas</span>
-                            @else
-                                <span class="fc-empresa-badge empresa"
-                                        style="background:{{ $empresa->color_primario ?? '#4f46e5' }}18;color:{{ $empresa->color_primario ?? '#4f46e5' }};border-color:{{ $empresa->color_primario ?? '#4f46e5' }}33">
-                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12 7V3H2v18h20V7H12z"/>
-                                    </svg>
-                                    {{ $empresa->nombre ?? 'Empresa' }}
-                                </span>
-                            @endif
+                        @foreach($porEmpresa as $empresaId => $grupo)
+                            @php $empresa = $grupo->first()->empresa; @endphp
 
-                            @can('create', App\Models\Carpeta::class)
-                            <a href="{{ route('carpetas.create', ['empresa_id' => $empresaId]) }}"
-                                style="margin-left:auto;font-size:12px;color:#6366f1;text-decoration:none;display:flex;align-items:center;gap:5px;">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-                                Nueva carpeta aquí
-                            </a>
-                            @endcan
-                        </div>
+                            {{-- BLOQUE INDIVIDUAL DE CADA EMPRESA (Actúa como columna) --}}
+                            <div class="fc-empresa-bloque">
+                                
+                                <div class="fc-empresa-header" style="margin-top: 0; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                                    {{-- Chip de empresa con su color primario --}}
+                                    @if($empresa && $empresa->es_corporativo)
+                                        <span class="fc-empresa-badge corporativo">
+                                            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                                            </svg>
+                                            {{ $empresa->nombre }}
+                                            <span style="font-size:9px;background:rgba(27,58,107,0.15);padding:1px 6px;border-radius:10px;margin-left:4px;">CORP</span>
+                                        </span>
+                                    @else
+                                        <span class="fc-empresa-badge empresa"
+                                                style="background:{{ $empresa->color_primario ?? '#4f46e5' }}18;color:{{ $empresa->color_primario ?? '#4f46e5' }};border-color:{{ $empresa->color_primario ?? '#4f46e5' }}33">
+                                            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M12 7V3H2v18h20V7H12z"/>
+                                            </svg>
+                                            {{ $empresa->nombre ?? 'Empresa' }}
+                                        </span>
+                                    @endif
 
-                        {{-- Grid --}}
-                        <div class="fc-folders-grid carpetas-container" id="grid_{{ $empresaId }}">
-                            @foreach($grupo as $carpeta)
-                                @include('carpetas._card', ['carpeta' => $carpeta])
-                            @endforeach
-                        </div>
-                        {{-- Lista (oculta) --}}
-                        <div class="fc-folders-list carpetas-container" id="list_{{ $empresaId }}" style="display:none">
-                            @foreach($grupo as $carpeta)
-                                @include('carpetas._row', ['carpeta' => $carpeta])
-                            @endforeach
-                        </div>
+                                    @can('create', App\Models\Carpeta::class)
+                                    <a href="{{ route('carpetas.create', ['empresa_id' => $empresaId]) }}"
+                                        style="font-size:12px;color:#6366f1;text-decoration:none;display:flex;align-items:center;gap:5px;">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                                        Nueva carpeta
+                                    </a>
+                                    @endcan
+                                </div>
 
-                    @endforeach
+                                {{-- Grid interno de las carpetas de esta empresa --}}
+                                <div class="fc-folders-grid carpetas-container" id="grid_{{ $empresaId }}" style="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); margin-bottom: 0;">
+                                    @foreach($grupo as $carpeta)
+                                        @include('carpetas._card', ['carpeta' => $carpeta])
+                                    @endforeach
+                                </div>
+                                {{-- Lista (oculta) --}}
+                                <div class="fc-folders-list carpetas-container" id="list_{{ $empresaId }}" style="display:none; margin-bottom: 0;">
+                                    @foreach($grupo as $carpeta)
+                                        @include('carpetas._row', ['carpeta' => $carpeta])
+                                    @endforeach
+                                </div>
+
+                            </div>{{-- FIN BLOQUE EMPRESA --}}
+                        @endforeach
+
+                    </div>{{-- FIN CONTENEDOR GRID --}}
 
                 @else
                     {{-- Vista usuario normal: solo su empresa --}}
@@ -159,13 +167,24 @@ function setView(v) {
     document.querySelectorAll('[id^="grid"]').forEach(el => el.style.display = v === 'grid' ? 'grid' : 'none');
     document.querySelectorAll('[id^="list"]').forEach(el => el.style.display = v === 'list' ? 'flex' : 'none');
 }
+
 function filtrarCarpetas(q) {
     const t = q.toLowerCase();
+    
+    // Filtramos las tarjetas individuales
     document.querySelectorAll('[data-nombre]').forEach(el => {
         el.style.display = el.dataset.nombre.toLowerCase().includes(t) ? '' : 'none';
     });
+
+    // Filtramos los bloques de las empresas (ocultar si no hay coincidencias)
+    document.querySelectorAll('.fc-empresa-bloque').forEach(bloque => {
+        // Contamos cuántas carpetas están visibles dentro de este bloque
+        const visibles = Array.from(bloque.querySelectorAll('[data-nombre]'))
+                              .filter(el => el.style.display !== 'none').length;
+                              
+        // Si hay al menos 1 visible, mostramos el bloque, sino lo ocultamos
+        bloque.style.display = visibles > 0 ? 'block' : 'none';
+    });
 }
-
-
 </script>
 </x-app-layout>
