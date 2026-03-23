@@ -1,5 +1,27 @@
 <x-app-layout>
-@section('title', 'Gestión de Áreas')
+<div class="fc-wrapper">
+
+    @include('components.sidebar')
+
+    <div class="fc-main">
+
+        <header class="fc-topbar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#6366f1">
+                <path d="M10 3H3v7h7V3zm11 0h-7v7h7V3zM10 14H3v7h7v-7zm11 3h-7v4h7v-4z"/>
+            </svg>
+            <span class="fc-topbar-title">Gestión de Áreas</span>
+            <div class="fc-topbar-right">
+                <div class="fc-topbar-avatar">
+                    {{ strtoupper(substr(Auth::user()->nombre,0,1)) }}{{ strtoupper(substr(Auth::user()->paterno,0,1)) }}
+                </div>
+                <div>
+                    <div class="fc-topbar-name">{{ Auth::user()->nombre_completo }}</div>
+                    <div class="fc-topbar-role">{{ Auth::user()->rol }}</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="fc-content">
 
 @php
     $userEmpresa = Auth::user()->empresa;
@@ -224,4 +246,8 @@ function setFiltro(btn, tipo) {
     });
 }
 </script>
+
+        </div>{{-- /fc-content --}}
+    </div>{{-- /fc-main --}}
+</div>{{-- /fc-wrapper --}}
 </x-app-layout>

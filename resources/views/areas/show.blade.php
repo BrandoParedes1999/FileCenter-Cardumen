@@ -1,7 +1,12 @@
 <x-app-layout>
-@section('title', $empresa->nombre)
+<div class="fc-wrapper">
 
-@section('content')
+    @include('components.sidebar')
+
+    <div class="fc-main">
+        {{-- fc-content sin padding para que area-layout ocupe todo el espacio --}}
+        <div class="fc-content" style="padding:0;overflow:hidden">
+
 @php
     $bg     = $empresa->color_primario   ?? '#1B3A6B';
     $accent = $empresa->color_secundario ?? '#2E5FA3';
@@ -32,7 +37,7 @@
     .area-logo-box                     { box-shadow: 0 2px 8px {{ $accent }}22; }
 </style>
 
-<div class="area-layout">
+<div class="area-layout" style="height:100%;margin:0">
 
     {{-- ── Sidebar de carpetas ────────────────────────── --}}
     <div class="carpetas-sidebar">
@@ -243,4 +248,8 @@ function selectCarpeta(el) {
     if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 </script>
+
+        </div>{{-- /fc-content --}}
+    </div>{{-- /fc-main --}}
+</div>{{-- /fc-wrapper --}}
 </x-app-layout>
