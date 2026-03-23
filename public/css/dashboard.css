@@ -1,0 +1,406 @@
+/* public/css/dashboard.css */
+
+/* ================================================
+   DASHBOARD — ESTILOS EXCLUSIVOS
+   ================================================ */
+
+/* Hero Banner */
+.fc-hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%);
+    border-radius: 14px;
+    padding: 24px 28px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    box-shadow: 0 10px 15px -3px rgba(30, 27, 75, 0.2);
+}
+.fc-hero-badge {
+    font-size: 12px;
+    color: #c7d2fe;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+.fc-hero-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 6px;
+}
+.fc-hero-sub {
+    font-size: 13px;
+    color: #c7d2fe;
+}
+.fc-hero-btns {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+.fc-btn-outline {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s;
+}
+.fc-btn-outline:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+.fc-btn-solid {
+    background: #ffffff;
+    border: 1px solid #ffffff;
+    color: #312e81;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s;
+}
+.fc-btn-solid:hover {
+    background: #f1f5f9;
+}
+
+/* Estadísticas */
+.fc-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 18px;
+}
+.fc-stat {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 18px 20px;
+    position: relative;
+    box-shadow: 6px 6px 12px #e2e8f0, -4px -4px 10px #ffffff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.fc-stat:hover {
+    transform: translateY(-3px);
+    box-shadow: 10px 10px 20px #d1d9e6, -6px -6px 15px #ffffff;
+}
+.fc-stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+.fc-stat-arrow {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    color: #94a3b8;
+    font-size: 18px;
+}
+.fc-stat-num {
+    font-size: 30px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1;
+}
+.fc-stat-label {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 5px;
+}
+.fc-stat-trend {
+    font-size: 12px;
+    margin-top: 7px;
+}
+.fc-stat-trend.pos {
+    color: #16a34a;
+}
+.fc-stat-trend.neutral {
+    color: #64748b;
+}
+
+/* Gráfica */
+.fc-chart-box {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 18px;
+    box-shadow: 6px 6px 12px #e2e8f0, -4px -4px 10px #ffffff;
+}
+.fc-chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+}
+.fc-chart-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #0f172a;
+}
+.fc-chart-sub {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+/* Áreas */
+.fc-areas-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.fc-areas-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #0f172a;
+}
+.fc-areas-link {
+    font-size: 13px;
+    color: #6366f1;
+    cursor: pointer;
+    text-decoration: none;
+}
+.fc-areas-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.fc-area-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    text-decoration: none;
+    box-shadow: 4px 4px 8px #e2e8f0, -2px -2px 6px #ffffff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.fc-area-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 12px #cbd5e1, -4px -4px 10px #ffffff;
+}
+.fc-area-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+}
+.fc-area-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+}
+.fc-area-meta {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 2px;
+}
+.fc-area-chevron {
+    color: #94a3b8;
+    font-size: 20px;
+}
+
+/* Actividad */
+.fc-activity-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: 6px 6px 12px #e2e8f0, -4px -4px 10px #ffffff;
+}
+.fc-activity-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.fc-act-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+.fc-act-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.fc-act-name {
+    font-size: 13px;
+    color: #475569;
+    line-height: 1.4;
+}
+.fc-act-name strong {
+    color: #0f172a;
+    font-weight: 600;
+}
+.fc-act-file {
+    font-size: 12px;
+    color: #6366f1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+}
+.fc-act-time {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+/* Roles */
+.fc-roles-card {
+    background: #feffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 6px 6px 12px #e2e8f0, -4px -4px 10px #ffffff;
+}
+.fc-roles-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0a0a0a;
+    margin-bottom: 14px;
+}
+.fc-role-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.fc-role-name {
+    font-size: 12px;
+    color: #475569;
+    width: 55px;
+}
+.fc-role-bar-bg {
+    flex: 1;
+    height: 7px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: inset 1px 1px 3px #d1d9e6;
+}
+.fc-role-bar {
+    height: 100%;
+    border-radius: 4px;
+}
+.fc-role-count {
+    font-size: 12px;
+    color: #0a0a0a;
+    width: 20px;
+    text-align: right;
+    font-weight: 600;
+}
+
+/* Iconos SVG para actividad */
+.icon-up   { fill: #10b981; }
+.icon-down { fill: #f59e0b; }
+.icon-plus { fill: #6366f1; }
+.bg-up     { background: rgba(16, 185, 129, 0.1); }
+.bg-down   { background: rgba(245, 158, 11, 0.1);  }
+.bg-plus   { background: rgba(99, 102, 241, 0.1); }
+
+/* Modo oscuro */
+.dark .fc-hero {
+    background: linear-gradient(135deg, #0f0c2c, #1e1b4b);
+}
+.dark .fc-stat {
+    background: #13111f;
+    border-color: #1e1b4b;
+    box-shadow: 4px 4px 10px #0a0918, -2px -2px 8px #1a1830;
+}
+.dark .fc-stat:hover {
+    box-shadow: 6px 6px 16px #0a0918, -4px -4px 12px #1a1830;
+}
+.dark .fc-stat-num   { color: #e0e7ff; }
+.dark .fc-stat-label { color: #6366f1; }
+.dark .fc-stat-arrow { color: #4f46e5; }
+.dark .fc-stat-trend.pos     { color: #34d399; }
+.dark .fc-stat-trend.neutral { color: #6366f1; }
+
+.dark .fc-chart-box {
+    background: #13111f;
+    border-color: #1e1b4b;
+    box-shadow: 4px 4px 10px #0a0918, -2px -2px 8px #1a1830;
+}
+.dark .fc-chart-title { color: #e0e7ff; }
+.dark .fc-chart-sub   { color: #6366f1; }
+
+.dark .fc-areas-title { color: #e0e7ff; }
+.dark .fc-area-card {
+    background: #13111f;
+    border-color: #1e1b4b;
+    box-shadow: 3px 3px 8px #0a0918, -2px -2px 6px #1a1830;
+}
+.dark .fc-area-card:hover {
+    box-shadow: 5px 5px 14px #0a0918, -3px -3px 10px #1a1830;
+    border-color: #4f46e5;
+}
+.dark .fc-area-name    { color: #e0e7ff; }
+.dark .fc-area-meta    { color: #6366f1; }
+.dark .fc-area-chevron { color: #4f46e5; }
+
+.dark .fc-activity-card {
+    background: #13111f;
+    border-color: #1e1b4b;
+    box-shadow: 4px 4px 10px #0a0918, -2px -2px 8px #1a1830;
+}
+.dark .fc-activity-title { color: #e0e7ff; }
+.dark .fc-act-item       { border-color: #1e1b4b; }
+.dark .fc-act-name       { color: #a5b4fc; }
+.dark .fc-act-name strong { color: #e0e7ff; }
+.dark .fc-act-file       { color: #818cf8; }
+.dark .fc-act-time       { color: #4f46e5; }
+
+.dark .fc-roles-card {
+    background: #13111f;
+    border-color: #1e1b4b;
+    box-shadow: 4px 4px 10px #0a0918, -2px -2px 8px #1a1830;
+}
+.dark .fc-roles-title  { color: #e0e7ff; }
+.dark .fc-role-name    { color: #a5b4fc; }
+.dark .fc-role-count   { color: #e0e7ff; }
+.dark .fc-role-bar-bg  {
+    background: #1e1b4b;
+    box-shadow: inset 1px 1px 3px #0a0918;
+}
+
+.fc-content-side {
+    width: 300px;
+    min-width: 300px;
+}
+
+.fc-content {
+    display: flex;
+    gap: 24px; 
+    align-items: flex-start; 
+}
+
+.fc-content-main {
+    flex: 1;
+    min-width: 0; 
+}
