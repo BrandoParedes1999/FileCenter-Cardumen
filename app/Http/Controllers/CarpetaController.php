@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Carpeta;
 use App\Models\Empresa;
+use App\Models\PermisoCarpeta;
 use App\Models\RegistroActividad;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,6 @@ class CarpetaController extends Controller
         $usuario = Auth::user();
 
         if (in_array($usuario->rol, ['Superadmin', 'Aux_QHSE'])) {
-            // Ven TODO: todas las empresas
             $carpetas = Carpeta::with(['empresa', 'hijos', 'creadoPor'])
                 ->whereNull('padre_id')
                 ->orderByRaw('(SELECT es_corporativo FROM empresas WHERE empresas.id = carpetas.empresa_id) DESC')
@@ -25,22 +25,18 @@ class CarpetaController extends Controller
                 ->orderBy('nombre')
                 ->get();
         } else {
-            // Usuarios normales: su empresa + carpetas del Corporativo (es_corporativo=1)
             $carpetas = Carpeta::with(['empresa', 'hijos', 'creadoPor'])
                 ->whereNull('padre_id')
                 ->where(function ($q) use ($usuario) {
-                    // Su propia empresa
                     $q->where('empresa_id', $usuario->empresa_id)
-                    // O el Corporativo (visible para todos)
-                    ->orWhereHas('empresa', fn($e) => $e->where('es_corporativo', true));
+                      ->orWhereHas('empresa', fn($e) => $e->where('es_corporativo', true));
                 })
-                // Solo las de su empresa o las públicas del Corporativo
                 ->where(function ($q) use ($usuario) {
                     $q->where('empresa_id', $usuario->empresa_id)
-                        ->orWhere(function ($q2) {
-                            $q2->whereHas('empresa', fn($e) => $e->where('es_corporativo', true))
-                                ->where('es_publico', true);
-                        });
+                      ->orWhere(function ($q2) {
+                          $q2->whereHas('empresa', fn($e) => $e->where('es_corporativo', true))
+                             ->where('es_publico', true);
+                      });
                 })
                 ->orderByRaw('(SELECT es_corporativo FROM empresas WHERE empresas.id = carpetas.empresa_id) DESC')
                 ->orderBy('nombre')
@@ -110,15 +106,24 @@ class CarpetaController extends Controller
             : $usuario->empresa_id;
 
         $path = $this->calcularPath($validated['padre_id'] ?? null, $validated['nombre']);
+        $esPublico = $validated['es_publico'] ?? false;
 
         $carpeta = Carpeta::create([
             'empresa_id' => $empresaId,
             'padre_id'   => $validated['padre_id'] ?? null,
             'nombre'     => $validated['nombre'],
             'path'       => $path,
-            'es_publico' => $validated['es_publico'] ?? false,
+            'es_publico' => $esPublico,
             'creado_por' => $usuario->id,
         ]);
+
+        // ── Auto-crear permisos para Admin y Gerente de la empresa ──
+        // Las carpetas privadas requieren PermisoCarpeta explícito para descargar.
+        // Al crear, se genera automáticamente un permiso completo por rol
+        // para que Admin y Gerente de la empresa operen sin configuración manual.
+        if (!$esPublico) {
+            $this->crearPermisosIniciales($carpeta, $usuario->id);
+        }
 
         RegistroActividad::registrar('crear_carpeta', 'carpeta', $carpeta->id, "Creó carpeta: {$carpeta->nombre}");
 
@@ -143,12 +148,19 @@ class CarpetaController extends Controller
         ]);
 
         $nombreAnterior = $carpeta->nombre;
+        $eraPublica     = $carpeta->es_publico;
+        $ahoraPublica   = $validated['es_publico'] ?? false;
 
         $carpeta->update([
             'nombre'     => $validated['nombre'],
-            'es_publico' => $validated['es_publico'] ?? false,
+            'es_publico' => $ahoraPublica,
             'path'       => $this->calcularPath($carpeta->padre_id, $validated['nombre']),
         ]);
+
+        // Si se cambió de pública → privada, crear permisos iniciales para gestores
+        if ($eraPublica && !$ahoraPublica) {
+            $this->crearPermisosIniciales($carpeta, Auth::id());
+        }
 
         RegistroActividad::registrar(
             'editar', 'carpeta', $carpeta->id,
@@ -183,6 +195,8 @@ class CarpetaController extends Controller
         )->with('success', "Carpeta \"{$nombre}\" eliminada.");
     }
 
+    // ── Helpers privados ──────────────────────────────────────────────────
+
     private function calcularPath(?int $padreId, string $nombre): string
     {
         if (!$padreId) return '/' . $nombre;
@@ -199,5 +213,35 @@ class CarpetaController extends Controller
             $actual = $actual->padre;
         }
         return $migas;
+    }
+
+    /**
+     * Crea permisos completos automáticos para Admin y Gerente de la empresa
+     * cuando se crea o se hace privada una carpeta.
+     *
+     * Esto garantiza que los gestores puedan operar sin configuración manual,
+     * siendo consistentes con la regla de PermisoCarpeta estricto en la Policy.
+     */
+    private function crearPermisosIniciales(Carpeta $carpeta, int $creadoPor): void
+    {
+        foreach (['Admin', 'Gerente'] as $rol) {
+            PermisoCarpeta::updateOrCreate(
+                [
+                    'carpeta_id' => $carpeta->id,
+                    'empresa_id' => $carpeta->empresa_id,
+                    'rol'        => $rol,
+                    'usuario_id' => null,
+                ],
+                [
+                    'puede_leer'      => true,
+                    'puede_subir'     => true,
+                    'puede_editar'    => true,
+                    'puede_borrar'    => true,
+                    'puede_descargar' => true,
+                    'heredar'         => true,
+                    'concedido_por'   => $creadoPor,
+                ]
+            );
+        }
     }
 }

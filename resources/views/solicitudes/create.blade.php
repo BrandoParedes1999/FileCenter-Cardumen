@@ -45,8 +45,11 @@
                             </svg>
                         </div>
                         <div>
-                            <div class="fc-form-title">Solicitar acceso a un archivo</div>
-                            <div class="fc-form-sub">Un administrador revisará tu solicitud y te notificará la decisión</div>
+                            <div class="fc-form-title">Solicitar acceso a un recurso</div>
+                            <div class="fc-form-sub">
+                                Solicita acceso a archivos o carpetas de otras empresas del grupo.
+                                Un administrador revisará tu solicitud.
+                            </div>
                         </div>
                     </div>
 
@@ -54,9 +57,30 @@
                         @csrf
                         <div class="fc-form-body">
 
-                            {{-- Si viene con archivo_id preseleccionado --}}
+                            {{-- Empresa objetivo --}}
+                            <div class="fc-field">
+                                <label for="empresa_objetivo_id">Empresa a la que solicitas acceso *</label>
+                                <select id="empresa_objetivo_id" name="empresa_objetivo_id" required>
+                                    <option value="">— Selecciona empresa —</option>
+                                    @foreach($empresas as $emp)
+                                        {{-- No puede solicitar a su propia empresa --}}
+                                        @if($emp->id !== Auth::user()->empresa_id)
+                                        <option value="{{ $emp->id }}"
+                                                {{ old('empresa_objetivo_id') == $emp->id ? 'selected' : '' }}>
+                                            {{ $emp->es_corporativo ? '🏢' : '🏭' }} {{ $emp->nombre }}
+                                        </option>
+                                        @endif
+                                    @endforeach
+                                </select>
+                                @error('empresa_objetivo_id')
+                                <span class="fc-field-error">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            {{-- Archivo preseleccionado --}}
                             @if(isset($archivo) && $archivo)
                             <input type="hidden" name="archivo_id" value="{{ $archivo->id }}">
+                            <input type="hidden" name="empresa_objetivo_id" value="{{ $archivo->carpeta->empresa_id ?? '' }}">
 
                             <div class="fc-info-chip">
                                 <div class="fc-info-chip-icon">
@@ -68,44 +92,67 @@
                                     <div class="fc-info-chip-label">Archivo solicitado</div>
                                     <div class="fc-info-chip-name">{{ $archivo->nombre_original }}</div>
                                     <div class="fc-info-chip-sub">
-                                        {{ strtoupper($archivo->extension) }} · {{ $archivo->tamanioFormateado() }} · Carpeta: {{ $archivo->carpeta->nombre }}
+                                        {{ strtoupper($archivo->extension) }} · {{ $archivo->tamanioFormateado() }}
+                                        · Carpeta: {{ $archivo->carpeta->nombre ?? '—' }}
                                     </div>
                                 </div>
                             </div>
 
+                            @elseif(isset($carpeta) && $carpeta)
+                            <input type="hidden" name="carpeta_id" value="{{ $carpeta->id }}">
+                            <input type="hidden" name="empresa_objetivo_id" value="{{ $carpeta->empresa_id }}">
+
+                            <div class="fc-info-chip">
+                                <div class="fc-info-chip-icon">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#4f46e5">
+                                        <path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="fc-info-chip-label">Carpeta solicitada</div>
+                                    <div class="fc-info-chip-name">{{ $carpeta->nombre }}</div>
+                                    <div class="fc-info-chip-sub">{{ $carpeta->path }}</div>
+                                </div>
+                            </div>
+
                             @else
-                            {{-- Selector de archivo libre --}}
+                            {{-- Sin preselección: mostrar selector de archivo_id o carpeta_id vacíos --}}
+                            <input type="hidden" name="archivo_id" value="">
+                            <input type="hidden" name="carpeta_id" value="">
+                            @endif
+
+                            {{-- Tipo de acceso --}}
                             <div class="fc-field">
-                                <label for="archivo_id">Archivo al que solicitas acceso *</label>
-                                <select id="archivo_id" name="archivo_id" required>
-                                    <option value="">— Selecciona un archivo —</option>
-                                    @if(isset($archivos))
-                                        @foreach($archivos as $carpetaNombre => $archivosGrupo)
-                                        <optgroup label="{{ $carpetaNombre }}">
-                                            @foreach($archivosGrupo as $arch)
-                                            <option value="{{ $arch->id }}" {{ old('archivo_id') == $arch->id ? 'selected' : '' }}>
-                                                {{ $arch->nombre_original }}
-                                            </option>
-                                            @endforeach
-                                        </optgroup>
-                                        @endforeach
-                                    @endif
-                                </select>
-                                @error('archivo_id')
+                                <label>Tipo de acceso solicitado *</label>
+                                <div style="display:flex;gap:10px;margin-top:6px">
+                                    @foreach(['Lectura' => ['👁', 'Solo ver el recurso'], 'Descargar' => ['⬇', 'Ver y descargar archivos']] as $val => [$icono, $hint])
+                                    <label style="flex:1;display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid {{ old('tipo_acceso','Lectura') === $val ? '#6366f1' : 'var(--fc-border)' }};border-radius:10px;cursor:pointer;transition:border-color .15s"
+                                           onclick="this.parentElement.querySelectorAll('label').forEach(l=>l.style.borderColor='var(--fc-border)');this.style.borderColor='#6366f1'">
+                                        <input type="radio" name="tipo_acceso" value="{{ $val }}"
+                                               {{ old('tipo_acceso','Lectura') === $val ? 'checked' : '' }}
+                                               style="accent-color:#6366f1">
+                                        <div>
+                                            <div style="font-size:13px;font-weight:600;color:var(--fc-text)">{{ $icono }} {{ $val }}</div>
+                                            <div style="font-size:11px;color:var(--fc-text-muted)">{{ $hint }}</div>
+                                        </div>
+                                    </label>
+                                    @endforeach
+                                </div>
+                                @error('tipo_acceso')
                                 <span class="fc-field-error">{{ $message }}</span>
                                 @enderror
                             </div>
-                            @endif
 
-                            {{-- Motivo --}}
+                            {{-- Razón: campo correcto es 'razon' (mínimo 10 chars) --}}
                             <div class="fc-field">
-                                <label for="motivo">Motivo de la solicitud *</label>
-                                <textarea id="motivo" name="motivo" rows="4"
-                                    placeholder="Explica por qué necesitas acceso a este archivo...">{{ old('motivo') }}</textarea>
+                                <label for="razon">Justificación de la solicitud *</label>
+                                <textarea id="razon" name="razon" rows="4" required
+                                    minlength="10" maxlength="1000"
+                                    placeholder="Explica detalladamente por qué necesitas acceso a este recurso...">{{ old('razon') }}</textarea>
                                 <div class="fc-field-hint">
-                                    Describe el propósito del acceso. Esto ayuda al administrador a tomar una decisión informada.
+                                    Mínimo 10 caracteres. Máximo 1,000. Esta justificación es revisada por el administrador.
                                 </div>
-                                @error('motivo')
+                                @error('razon')
                                 <span class="fc-field-error">{{ $message }}</span>
                                 @enderror
                             </div>
@@ -116,15 +163,15 @@
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="#4f46e5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
                                     ¿Cómo funciona?
                                 </div>
-                                <div style="font-size:12px;color:#475569;line-height:1.7">
-                                    1. Envías esta solicitud con el motivo de acceso.<br>
-                                    2. Un administrador la revisa y decide aprobarla o rechazarla.<br>
-                                    3. Recibirás una notificación con la decisión.<br>
-                                    4. Si es aprobada, podrás descargar el archivo desde esta sección.
+                                <div style="font-size:12px;color:#475569;line-height:1.8">
+                                    1. Envías esta solicitud con tu justificación.<br>
+                                    2. Un administrador de la empresa objetivo la revisa.<br>
+                                    3. Si es aprobada, el sistema otorga el permiso automáticamente.<br>
+                                    4. Si es rechazada, recibirás el motivo del rechazo.
                                 </div>
                             </div>
 
-                        </div>{{-- /fc-form-body --}}
+                        </div>
 
                         <div class="fc-form-footer">
                             <a href="{{ route('solicitudes.index') }}" class="fc-btn fc-btn-outline">Cancelar</a>
@@ -135,10 +182,10 @@
                         </div>
                     </form>
 
-                </div>{{-- /fc-form-card --}}
-            </div>{{-- /fc-form-wrap --}}
+                </div>
+            </div>
 
-        </div>{{-- /fc-content --}}
-    </div>{{-- /fc-main --}}
-</div>{{-- /fc-wrapper --}}
+        </div>
+    </div>
+</div>
 </x-app-layout>
