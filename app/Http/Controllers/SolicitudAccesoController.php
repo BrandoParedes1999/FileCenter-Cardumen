@@ -14,15 +14,6 @@ use Illuminate\View\View;
 
 class SolicitudAccesoController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
-    // ─────────────────────────────────────────────
-    // INDEX — lista de solicitudes
-    // ─────────────────────────────────────────────
-
     public function index(): View
     {
         $usuario = Auth::user();

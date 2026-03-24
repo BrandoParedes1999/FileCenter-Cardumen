@@ -25,7 +25,7 @@
                 <button href= "#" class="fc-btn-outline">{{ $buttonLeft }}</button>
             @endif
             @if($buttonRight)
-                <button class="fc-btn-solid">{{ $buttonRight }}</button>
+                <button href= "#" class="fc-btn-solid">{{ $buttonRight }}</button>
             @endif
         </div>
     @endif
