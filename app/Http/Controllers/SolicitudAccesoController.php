@@ -14,38 +14,84 @@ use Illuminate\View\View;
 
 class SolicitudAccesoController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         $usuario = Auth::user();
+        $filtroStatus = $request->query('status'); // null = todas
 
-        // Superadmin y Aux_QHSE ven todas las solicitudes
+        // ── Superadmin y Aux_QHSE — ven TODAS ──────────────────
         if (in_array($usuario->rol, ['Superadmin', 'Aux_QHSE'])) {
-            $solicitudes = SolicitudAcceso::with(['solicitante', 'empresaObjetivo', 'carpeta', 'archivo', 'revisor'])
-                ->orderByRaw("FIELD(status, 'Pendiente', 'Aprobado', 'Rechazado')")
-                ->orderBy('created_at', 'desc')
-                ->paginate(25);
+            $query = SolicitudAcceso::with([
+                'solicitante.empresa',
+                'empresaObjetivo',
+                'carpeta',
+                'archivo.carpeta',
+                'revisor',
+            ]);
 
-            return view('solicitudes.index', compact('solicitudes'));
+            if ($filtroStatus && in_array($filtroStatus, ['Pendiente', 'Aprobado', 'Rechazado'])) {
+                $query->where('status', $filtroStatus);
+            }
+
+            $solicitudes = $query
+                ->orderByRaw("CASE status
+                    WHEN 'Pendiente' THEN 1
+                    WHEN 'Aprobado'  THEN 2
+                    WHEN 'Rechazado' THEN 3
+                    ELSE 4 END")
+                ->orderBy('created_at', 'desc')
+                ->paginate(25)
+                ->withQueryString();
+
+            return view('solicitudes.index', compact('solicitudes', 'filtroStatus'));
         }
 
-        // Admin y Gerente ven solicitudes dirigidas a su empresa
+        // ── Admin y Gerente — ven solicitudes dirigidas a su empresa ──
         if (in_array($usuario->rol, ['Admin', 'Gerente'])) {
-            $solicitudes = SolicitudAcceso::with(['solicitante', 'carpeta', 'archivo', 'revisor'])
-                ->where('empresa_objetivo_id', $usuario->empresa_id)
-                ->orderByRaw("FIELD(status, 'Pendiente', 'Aprobado', 'Rechazado')")
-                ->orderBy('created_at', 'desc')
-                ->paginate(25);
+            $query = SolicitudAcceso::with([
+                'solicitante.empresa',
+                'empresaObjetivo',
+                'carpeta',
+                'archivo.carpeta',
+                'revisor',
+            ])->where('empresa_objetivo_id', $usuario->empresa_id);
 
-            return view('solicitudes.index', compact('solicitudes'));
+            if ($filtroStatus && in_array($filtroStatus, ['Pendiente', 'Aprobado', 'Rechazado'])) {
+                $query->where('status', $filtroStatus);
+            }
+
+            $solicitudes = $query
+                ->orderByRaw("CASE status
+                    WHEN 'Pendiente' THEN 1
+                    WHEN 'Aprobado'  THEN 2
+                    WHEN 'Rechazado' THEN 3
+                    ELSE 4 END")
+                ->orderBy('created_at', 'desc')
+                ->paginate(25)
+                ->withQueryString();
+
+            return view('solicitudes.index', compact('solicitudes', 'filtroStatus'));
         }
 
-        // El resto solo ve sus propias solicitudes
-        $solicitudes = SolicitudAcceso::with(['empresaObjetivo', 'carpeta', 'archivo', 'revisor'])
-            ->where('solicitante_id', $usuario->id)
-            ->orderBy('created_at', 'desc')
-            ->paginate(25);
+        // ── Auxiliar / Empleado — ven sus propias solicitudes ──
+        $query = SolicitudAcceso::with([
+            'empresaObjetivo',
+            'carpeta',
+            'archivo.carpeta',
+            'revisor',
+        ])->where('solicitante_id', $usuario->id);
 
-        return view('solicitudes.mis_solicitudes', compact('solicitudes'));
+        if ($filtroStatus && in_array($filtroStatus, ['Pendiente', 'Aprobado', 'Rechazado'])) {
+            $query->where('status', $filtroStatus);
+        }
+
+        $solicitudes = $query
+            ->orderBy('created_at', 'desc')
+            ->paginate(25)
+            ->withQueryString();
+
+        // Usamos la MISMA vista — no "mis_solicitudes" que no existe
+        return view('solicitudes.index', compact('solicitudes', 'filtroStatus'));
     }
 
     // ─────────────────────────────────────────────
@@ -56,13 +102,19 @@ class SolicitudAccesoController extends Controller
     {
         $this->autorizarVer($solicitud);
 
-        $solicitud->load(['solicitante', 'empresaObjetivo', 'carpeta', 'archivo', 'revisor']);
+        $solicitud->load([
+            'solicitante.empresa',
+            'empresaObjetivo',
+            'carpeta',
+            'archivo.carpeta',
+            'revisor',
+        ]);
 
         return view('solicitudes.show', compact('solicitud'));
     }
 
     // ─────────────────────────────────────────────
-    // CREATE / STORE — crear solicitud
+    // CREATE
     // ─────────────────────────────────────────────
 
     public function create(Request $request): View
@@ -70,12 +122,16 @@ class SolicitudAccesoController extends Controller
         $carpetaId = $request->query('carpeta_id');
         $archivoId = $request->query('archivo_id');
 
-        $carpeta = $carpetaId ? Carpeta::findOrFail($carpetaId) : null;
-        $archivo = $archivoId ? Archivo::findOrFail($archivoId) : null;
+        $carpeta  = $carpetaId ? Carpeta::findOrFail($carpetaId) : null;
+        $archivo  = $archivoId ? Archivo::with('carpeta')->findOrFail($archivoId) : null;
         $empresas = Empresa::where('activo', true)->orderBy('nombre')->get();
 
         return view('solicitudes.create', compact('carpeta', 'archivo', 'empresas'));
     }
+
+    // ─────────────────────────────────────────────
+    // STORE
+    // ─────────────────────────────────────────────
 
     public function store(Request $request): RedirectResponse
     {
@@ -92,12 +148,10 @@ class SolicitudAccesoController extends Controller
 
         $usuario = Auth::user();
 
-        // No puede solicitar acceso a su propia empresa (ya lo tiene)
-        if ((int)$validated['empresa_objetivo_id'] === (int)$usuario->empresa_id) {
+        if ((int) $validated['empresa_objetivo_id'] === (int) $usuario->empresa_id) {
             return back()->withErrors(['empresa_objetivo_id' => 'No puedes solicitar acceso a tu propia empresa.']);
         }
 
-        // Verificar que no tenga ya una solicitud pendiente para el mismo recurso
         $existente = SolicitudAcceso::where('solicitante_id', $usuario->id)
             ->where('empresa_objetivo_id', $validated['empresa_objetivo_id'])
             ->where('carpeta_id', $validated['carpeta_id'] ?? null)
@@ -137,7 +191,7 @@ class SolicitudAccesoController extends Controller
     {
         $this->autorizarRevisar($solicitud);
 
-        if (!$solicitud->estaPendiente()) {
+        if (! $solicitud->estaPendiente()) {
             return back()->withErrors(['error' => 'Esta solicitud ya fue procesada.']);
         }
 
@@ -168,7 +222,7 @@ class SolicitudAccesoController extends Controller
     {
         $this->autorizarRevisar($solicitud);
 
-        if (!$solicitud->estaPendiente()) {
+        if (! $solicitud->estaPendiente()) {
             return back()->withErrors(['error' => 'Esta solicitud ya fue procesada.']);
         }
 
@@ -191,7 +245,7 @@ class SolicitudAccesoController extends Controller
     }
 
     // ─────────────────────────────────────────────
-    // HELPERS PRIVADOS
+    // HELPERS
     // ─────────────────────────────────────────────
 
     private function autorizarVer(SolicitudAcceso $solicitud): void
@@ -200,9 +254,10 @@ class SolicitudAccesoController extends Controller
 
         $puedeVer = in_array($usuario->rol, ['Superadmin', 'Aux_QHSE'])
             || $solicitud->solicitante_id === $usuario->id
-            || (in_array($usuario->rol, ['Admin', 'Gerente']) && $solicitud->empresa_objetivo_id === $usuario->empresa_id);
+            || (in_array($usuario->rol, ['Admin', 'Gerente'])
+                && $solicitud->empresa_objetivo_id === $usuario->empresa_id);
 
-        if (!$puedeVer) {
+        if (! $puedeVer) {
             abort(403, 'No tienes permiso para ver esta solicitud.');
         }
     }
@@ -212,9 +267,10 @@ class SolicitudAccesoController extends Controller
         $usuario = Auth::user();
 
         $puedeRevisar = in_array($usuario->rol, ['Superadmin', 'Aux_QHSE'])
-            || (in_array($usuario->rol, ['Admin', 'Gerente']) && $solicitud->empresa_objetivo_id === $usuario->empresa_id);
+            || (in_array($usuario->rol, ['Admin', 'Gerente'])
+                && $solicitud->empresa_objetivo_id === $usuario->empresa_id);
 
-        if (!$puedeRevisar) {
+        if (! $puedeRevisar) {
             abort(403, 'No tienes permiso para revisar esta solicitud.');
         }
     }

@@ -48,7 +48,57 @@
                     />
 
                     {{-- Estadísticas --}}
-                    <x-stats :stats="$stats"/>
+                    <div class="fc-stats">
+
+                        <div class="fc-stat">
+                            <div class="fc-stat-icon" style="background:rgba(124,58,237,0.13)">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="#a78bfa">
+                                    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                                </svg>
+                            </div>
+                            <div class="fc-stat-arrow">↗</div>
+                            <div class="fc-stat-num">{{ $totalUsuarios }}</div>
+                            <div class="fc-stat-label">Usuarios activos</div>
+                            <div class="fc-stat-trend neutral">en el sistema</div>
+                        </div>
+
+                        <div class="fc-stat">
+                            <div class="fc-stat-icon" style="background:rgba(13,148,136,0.13)">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="#2dd4bf">
+                                    <path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/>
+                                </svg>
+                            </div>
+                            <div class="fc-stat-arrow">↗</div>
+                            <div class="fc-stat-num">{{ $totalEmpresas }}</div>
+                            <div class="fc-stat-label">Áreas activas</div>
+                            <div class="fc-stat-trend neutral">empresas</div>
+                        </div>
+
+                        <div class="fc-stat">
+                            <div class="fc-stat-icon" style="background:rgba(217,119,6,0.13)">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fbbf24">
+                                    <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/>
+                                </svg>
+                            </div>
+                            <div class="fc-stat-arrow">↗</div>
+                            <div class="fc-stat-num">{{ $totalArchivos }}</div>
+                            <div class="fc-stat-label">Total archivos</div>
+                            <div class="fc-stat-trend neutral">activos</div>
+                        </div>
+
+                        <div class="fc-stat">
+                            <div class="fc-stat-icon" style="background:rgba(29,78,216,0.13)">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="#60a5fa">
+                                    <path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/>
+                                </svg>
+                            </div>
+                            <div class="fc-stat-arrow">↗</div>
+                            <div class="fc-stat-num">{{ $totalCarpetas }}</div>
+                            <div class="fc-stat-label">Total carpetas</div>
+                            <div class="fc-stat-trend neutral">en el sistema</div>
+                        </div>
+
+                    </div>
 
                     {{-- Gráfica --}}
                     <x-chart :empresas="$empresas" :maxArchivos="$maxArchivos" />
