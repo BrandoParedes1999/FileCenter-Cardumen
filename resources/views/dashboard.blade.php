@@ -40,11 +40,11 @@
 
                     {{-- Hero --}}
                     <x-hero
-                        badge="Super Administrador"
+                        badge="{{ Auth::user()->rol }}"
                         title="Panel de Control Global"
                         subtitle="Tienes acceso completo a todas las áreas y configuraciones del sistema."
-                        buttonLeft="Gestionar Usuarios"
-                        buttonRight="Ver Permisos"
+                        buttonLeft="{{ Auth::user()->rol == 'Superadmin' ? 'Gestionar Usuarios' : '' }}"
+                        buttonRight="{{ Auth::user()->rol == 'Superadmin' ? 'Ver Permisos' : '' }}"
                     />
 
                     {{-- Estadísticas --}}
