@@ -55,7 +55,7 @@
             {{-- Filtros de status --}}
             <div class="fc-filter-bar" style="margin-bottom:20px">
                 @php
-                    {{-- Controller usa: status='Pendiente','Aprobado','Rechazado' --}}
+                    // Controller usa: status='Pendiente','Aprobado','Rechazado'
                     $filtroActual = request('status', 'todas');
                     $statusOpts = ['todas'=>'Todas','Pendiente'=>'Pendientes','Aprobado'=>'Aprobadas','Rechazado'=>'Rechazadas'];
                     $statusColors = [
@@ -109,7 +109,7 @@
                     <tbody>
                         @foreach($solicitudes as $sol)
                         @php
-                            {{-- Campo correcto: ->status con valores 'Pendiente','Aprobado','Rechazado' --}}
+                            // Campo correcto: ->status con valores 'Pendiente','Aprobado','Rechazado'
                             $sc = $statusColors[$sol->status] ?? ['bg'=>'#f1f5f9','color'=>'#64748b'];
                         @endphp
                         <tr>
