@@ -6,6 +6,8 @@ use App\Models\Archivo;
 use App\Models\Carpeta;
 use App\Models\Empresa;
 use App\Models\RegistroActividad;
+use App\Models\SolicitudAcceso;
+use App\Models\SolicitudSubida;
 use App\Models\Usuario;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -18,12 +20,11 @@ class DashboardController extends Controller
         $rol       = $usuario->rol;
         $empresaId = $usuario->empresa_id;
 
-        // Niveles de acceso
-        $esAdmin    = in_array($rol, ['Superadmin', 'Aux_QHSE']);   // ve todo el sistema
-        $esGestor   = in_array($rol, ['Admin', 'Gerente']);          // ve su empresa
-        $esEmpleado = in_array($rol, ['Auxiliar', 'Empleado']);      // ve sus documentos
+        $esAdmin    = in_array($rol, ['Superadmin', 'Aux_QHSE']);
+        $esGestor   = in_array($rol, ['Admin', 'Gerente']);
+        $esEmpleado = in_array($rol, ['Auxiliar', 'Empleado']);
 
-        // ── 1. STATS ──────────────────────────────────────────────
+        // ── 1. STATS ─────────────────────────────────────────────
         if ($esAdmin) {
             $totalUsuarios = Usuario::where('es_activo', true)->count();
             $totalEmpresas = Empresa::where('activo', true)->count();
@@ -36,17 +37,15 @@ class DashboardController extends Controller
                 ->whereHas('carpeta', fn($q) => $q->where('empresa_id', $empresaId))->count();
             $totalCarpetas = Carpeta::where('empresa_id', $empresaId)->whereNull('deleted_at')->count();
         } else {
-            // Empleado: solo sus archivos accesibles
-            $totalUsuarios = null; // no se muestra
-            $totalEmpresas = null; // no se muestra
+            $totalUsuarios = null;
+            $totalEmpresas = null;
             $totalArchivos = Archivo::where('esta_eliminado', false)
                 ->where('subido_por', $usuario->id)->count();
             $totalCarpetas = Carpeta::where('empresa_id', $empresaId)
-                ->whereNull('deleted_at')->count(); // carpetas que puede ver
+                ->whereNull('deleted_at')->count();
         }
 
-        // ── 2. EMPRESAS para gráfica de barras ───────────────────
-        // Solo para Admin/Gestor — Empleado no ve la gráfica
+        // ── 2. EMPRESAS para gráfica ──────────────────────────────
         $empresas    = collect();
         $maxArchivos = 1;
 
@@ -69,11 +68,13 @@ class DashboardController extends Controller
             ->when($esEmpleado, fn($q) => $q->where('usuario_id', $usuario->id))
             ->when($esGestor, fn($q) => $q->whereHas('usuario',
                 fn($u) => $u->where('empresa_id', $empresaId)))
-            ->whereIn('accion', ['subir','descargar','crear_carpeta','eliminar','restaurar_version'])
+            ->whereIn('accion', [
+                'subir', 'descargar', 'crear_carpeta', 'eliminar',
+                'restaurar_version', 'aprobar_subida', 'rechazar_subida',
+            ])
             ->latest('created_at')->take(7)->get();
 
         // ── 4. USUARIOS POR ROL ───────────────────────────────────
-        // Solo Admin/Gestor
         $usuariosPorRol = collect();
         $maxRol         = 1;
 
@@ -91,7 +92,7 @@ class DashboardController extends Controller
             $maxRol = $usuariosPorRol->max('total') ?: 1;
         }
 
-        // ── 5. ACCESOS RÁPIDOS (archivos recientes para Empleado) ─
+        // ── 5. ARCHIVOS RECIENTES (Empleado) ──────────────────────
         $archivosRecientes = collect();
         if ($esEmpleado) {
             $archivosRecientes = Archivo::where('esta_eliminado', false)
@@ -99,18 +100,33 @@ class DashboardController extends Controller
                 ->latest('created_at')->take(6)->get();
         }
 
-        // ── 6. SOLICITUDES PENDIENTES (solo Admin/Gestor) ─────────
+        // ── 6. SOLICITUDES DE ACCESO PENDIENTES ───────────────────
         $solicitudesPendientes = 0;
         if (!$esEmpleado) {
             try {
-                $solicitudesPendientes = \App\Models\SolicitudAcceso::where('status', 'Pendiente')
+                $solicitudesPendientes = SolicitudAcceso::where('status', 'Pendiente')
                     ->when(!$esAdmin, fn($q) => $q->where('empresa_objetivo_id', $empresaId))
                     ->count();
             } catch (\Exception $e) {
                 $solicitudesPendientes = 0;
             }
         }
-        
+
+        // ── 7. SOLICITUDES DE SUBIDA PENDIENTES ───────────────────
+        // Solo para gestores (Admin/Gerente/Superadmin/Aux_QHSE)
+        $solicitudesSubidaPendientes = 0;
+        if (!$esEmpleado) {
+            try {
+                $solicitudesSubidaPendientes = SolicitudSubida::where('status', 'Pendiente')
+                    ->when(
+                        !$esAdmin,
+                        fn($q) => $q->whereHas('carpeta', fn($c) => $c->where('empresa_id', $empresaId))
+                    )
+                    ->count();
+            } catch (\Exception $e) {
+                $solicitudesSubidaPendientes = 0;
+            }
+        }
 
         return view('dashboard', compact(
             'usuario', 'rol', 'esAdmin', 'esGestor', 'esEmpleado',
@@ -118,7 +134,8 @@ class DashboardController extends Controller
             'empresas', 'maxArchivos',
             'actividad', 'archivosRecientes',
             'usuariosPorRol', 'maxRol',
-            'solicitudesPendientes'
+            'solicitudesPendientes',
+            'solicitudesSubidaPendientes'
         ));
     }
 }

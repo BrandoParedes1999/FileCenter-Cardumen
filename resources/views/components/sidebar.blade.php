@@ -159,11 +159,16 @@
     {{-- Sección corporativo/empresas --}}
     <div class="fc-nav-section">
         <div class="fc-nav-label">Cardumen</div>
-        <a href="{{ route('carpetas.index') }}"
-           class="fc-nav-item">
+        @php
+            $empCorp = \App\Models\Empresa::where('es_corporativo', true)->where('activo', true)->first();
+        @endphp
+        @if($empCorp)
+        <a href="{{ route('areas.show', $empCorp) }}"
+           class="fc-nav-item {{ request()->routeIs('areas.show') && request()->route('empresa')?->id === $empCorp->id ? 'active' : '' }}">
             <div class="fc-dot" style="background:#a5b4fc"></div>
             Corporativo
         </a>
+        @endif
         <a href="{{ route('nosotros') }}"
            class="fc-nav-item {{ request()->routeIs('nosotros') ? 'active' : '' }}">
             <svg viewBox="0 0 24 24" fill="currentColor">

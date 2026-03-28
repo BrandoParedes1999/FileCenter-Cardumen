@@ -5,13 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Storage;
 
 class Archivo extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $table = 'archivos';
+
+    // Extensiones permitidas en el sistema
+    const EXTENSIONES_PERMITIDAS = ['pdf', 'doc', 'docx', 'xls', 'xlsx'];
 
     protected $fillable = [
         'carpeta_id',
@@ -83,18 +85,46 @@ class Archivo extends Model
         return round($bytes / 1073741824, 2) . ' GB';
     }
 
-    /** Icono Bootstrap según tipo MIME */
+    /**
+     * Color del icono según extensión (solo tipos permitidos).
+     * Retorna ['color' => hex, 'bg' => rgba]
+     */
+    public function colorExtension(): array
+    {
+        return match (strtolower($this->extension)) {
+            'pdf'        => ['color' => '#dc2626', 'bg' => 'rgba(220,38,38,0.1)'],
+            'doc', 'docx'=> ['color' => '#2563eb', 'bg' => 'rgba(37,99,235,0.1)'],
+            'xls', 'xlsx'=> ['color' => '#059669', 'bg' => 'rgba(5,150,105,0.1)'],
+            default      => ['color' => '#64748b', 'bg' => 'rgba(100,116,139,0.1)'],
+        };
+    }
+
+    /**
+     * Clase Bootstrap Icon según extensión.
+     * Solo contempla los tipos permitidos en el sistema.
+     */
     public function iconoTipo(): string
     {
-        return match (true) {
-            $this->extension === 'pdf'                          => 'bi-file-earmark-pdf text-danger',
-            in_array($this->extension, ['doc', 'docx'])        => 'bi-file-earmark-word text-primary',
-            in_array($this->extension, ['xls', 'xlsx'])        => 'bi-file-earmark-excel text-success',
-            in_array($this->extension, ['ppt', 'pptx'])        => 'bi-file-earmark-ppt text-warning',
-            in_array($this->extension, ['jpg', 'jpeg', 'png',
-                                        'gif', 'webp'])       => 'bi-file-earmark-image text-info',
-            in_array($this->extension, ['zip', 'rar', '7z'])   => 'bi-file-earmark-zip text-warning',
-            default                                             => 'bi-file-earmark text-secondary',
+        return match (strtolower($this->extension)) {
+            'pdf'        => 'bi-file-earmark-pdf text-danger',
+            'doc', 'docx'=> 'bi-file-earmark-word text-primary',
+            'xls', 'xlsx'=> 'bi-file-earmark-excel text-success',
+            default      => 'bi-file-earmark text-secondary',
+        };
+    }
+
+    /**
+     * Etiqueta legible del tipo de archivo.
+     */
+    public function tipoLegible(): string
+    {
+        return match (strtolower($this->extension)) {
+            'pdf'  => 'Documento PDF',
+            'doc'  => 'Word 97-2003',
+            'docx' => 'Word',
+            'xls'  => 'Excel 97-2003',
+            'xlsx' => 'Excel',
+            default => strtoupper($this->extension),
         };
     }
 

@@ -5,20 +5,9 @@
         <div class="fc-main">
             <header class="fc-topbar">
                 @php
-                    $extColors = [
-                        'pdf'  => '#dc2626', 'doc'  => '#2563eb', 'docx' => '#2563eb',
-                        'xls'  => '#059669', 'xlsx' => '#059669', 'ppt'  => '#ea580c',
-                        'pptx' => '#ea580c', 'zip'  => '#f59e0b', 'rar'  => '#f59e0b',
-                        'jpg'  => '#06b6d4', 'jpeg' => '#06b6d4', 'png'  => '#06b6d4',
-                    ];
                     $ext   = strtolower($archivo->extension);
-                    $color = $extColors[$ext] ?? '#64748b';
-
-                    $hexClean = ltrim($color, '#');
-                    $r = hexdec(substr($hexClean, 0, 2));
-                    $g = hexdec(substr($hexClean, 2, 2));
-                    $b = hexdec(substr($hexClean, 4, 2));
-                    $colorRgba10 = "rgba({$r},{$g},{$b},0.1)";
+                    $color = $archivo->colorExtension()['color'];
+                    $colorBg = $archivo->colorExtension()['bg'];
                 @endphp
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="{{ $color }}">
                     <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/>
@@ -36,11 +25,9 @@
             </header>
 
             <div class="fc-content">
-
-                {{-- Bug #10 fix: wrapper fc-content-cols para layout horizontal --}}
                 <div class="fc-content-cols">
 
-                    {{-- ══ COLUMNA PRINCIPAL ══════════════════════════════════ --}}
+                    {{-- ══ COLUMNA PRINCIPAL ══ --}}
                     <div class="fc-col-main">
 
                         {{-- Breadcrumb --}}
@@ -68,10 +55,18 @@
                         </div>
                         @endif
 
+                        {{-- Aviso de modo solo lectura --}}
+                        @if($archivo->carpeta->esSoloLectura())
+                        <div class="fc-flash info" style="margin-bottom:16px">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#4f46e5"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5z"/></svg>
+                            Esta carpeta es de <strong>solo lectura online</strong>. La descarga solo está disponible para usuarios con permiso explícito.
+                        </div>
+                        @endif
+
                         {{-- Header del archivo --}}
                         <div class="fc-file-header">
                             <div class="fc-file-header-top">
-                                <div class="fc-file-icon-wrap" style="background:{{ $colorRgba10 }}">
+                                <div class="fc-file-icon-wrap" style="background:{{ $colorBg }}">
                                     <svg width="32" height="32" viewBox="0 0 24 24" fill="{{ $color }}">
                                         <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/>
                                     </svg>
@@ -82,13 +77,20 @@
                                     <div class="fc-file-meta-row">
                                         <span class="fc-badge fc-badge-ext">{{ strtoupper($ext) }}</span>
                                         <span class="fc-badge fc-badge-ver">v{{ $archivo->version }}</span>
-                                        <span class="fc-badge {{ $archivo->carpeta->es_publico ? 'fc-badge-pub' : 'fc-badge-priv' }}">
+                                        <span class="fc-badge {{ $archivo->carpeta->es_publico ? 'fc-badge-public' : 'fc-badge-priv' }}">
                                             {{ $archivo->carpeta->es_publico ? '🌐 Carpeta pública' : '🔒 Carpeta privada' }}
                                         </span>
+                                        @if($archivo->carpeta->esSoloLectura())
+                                        <span class="fc-badge" style="background:rgba(99,102,241,.1);color:#4f46e5">
+                                            👁 Solo lectura
+                                        </span>
+                                        @endif
                                         <span style="font-size:12px;color:#94a3b8">{{ $archivo->tamanioFormateado() }}</span>
+                                        <span style="font-size:12px;color:#94a3b8">{{ $archivo->tipoLegible() }}</span>
                                     </div>
 
                                     <div class="fc-file-actions">
+                                        {{-- DESCARGAR: respeta modo_acceso Y permiso --}}
                                         @can('download', $archivo)
                                         <a href="{{ route('archivos.descargar', $archivo) }}"
                                            class="fc-action-btn download"
@@ -96,6 +98,21 @@
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
                                             Descargar
                                         </a>
+                                        @else
+                                        {{-- Mostrar por qué no puede descargar --}}
+                                        @if($archivo->carpeta->esSoloLectura())
+                                        <span style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:5px;padding:9px 0">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="#94a3b8"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5z"/></svg>
+                                            Solo lectura — descarga no disponible
+                                        </span>
+                                        @else
+                                        <a href="{{ route('solicitudes.create', ['archivo_id' => $archivo->id]) }}"
+                                           class="fc-action-btn solicitar"
+                                           style="background:rgba(245,158,11,.08);color:#d97706;border-color:rgba(245,158,11,.25)">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                                            Solicitar acceso
+                                        </a>
+                                        @endif
                                         @endcan
 
                                         @can('update', $archivo)
@@ -115,15 +132,6 @@
                                             Eliminar
                                         </button>
                                         @endcan
-
-                                        @cannot('download', $archivo)
-                                        <a href="{{ route('solicitudes.create', ['archivo_id' => $archivo->id]) }}"
-                                           class="fc-action-btn solicitar"
-                                           style="background:rgba(245,158,11,.08);color:#d97706;border-color:rgba(245,158,11,.25)">
-                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-                                            Solicitar acceso
-                                        </a>
-                                        @endcannot
                                     </div>
                                 </div>
                             </div>
@@ -162,7 +170,9 @@
                                     @if($archivo->descripcion)
                                         <p class="fc-desc-text">{{ $archivo->descripcion }}</p>
                                     @else
-                                        <p class="fc-desc-empty">Sin descripción. Puedes agregar una haciendo clic en "Editar descripción".</p>
+                                        <p class="fc-desc-empty">Sin descripción.
+                                            @can('update', $archivo) Puedes agregar una haciendo clic en "Editar descripción". @endcan
+                                        </p>
                                     @endif
                                 </div>
 
@@ -208,7 +218,7 @@
                                         </div>
                                         <div class="fc-ver-meta">
                                             {{ $ver->tamanioFormateado() }}
-                                            · Subido por {{ $ver->subidoPor->nombre ?? 'N/A' }} {{ $ver->subidoPor->paterno ?? '' }}
+                                            · {{ $ver->subidoPor->nombre ?? 'N/A' }} {{ $ver->subidoPor->paterno ?? '' }}
                                             · {{ $ver->created_at?->diffForHumans() ?? '—' }}
                                         </div>
                                         @if($ver->nota_version)
@@ -234,10 +244,9 @@
 
                     </div>{{-- /fc-col-main --}}
 
-                    {{-- ══ PANEL LATERAL ══════════════════════════════════════ --}}
+                    {{-- ══ PANEL LATERAL ══ --}}
                     <div class="fc-col-side">
 
-                        {{-- Info general --}}
                         <div class="fc-info-card">
                             <div class="fc-info-header">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="#6366f1"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
@@ -252,6 +261,15 @@
                                     </a>
                                 </div>
                                 <div class="fc-info-row">
+                                    <span class="fc-info-label">Modo acceso</span>
+                                    <span class="fc-info-val">
+                                        @if($archivo->carpeta->esSoloLectura()) 👁 Solo lectura
+                                        @elseif($archivo->carpeta->modo_acceso === 'con_descarga') ⬇ Con descarga
+                                        @else 🔓 Normal
+                                        @endif
+                                    </span>
+                                </div>
+                                <div class="fc-info-row">
                                     <span class="fc-info-label">Subido por</span>
                                     <span class="fc-info-val">{{ $archivo->subidoPor->nombre ?? '—' }} {{ $archivo->subidoPor->paterno ?? '' }}</span>
                                 </div>
@@ -264,12 +282,8 @@
                                     <span class="fc-info-val">{{ $archivo->updated_at?->diffForHumans() ?? '—' }}</span>
                                 </div>
                                 <div class="fc-info-row">
-                                    <span class="fc-info-label">Tipo MIME</span>
-                                    <span class="fc-info-val mono">{{ $archivo->tipo_mime ?? '—' }}</span>
-                                </div>
-                                <div class="fc-info-row">
-                                    <span class="fc-info-label">Extensión</span>
-                                    <span class="fc-info-val">{{ strtoupper($ext) }}</span>
+                                    <span class="fc-info-label">Tipo</span>
+                                    <span class="fc-info-val">{{ $archivo->tipoLegible() }}</span>
                                 </div>
                                 <div class="fc-info-row">
                                     <span class="fc-info-label">Tamaño</span>
@@ -300,6 +314,7 @@
 
                         {{-- Subir nueva versión --}}
                         @can('update', $archivo)
+                        @if(!$archivo->carpeta->esSoloLectura())
                         <div class="fc-info-card">
                             <div class="fc-info-header">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
@@ -316,13 +331,14 @@
                                 </a>
                             </div>
                         </div>
+                        @endif
                         @endcan
 
                     </div>{{-- /fc-col-side --}}
 
                 </div>{{-- /fc-content-cols --}}
-            </div>{{-- /fc-content --}}
-        </div>{{-- /fc-main --}}
+            </div>
+        </div>
     </div>
 
     {{-- Modal eliminar --}}

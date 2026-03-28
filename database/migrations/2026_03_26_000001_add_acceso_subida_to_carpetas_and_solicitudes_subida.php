@@ -8,18 +8,25 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // ── 1. Campo en carpetas ─────────────────────────────────
+        // Indica si los usuarios con rol Auxiliar/Empleado necesitan
+        // aprobación de un Admin/Gerente para subir archivos.
         Schema::table('carpetas', function (Blueprint $table) {
-
+            // Tipo de acceso de la carpeta:
+            // 'solo_lectura'   → solo pueden ver el listado, sin descargar
+            // 'con_descarga'   → pueden ver Y descargar
+            // Nota: esto complementa el campo puede_descargar en PermisoCarpeta
+            // pero aplica como comportamiento por defecto de la carpeta.
             $table->enum('modo_acceso', ['solo_lectura', 'con_descarga', 'normal'])
-                ->default('normal')
-                ->after('es_publico')
-                ->comment('Control de acceso base de la carpeta');
+                  ->default('normal')
+                  ->after('es_publico')
+                  ->comment('Control de acceso base de la carpeta');
 
-
+            // Si es true, Auxiliar y Empleado deben pedir aprobación para subir
             $table->boolean('requiere_aprobacion_subida')
-                ->default(false)
-                ->after('modo_acceso')
-                ->comment('Si true, subidas de roles menores quedan pendientes');
+                  ->default(false)
+                  ->after('modo_acceso')
+                  ->comment('Si true, subidas de roles menores quedan pendientes');
         });
 
         // ── 2. Tabla de solicitudes de subida ────────────────────
@@ -56,29 +63,37 @@ return new class extends Migration
 
             // Foreign keys
             $table->foreign('carpeta_id', 'fk_sol_subida_carpeta')
-                ->references('id')->on('carpetas')
-                ->onDelete('no action');
+                  ->references('id')->on('carpetas')
+                  ->onDelete('no action');
 
             $table->foreign('solicitante_id', 'fk_sol_subida_solicitante')
-                ->references('id')->on('usuarios')
-                ->onDelete('no action');
+                  ->references('id')->on('usuarios')
+                  ->onDelete('no action');
 
             $table->foreign('revisado_por', 'fk_sol_subida_revisor')
-                ->references('id')->on('usuarios')
-                ->onDelete('no action');
+                  ->references('id')->on('usuarios')
+                  ->onDelete('no action');
 
             $table->foreign('archivo_id', 'fk_sol_subida_archivo')
-                ->references('id')->on('archivos')
-                ->onDelete('set null');
+                  ->references('id')->on('archivos')
+                  ->onDelete('set null');
         });
     }
 
     public function down(): void
     {
+        // Primero eliminar la tabla que tiene FK → carpetas
         Schema::dropIfExists('solicitudes_subida');
 
+        // Luego quitar las columnas nuevas de carpetas
+        // Se hacen por separado porque en MySQL los ENUMs
+        // no permiten drop en array junto con booleans
         Schema::table('carpetas', function (Blueprint $table) {
-            $table->dropColumn(['modo_acceso', 'requiere_aprobacion_subida']);
+            $table->dropColumn('requiere_aprobacion_subida');
+        });
+
+        Schema::table('carpetas', function (Blueprint $table) {
+            $table->dropColumn('modo_acceso');
         });
     }
 };

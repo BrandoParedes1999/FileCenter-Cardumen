@@ -46,6 +46,34 @@
                         buttonRight="{{ Auth::user()->rol == 'Superadmin' ? 'Ver Permisos' : '' }}"
                     />
 
+                    @if(!$esEmpleado && $solicitudesSubidaPendientes > 0)
+                        <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;
+                                    background:rgba(245,158,11,.06);
+                                    border:1px solid rgba(245,158,11,.25);
+                                    border-radius:12px;margin-bottom:18px">
+                            <div style="width:38px;height:38px;border-radius:10px;
+                                        background:rgba(245,158,11,.15);
+                                        display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="#d97706">
+                                    <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
+                                </svg>
+                            </div>
+                            <div style="flex:1">
+                                <div style="font-size:13px;font-weight:700;color:#92400e">
+                                    {{ $solicitudesSubidaPendientes }} archivo{{ $solicitudesSubidaPendientes != 1 ? 's' : '' }} pendiente{{ $solicitudesSubidaPendientes != 1 ? 's' : '' }} de aprobación
+                                </div>
+                                <div style="font-size:12px;color:#b45309;margin-top:2px">
+                                    Usuarios han solicitado publicar archivos en carpetas con aprobación requerida.
+                                </div>
+                            </div>
+                            <a href="{{ route('solicitudes-subida.index') }}"
+                            class="fc-btn fc-btn-warning" style="font-size:12px;padding:7px 14px;white-space:nowrap">
+                                Revisar ahora →
+                            </a>
+                        </div>
+                    @endif
+
+
                     {{-- Estadísticas --}}
                     <div class="fc-stats">
 
@@ -97,6 +125,19 @@
                             <div class="fc-stat-trend neutral">en el sistema</div>
                         </div>
 
+                        <div class="fc-stat">
+                            <div class="fc-stat-icon" style="background:rgba(245,158,11,0.13)">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="#f59e0b">
+                                    <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
+                                </svg>
+                            </div>
+                            <div class="fc-stat-arrow">↗</div>
+                            <div class="fc-stat-num">{{ $solicitudesSubidaPendientes }}</div>
+                            <div class="fc-stat-label">Subidas pendientes</div>
+                            <div class="fc-stat-trend neutral">
+                                <a href="{{ route('solicitudes-subida.index') }}" style="color:#6366f1">revisar</a>
+                            </div>
+                        </div>
                     </div>
 
                     {{-- Gráfica --}}
