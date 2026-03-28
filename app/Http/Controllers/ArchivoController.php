@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Archivo;
 use App\Models\Carpeta;
 use App\Models\RegistroActividad;
+use App\Models\SolicitudSubida;
 use App\Models\VersionArchivo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,19 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ArchivoController extends Controller
 {
+    // ── Tipos MIME permitidos ────────────────────────────────
+    const MIMES_PERMITIDOS = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ];
+
+    const EXTENSIONES_PERMITIDAS = ['pdf', 'doc', 'docx', 'xls', 'xlsx'];
+
+    // ────────────────────────────────────────────────────────
+
     public function index(Request $request): View
     {
         $carpetaId = $request->query('carpeta_id');
@@ -65,13 +79,20 @@ class ArchivoController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        // Sin límite de tamaño en la validación de Laravel.
+        // El límite real lo impone php.ini / nginx en el servidor.
         $request->validate([
             'carpeta_id'  => ['required', 'exists:carpetas,id'],
-            'archivo'     => ['required', 'file', 'max:102400'],
+            'archivo'     => [
+                'required',
+                'file',
+                // Solo PDF, Word y Excel
+                'mimes:pdf,doc,docx,xls,xlsx',
+            ],
             'descripcion' => ['nullable', 'string', 'max:500'],
         ], [
             'archivo.required' => 'Debes seleccionar un archivo.',
-            'archivo.max'      => 'El archivo no puede superar 100 MB.',
+            'archivo.mimes'    => 'Solo se permiten archivos PDF, Word (.doc/.docx) y Excel (.xls/.xlsx).',
         ]);
 
         $usuario = Auth::user();
@@ -80,55 +101,21 @@ class ArchivoController extends Controller
 
         $this->authorize('uploadTo', $carpeta);
 
-        // ¿Ya existe un archivo con el mismo nombre? → nueva versión
-        $archivoExistente = Archivo::where('carpeta_id', $carpeta->id)
-            ->where('nombre_original', $file->getClientOriginalName())
-            ->where('esta_eliminado', false)
-            ->first();
-
-        if ($archivoExistente) {
-            return $this->crearNuevaVersion($archivoExistente, $file, $usuario, $carpeta);
+        // Validación extra de extensión (doble capa de seguridad)
+        $extension = strtolower($file->getClientOriginalExtension());
+        if (!in_array($extension, self::EXTENSIONES_PERMITIDAS)) {
+            return back()->withErrors(['archivo' => 'Tipo de archivo no permitido.']);
         }
 
-        // Archivo nuevo
-        $nombreAlmacenamiento = Str::uuid() . '.' . strtolower($file->getClientOriginalExtension());
-        $rutaDisco            = "empresa_{$carpeta->empresa_id}/carpeta_{$carpeta->id}/{$nombreAlmacenamiento}";
-        $hash                 = hash_file('sha256', $file->getRealPath());
+        // ── ¿La carpeta requiere aprobación para subir? ──────────
+        // Si el usuario NO es Admin/Gerente/Superadmin y la carpeta
+        // tiene requiere_aprobacion_subida = true, crear solicitud.
+        if ($this->requiereAprobacion($carpeta, $usuario)) {
+            return $this->crearSolicitudSubida($request, $carpeta, $file, $usuario);
+        }
 
-        Storage::disk('filecenter')->put($rutaDisco, file_get_contents($file->getRealPath()));
-
-        $archivo = Archivo::create([
-            'carpeta_id'            => $carpeta->id,
-            'subido_por'            => $usuario->id,
-            'nombre_original'       => $file->getClientOriginalName(),
-            'nombre_almacenamiento' => $nombreAlmacenamiento,
-            'ruta_disco'            => $rutaDisco,
-            'hash_sha256'           => $hash,
-            'tipo_mime'             => $file->getMimeType(),
-            'extension'             => strtolower($file->getClientOriginalExtension()),
-            'tamanio_bytes'         => $file->getSize(),
-            'descripcion'           => $request->descripcion,
-            'version'               => 1,
-        ]);
-
-        VersionArchivo::create([
-            'archivo_id'            => $archivo->id,
-            'version'               => 1,
-            'nombre_original'       => $archivo->nombre_original,
-            'nombre_almacenamiento' => $nombreAlmacenamiento,
-            'ruta_disco'            => $rutaDisco,
-            'hash_sha256'           => $hash,
-            'tamanio_bytes'         => $archivo->tamanio_bytes,
-            'subido_por'            => $usuario->id,
-            'nota_version'          => 'Versión inicial',
-            'activo'                => true,
-        ]);
-
-        RegistroActividad::registrar('subir', 'archivo', $archivo->id, "Subió: {$archivo->nombre_original}");
-
-        return redirect()
-            ->route('carpetas.show', $carpeta)
-            ->with('success', "Archivo \"{$archivo->nombre_original}\" subido correctamente.");
+        // ── Proceso normal de subida ─────────────────────────────
+        return $this->procesarSubida($request, $carpeta, $file, $usuario);
     }
 
     public function edit(Archivo $archivo): View
@@ -222,12 +209,123 @@ class ArchivoController extends Controller
             ->with('success', "Versión {$version->version} restaurada correctamente.");
     }
 
-    // ── Helper privado ────────────────────────────
+    // ── Helpers privados ────────────────────────────────────────
+
+    /**
+     * Determina si la carpeta requiere aprobación para subir archivos.
+     * Aplica a roles menores cuando la carpeta tiene restricción de subida pendiente.
+     */
+    private function requiereAprobacion(Carpeta $carpeta, $usuario): bool
+    {
+        // Superadmin, Aux_QHSE, Admin y Gerente nunca necesitan aprobación
+        if (in_array($usuario->rol, ['Superadmin', 'Aux_QHSE', 'Admin', 'Gerente'])) {
+            return false;
+        }
+
+        // Si la carpeta requiere aprobación de subida
+        return (bool) $carpeta->requiere_aprobacion_subida;
+    }
+
+    /**
+     * Crea una solicitud de subida pendiente de aprobación.
+     * El archivo se guarda temporalmente en disco hasta que un admin lo apruebe.
+     */
+    private function crearSolicitudSubida(Request $request, Carpeta $carpeta, $file, $usuario): RedirectResponse
+    {
+        $extension            = strtolower($file->getClientOriginalExtension());
+        $nombreAlmacenamiento = Str::uuid() . '.' . $extension;
+        $rutaTemporal         = "empresa_{$carpeta->empresa_id}/temp/{$nombreAlmacenamiento}";
+
+        // Guardar temporalmente
+        Storage::disk('filecenter')->put($rutaTemporal, file_get_contents($file->getRealPath()));
+
+        // Crear solicitud de subida
+        \App\Models\SolicitudSubida::create([
+            'carpeta_id'            => $carpeta->id,
+            'solicitante_id'        => $usuario->id,
+            'nombre_original'       => $file->getClientOriginalName(),
+            'nombre_almacenamiento' => $nombreAlmacenamiento,
+            'ruta_temporal'         => $rutaTemporal,
+            'hash_sha256'           => hash_file('sha256', $file->getRealPath()),
+            'tipo_mime'             => $file->getMimeType(),
+            'extension'             => $extension,
+            'tamanio_bytes'         => $file->getSize(),
+            'descripcion'           => $request->descripcion,
+            'status'                => 'Pendiente',
+        ]);
+
+        RegistroActividad::registrar(
+            'solicitar_subida', 'carpeta', $carpeta->id,
+            "Solicitó subir: {$file->getClientOriginalName()}"
+        );
+
+        return redirect()
+            ->route('carpetas.show', $carpeta)
+            ->with('success', "Tu archivo \"{$file->getClientOriginalName()}\" está pendiente de aprobación por un administrador.");
+    }
+
+    /**
+     * Procesa la subida directa de un archivo (sin aprobación).
+     */
+    private function procesarSubida(Request $request, Carpeta $carpeta, $file, $usuario): RedirectResponse
+    {
+        // ¿Ya existe un archivo con el mismo nombre? → nueva versión
+        $archivoExistente = Archivo::where('carpeta_id', $carpeta->id)
+            ->where('nombre_original', $file->getClientOriginalName())
+            ->where('esta_eliminado', false)
+            ->first();
+
+        if ($archivoExistente) {
+            return $this->crearNuevaVersion($archivoExistente, $file, $usuario, $carpeta);
+        }
+
+        // Archivo nuevo
+        $extension            = strtolower($file->getClientOriginalExtension());
+        $nombreAlmacenamiento = Str::uuid() . '.' . $extension;
+        $rutaDisco            = "empresa_{$carpeta->empresa_id}/carpeta_{$carpeta->id}/{$nombreAlmacenamiento}";
+        $hash                 = hash_file('sha256', $file->getRealPath());
+
+        Storage::disk('filecenter')->put($rutaDisco, file_get_contents($file->getRealPath()));
+
+        $archivo = Archivo::create([
+            'carpeta_id'            => $carpeta->id,
+            'subido_por'            => $usuario->id,
+            'nombre_original'       => $file->getClientOriginalName(),
+            'nombre_almacenamiento' => $nombreAlmacenamiento,
+            'ruta_disco'            => $rutaDisco,
+            'hash_sha256'           => $hash,
+            'tipo_mime'             => $file->getMimeType(),
+            'extension'             => $extension,
+            'tamanio_bytes'         => $file->getSize(),
+            'descripcion'           => $request->descripcion,
+            'version'               => 1,
+        ]);
+
+        VersionArchivo::create([
+            'archivo_id'            => $archivo->id,
+            'version'               => 1,
+            'nombre_original'       => $archivo->nombre_original,
+            'nombre_almacenamiento' => $nombreAlmacenamiento,
+            'ruta_disco'            => $rutaDisco,
+            'hash_sha256'           => $hash,
+            'tamanio_bytes'         => $archivo->tamanio_bytes,
+            'subido_por'            => $usuario->id,
+            'nota_version'          => 'Versión inicial',
+            'activo'                => true,
+        ]);
+
+        RegistroActividad::registrar('subir', 'archivo', $archivo->id, "Subió: {$archivo->nombre_original}");
+
+        return redirect()
+            ->route('carpetas.show', $carpeta)
+            ->with('success', "Archivo \"{$archivo->nombre_original}\" subido correctamente.");
+    }
 
     private function crearNuevaVersion(Archivo $archivo, $file, $usuario, Carpeta $carpeta): RedirectResponse
     {
         $nuevaVersion         = $archivo->version + 1;
-        $nombreAlmacenamiento = Str::uuid() . '.' . strtolower($file->getClientOriginalExtension());
+        $extension            = strtolower($file->getClientOriginalExtension());
+        $nombreAlmacenamiento = Str::uuid() . '.' . $extension;
         $rutaDisco            = "empresa_{$carpeta->empresa_id}/carpeta_{$carpeta->id}/{$nombreAlmacenamiento}";
         $hash                 = hash_file('sha256', $file->getRealPath());
 

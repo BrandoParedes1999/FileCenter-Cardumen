@@ -64,9 +64,19 @@ class CarpetaController extends Controller
 
         $migas = $this->generarMigas($carpeta);
 
+        // Solicitudes de subida pendientes en esta carpeta (para Admin/Gerente)
+        $solicitudesSubidaPendientes = 0;
+        if (in_array($usuario->rol, ['Superadmin', 'Aux_QHSE', 'Admin', 'Gerente'])) {
+            $solicitudesSubidaPendientes = $carpeta->solicitudesSubida()
+                ->where('status', 'Pendiente')
+                ->count();
+        }
+
         RegistroActividad::registrar('ver', 'carpeta', $carpeta->id, "Vista: {$carpeta->nombre}");
 
-        return view('carpetas.show', compact('carpeta', 'archivos', 'migas'));
+        return view('carpetas.show', compact(
+            'carpeta', 'archivos', 'migas', 'solicitudesSubidaPendientes'
+        ));
     }
 
     public function create(Request $request): View
@@ -92,10 +102,12 @@ class CarpetaController extends Controller
         $usuario = Auth::user();
 
         $validated = $request->validate([
-            'nombre'     => ['required', 'string', 'max:245'],
-            'empresa_id' => ['nullable', 'exists:empresas,id'],
-            'padre_id'   => ['nullable', 'exists:carpetas,id'],
-            'es_publico' => ['boolean'],
+            'nombre'                     => ['required', 'string', 'max:245'],
+            'empresa_id'                 => ['nullable', 'exists:empresas,id'],
+            'padre_id'                   => ['nullable', 'exists:carpetas,id'],
+            'es_publico'                 => ['boolean'],
+            'modo_acceso'                => ['required', 'in:solo_lectura,con_descarga,normal'],
+            'requiere_aprobacion_subida' => ['boolean'],
         ], [
             'nombre.required' => 'El nombre de la carpeta es obligatorio.',
             'nombre.max'      => 'El nombre no puede superar 245 caracteres.',
@@ -105,22 +117,21 @@ class CarpetaController extends Controller
             ? ($validated['empresa_id'] ?? $usuario->empresa_id)
             : $usuario->empresa_id;
 
-        $path = $this->calcularPath($validated['padre_id'] ?? null, $validated['nombre']);
+        $path      = $this->calcularPath($validated['padre_id'] ?? null, $validated['nombre']);
         $esPublico = $validated['es_publico'] ?? false;
 
         $carpeta = Carpeta::create([
-            'empresa_id' => $empresaId,
-            'padre_id'   => $validated['padre_id'] ?? null,
-            'nombre'     => $validated['nombre'],
-            'path'       => $path,
-            'es_publico' => $esPublico,
-            'creado_por' => $usuario->id,
+            'empresa_id'                 => $empresaId,
+            'padre_id'                   => $validated['padre_id'] ?? null,
+            'nombre'                     => $validated['nombre'],
+            'path'                       => $path,
+            'es_publico'                 => $esPublico,
+            'modo_acceso'                => $validated['modo_acceso'],
+            'requiere_aprobacion_subida' => $validated['requiere_aprobacion_subida'] ?? false,
+            'creado_por'                 => $usuario->id,
         ]);
 
-        // ── Auto-crear permisos para Admin y Gerente de la empresa ──
-        // Las carpetas privadas requieren PermisoCarpeta explícito para descargar.
-        // Al crear, se genera automáticamente un permiso completo por rol
-        // para que Admin y Gerente de la empresa operen sin configuración manual.
+        // Auto-crear permisos para Admin y Gerente
         if (!$esPublico) {
             $this->crearPermisosIniciales($carpeta, $usuario->id);
         }
@@ -143,8 +154,10 @@ class CarpetaController extends Controller
         $this->authorize('update', $carpeta);
 
         $validated = $request->validate([
-            'nombre'     => ['required', 'string', 'max:245'],
-            'es_publico' => ['boolean'],
+            'nombre'                     => ['required', 'string', 'max:245'],
+            'es_publico'                 => ['boolean'],
+            'modo_acceso'                => ['required', 'in:solo_lectura,con_descarga,normal'],
+            'requiere_aprobacion_subida' => ['boolean'],
         ]);
 
         $nombreAnterior = $carpeta->nombre;
@@ -152,12 +165,13 @@ class CarpetaController extends Controller
         $ahoraPublica   = $validated['es_publico'] ?? false;
 
         $carpeta->update([
-            'nombre'     => $validated['nombre'],
-            'es_publico' => $ahoraPublica,
-            'path'       => $this->calcularPath($carpeta->padre_id, $validated['nombre']),
+            'nombre'                     => $validated['nombre'],
+            'es_publico'                 => $ahoraPublica,
+            'modo_acceso'                => $validated['modo_acceso'],
+            'requiere_aprobacion_subida' => $validated['requiere_aprobacion_subida'] ?? false,
+            'path'                       => $this->calcularPath($carpeta->padre_id, $validated['nombre']),
         ]);
 
-        // Si se cambió de pública → privada, crear permisos iniciales para gestores
         if ($eraPublica && !$ahoraPublica) {
             $this->crearPermisosIniciales($carpeta, Auth::id());
         }
@@ -215,13 +229,6 @@ class CarpetaController extends Controller
         return $migas;
     }
 
-    /**
-     * Crea permisos completos automáticos para Admin y Gerente de la empresa
-     * cuando se crea o se hace privada una carpeta.
-     *
-     * Esto garantiza que los gestores puedan operar sin configuración manual,
-     * siendo consistentes con la regla de PermisoCarpeta estricto en la Policy.
-     */
     private function crearPermisosIniciales(Carpeta $carpeta, int $creadoPor): void
     {
         foreach (['Admin', 'Gerente'] as $rol) {

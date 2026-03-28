@@ -1,5 +1,4 @@
 <x-app-layout>
-    {{-- Cargar estilos específicos del dashboard --}}
     @push('styles')
         <link href="{{ asset('css/dashboard.css') }}" rel="stylesheet">
     @endpush

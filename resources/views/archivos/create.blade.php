@@ -21,7 +21,6 @@
 
             <div class="fc-content">
 
-                {{-- Breadcrumb --}}
                 <div class="fc-breadcrumb">
                     <a href="{{ route('carpetas.index') }}" class="fc-bread-item">📁 Inicio</a>
                     <span class="fc-bread-sep">›</span>
@@ -32,10 +31,27 @@
 
                 @if($errors->any())
                 <div class="fc-flash error">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#dc2626">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-                    </svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#dc2626"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
                     {{ $errors->first() }}
+                </div>
+                @endif
+
+                {{-- Aviso si la carpeta requiere aprobación --}}
+                @if($carpeta->requiere_aprobacion_subida && !in_array(Auth::user()->rol, ['Superadmin','Aux_QHSE','Admin','Gerente']))
+                <div class="fc-flash warning" style="margin-bottom:20px">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#d97706"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                    <div>
+                        <strong>Esta carpeta requiere aprobación para publicar archivos.</strong>
+                        Tu archivo quedará pendiente de revisión por un administrador antes de ser visible.
+                    </div>
+                </div>
+                @endif
+
+                {{-- Aviso de modo solo lectura --}}
+                @if($carpeta->esSoloLectura())
+                <div class="fc-flash info" style="margin-bottom:20px">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#4f46e5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    Esta carpeta está en modo <strong>solo lectura</strong>. Los archivos solo podrán visualizarse online.
                 </div>
                 @endif
 
@@ -48,9 +64,16 @@
                                 </svg>
                             </div>
                             <div>
-                                <div class="fc-form-title">Subir nuevo archivo</div>
+                                <div class="fc-form-title">
+                                    @if($carpeta->requiere_aprobacion_subida && !in_array(Auth::user()->rol, ['Superadmin','Aux_QHSE','Admin','Gerente']))
+                                        Solicitar publicación de archivo
+                                    @else
+                                        Subir nuevo archivo
+                                    @endif
+                                </div>
                                 <div class="fc-form-sub">
-                                    Si el archivo ya existe en esta carpeta se creará una nueva versión automáticamente
+                                    Si el archivo ya existe en esta carpeta se creará una nueva versión automáticamente.
+                                    Solo se aceptan <strong>PDF, Word y Excel</strong>.
                                 </div>
                             </div>
                         </div>
@@ -69,16 +92,24 @@
                                             <path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/>
                                         </svg>
                                     </div>
-                                    <div>
+                                    <div style="flex:1">
                                         <div class="fc-dest-label">Carpeta destino</div>
                                         <div class="fc-dest-name">{{ $carpeta->nombre }}</div>
                                         <div class="fc-dest-path">{{ $carpeta->path }}</div>
                                     </div>
-                                    @if($carpeta->es_publico)
-                                    <span style="margin-left:auto;font-size:10px;font-weight:700;
-                                        background:rgba(5,150,105,0.1);color:#059669;
-                                        padding:3px 10px;border-radius:20px;">Pública</span>
-                                    @endif
+                                    <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end">
+                                        @if($carpeta->esSoloLectura())
+                                        <span style="font-size:10px;font-weight:700;background:rgba(99,102,241,.1);
+                                              color:#4f46e5;padding:3px 10px;border-radius:20px">👁 Solo lectura</span>
+                                        @elseif($carpeta->modo_acceso === 'con_descarga')
+                                        <span style="font-size:10px;font-weight:700;background:rgba(5,150,105,.1);
+                                              color:#059669;padding:3px 10px;border-radius:20px">⬇ Con descarga</span>
+                                        @endif
+                                        @if($carpeta->requiere_aprobacion_subida)
+                                        <span style="font-size:10px;font-weight:700;background:rgba(245,158,11,.1);
+                                              color:#d97706;padding:3px 10px;border-radius:20px">⏳ Con aprobación</span>
+                                        @endif
+                                    </div>
                                 </div>
 
                                 {{-- Drop zone --}}
@@ -89,8 +120,9 @@
                                     </label>
 
                                     <div class="fc-dropzone" id="dropzone">
+                                        {{-- Solo PDF, Word, Excel --}}
                                         <input type="file" name="archivo" id="fileInput"
-                                            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.7z,.jpg,.jpeg,.png,.gif,.webp,.mp4,.mp3"
+                                            accept=".pdf,.doc,.docx,.xls,.xlsx"
                                             onchange="handleFile(this)">
                                         <div class="fc-drop-icon">
                                             <svg width="26" height="26" viewBox="0 0 24 24" fill="#6366f1">
@@ -105,16 +137,12 @@
                                             </svg>
                                             Explorar archivos
                                         </div>
-                                        <div class="fc-drop-limit">Máximo 100 MB por archivo</div>
+                                        <div class="fc-drop-limit">Sin límite de tamaño · Solo PDF, Word y Excel</div>
                                     </div>
 
-                                    {{-- Preview del archivo --}}
+                                    {{-- Preview --}}
                                     <div class="fc-file-preview" id="filePreview">
-                                        <div class="fc-file-prev-icon" id="prevIcon">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#4f46e5">
-                                                <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/>
-                                            </svg>
-                                        </div>
+                                        <div class="fc-file-prev-icon" id="prevIcon"></div>
                                         <div>
                                             <div class="fc-file-prev-name" id="prevName">—</div>
                                             <div class="fc-file-prev-size" id="prevSize">—</div>
@@ -130,12 +158,21 @@
                                     <div class="fc-field-error">{{ $message }}</div>
                                     @enderror
 
-                                    {{-- Tipos aceptados --}}
+                                    {{-- Tipos permitidos --}}
                                     <div style="margin-top:10px">
-                                        <div style="font-size:11px;color:#94a3b8;margin-bottom:6px;">Tipos aceptados:</div>
+                                        <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">Tipos aceptados:</div>
                                         <div class="fc-tipos">
-                                            @foreach(['PDF','DOC','DOCX','XLS','XLSX','PPT','PPTX','TXT','CSV','ZIP','RAR','JPG','PNG','MP4'] as $tipo)
-                                                <span class="fc-tipo-badge">{{ $tipo }}</span>
+                                            @foreach([
+                                                ['PDF',  '#dc2626'],
+                                                ['DOC',  '#2563eb'],
+                                                ['DOCX', '#2563eb'],
+                                                ['XLS',  '#059669'],
+                                                ['XLSX', '#059669'],
+                                            ] as [$tipo, $color])
+                                            <span class="fc-tipo-badge"
+                                                  style="background:{{ $color }}12;color:{{ $color }};border:1px solid {{ $color }}22">
+                                                {{ $tipo }}
+                                            </span>
                                             @endforeach
                                         </div>
                                     </div>
@@ -146,36 +183,33 @@
                                     <label for="descripcion">Descripción <span style="color:#94a3b8;font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label>
                                     <textarea id="descripcion" name="descripcion" rows="3"
                                         placeholder="Describe brevemente el contenido del archivo...">{{ old('descripcion') }}</textarea>
-                                    <div class="fc-field-hint">Máximo 500 caracteres. Facilita la búsqueda y comprensión del archivo.</div>
+                                    <div class="fc-field-hint">Máximo 500 caracteres.</div>
                                     @error('descripcion')
                                         <div class="fc-field-error">{{ $message }}</div>
                                     @enderror
                                 </div>
 
-                                {{-- Barra de progreso (se muestra al enviar) --}}
-                                <div class="fc-progress-wrap" id="progressWrap">
-                                    <div class="fc-progress-label">
-                                        <span>Subiendo archivo...</span>
-                                        <span id="progressPct">0%</span>
-                                    </div>
-                                    <div class="fc-progress-bar-bg">
-                                        <div class="fc-progress-bar" id="progressBar"></div>
-                                    </div>
-                                </div>
-
-                            </div>{{-- /fc-form-body --}}
+                            </div>
 
                             <div class="fc-form-footer">
-                                <div class="fc-form-footer-left">
-                                    💡 Si el archivo ya existe en esta carpeta, se creará una nueva versión
+                                <div style="font-size:12px;color:#94a3b8">
+                                    @if($carpeta->requiere_aprobacion_subida && !in_array(Auth::user()->rol, ['Superadmin','Aux_QHSE','Admin','Gerente']))
+                                        ⏳ Tu archivo quedará pendiente de aprobación
+                                    @else
+                                        💡 Si el archivo ya existe, se creará una nueva versión
+                                    @endif
                                 </div>
-                                <div class="fc-form-footer-right">
+                                <div style="display:flex;gap:10px">
                                     <a href="{{ route('carpetas.show', $carpeta) }}" class="fc-btn fc-btn-outline">Cancelar</a>
                                     <button type="submit" class="fc-btn fc-btn-primary" id="submitBtn" disabled>
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                                             <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
                                         </svg>
-                                        Subir archivo
+                                        @if($carpeta->requiere_aprobacion_subida && !in_array(Auth::user()->rol, ['Superadmin','Aux_QHSE','Admin','Gerente']))
+                                            Solicitar publicación
+                                        @else
+                                            Subir archivo
+                                        @endif
                                     </button>
                                 </div>
                             </div>
@@ -188,29 +222,38 @@
     </div>
 
     <script>
+    // Colores por extensión (solo los tipos permitidos)
     const extColores = {
-        pdf:  { bg: 'rgba(220,38,38,0.1)',  fill: '#dc2626' },
-        doc:  { bg: 'rgba(37,99,235,0.1)',  fill: '#2563eb' },
-        docx: { bg: 'rgba(37,99,235,0.1)',  fill: '#2563eb' },
-        xls:  { bg: 'rgba(5,150,105,0.1)',  fill: '#059669' },
-        xlsx: { bg: 'rgba(5,150,105,0.1)',  fill: '#059669' },
-        ppt:  { bg: 'rgba(234,88,12,0.1)',  fill: '#ea580c' },
-        pptx: { bg: 'rgba(234,88,12,0.1)',  fill: '#ea580c' },
-        zip:  { bg: 'rgba(245,158,11,0.1)', fill: '#f59e0b' },
-        rar:  { bg: 'rgba(245,158,11,0.1)', fill: '#f59e0b' },
-        jpg:  { bg: 'rgba(6,182,212,0.1)',  fill: '#06b6d4' },
-        jpeg: { bg: 'rgba(6,182,212,0.1)',  fill: '#06b6d4' },
-        png:  { bg: 'rgba(6,182,212,0.1)',  fill: '#06b6d4' },
+        pdf:  { bg: 'rgba(220,38,38,0.1)',   fill: '#dc2626' },
+        doc:  { bg: 'rgba(37,99,235,0.1)',   fill: '#2563eb' },
+        docx: { bg: 'rgba(37,99,235,0.1)',   fill: '#2563eb' },
+        xls:  { bg: 'rgba(5,150,105,0.1)',   fill: '#059669' },
+        xlsx: { bg: 'rgba(5,150,105,0.1)',   fill: '#059669' },
     };
+
+    // Extensiones permitidas en el cliente (la validación real es en servidor)
+    const extPermitidas = ['pdf', 'doc', 'docx', 'xls', 'xlsx'];
 
     function handleFile(input) {
         const file = input.files[0];
         if (!file) return;
 
         const ext = file.name.split('.').pop().toLowerCase();
+
+        // Validación cliente
+        if (!extPermitidas.includes(ext)) {
+            alert('Solo se permiten archivos PDF, Word (.doc/.docx) y Excel (.xls/.xlsx).');
+            input.value = '';
+            return;
+        }
+
         const color = extColores[ext] || { bg: 'rgba(100,116,139,0.1)', fill: '#64748b' };
 
         document.getElementById('prevIcon').style.background = color.bg;
+        document.getElementById('prevIcon').style.borderRadius = '10px';
+        document.getElementById('prevIcon').style.display = 'flex';
+        document.getElementById('prevIcon').style.alignItems = 'center';
+        document.getElementById('prevIcon').style.justifyContent = 'center';
         document.getElementById('prevIcon').innerHTML = `
             <svg width="20" height="20" viewBox="0 0 24 24" fill="${color.fill}">
                 <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/>
@@ -231,8 +274,8 @@
 
     function formatBytes(b) {
         if (b >= 1073741824) return (b/1073741824).toFixed(2) + ' GB';
-        if (b >= 1048576)    return (b/1048576).toFixed(2) + ' MB';
-        if (b >= 1024)       return (b/1024).toFixed(2) + ' KB';
+        if (b >= 1048576)    return (b/1048576).toFixed(1)   + ' MB';
+        if (b >= 1024)       return (b/1024).toFixed(1)      + ' KB';
         return b + ' B';
     }
 
@@ -243,29 +286,10 @@
     dz.addEventListener('drop', e => {
         e.preventDefault();
         dz.classList.remove('dragover');
-        const dt = e.dataTransfer;
-        if (dt.files.length) {
-            document.getElementById('fileInput').files = dt.files;
+        if (e.dataTransfer.files.length) {
+            document.getElementById('fileInput').files = e.dataTransfer.files;
             handleFile(document.getElementById('fileInput'));
         }
-    });
-
-    // Simular progreso al enviar
-    document.getElementById('uploadForm').addEventListener('submit', function(e) {
-        if (!document.getElementById('fileInput').files.length) return;
-        document.getElementById('progressWrap').classList.add('visible');
-        document.getElementById('submitBtn').disabled = true;
-        document.getElementById('submitBtn').textContent = 'Subiendo...';
-
-        let pct = 0;
-        const iv = setInterval(() => {
-            pct = Math.min(pct + Math.random() * 15, 92);
-            document.getElementById('progressBar').style.width = pct + '%';
-            document.getElementById('progressPct').textContent = Math.round(pct) + '%';
-        }, 200);
-
-        // Limpiar intervalo si la página cambia
-        window.addEventListener('beforeunload', () => clearInterval(iv));
     });
     </script>
 </x-app-layout>

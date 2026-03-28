@@ -18,12 +18,20 @@ class Carpeta extends Model
         'nombre',
         'path',
         'es_publico',
+        'modo_acceso',                  // 'solo_lectura' | 'con_descarga' | 'normal'
+        'requiere_aprobacion_subida',   // bool: Auxiliar/Empleado deben pedir aprobación
         'creado_por',
     ];
 
     protected $casts = [
-        'es_publico' => 'boolean',
-        'deleted_at' => 'datetime',
+        'es_publico'                 => 'boolean',
+        'requiere_aprobacion_subida' => 'boolean',
+        'deleted_at'                 => 'datetime',
+    ];
+
+    protected $attributes = [
+        'modo_acceso'                => 'normal',
+        'requiere_aprobacion_subida' => false,
     ];
 
     // RELACIONES
@@ -66,6 +74,29 @@ class Carpeta extends Model
     public function solicitudes()
     {
         return $this->hasMany(SolicitudAcceso::class, 'carpeta_id');
+    }
+
+    public function solicitudesSubida()
+    {
+        return $this->hasMany(SolicitudSubida::class, 'carpeta_id');
+    }
+
+    // HELPERS DE MODO DE ACCESO
+
+    /**
+     * ¿La carpeta es de solo lectura? (sin descarga para nadie salvo permiso explícito)
+     */
+    public function esSoloLectura(): bool
+    {
+        return $this->modo_acceso === 'solo_lectura';
+    }
+
+    /**
+     * ¿La carpeta permite descarga por defecto?
+     */
+    public function permiteDescargaBase(): bool
+    {
+        return in_array($this->modo_acceso, ['con_descarga', 'normal']);
     }
 
     // LÓGICA DE PERMISOS CON HERENCIA
@@ -141,11 +172,26 @@ class Carpeta extends Model
         return $p && $p->puede_borrar;
     }
 
+    /**
+     * ¿El usuario puede descargar?
+     *
+     * Regla combinada:
+     * 1. Superadmin / Aux_QHSE → siempre sí
+     * 2. Carpeta en modo 'solo_lectura' → nadie descarga salvo que tenga
+     *    puede_descargar explícito en su PermisoCarpeta
+     * 3. Resto: verifica puede_descargar en el permiso efectivo
+     */
     public function usuarioPuedeDescargar(Usuario $usuario): bool
     {
         if ($usuario->esSuperAdmin() || $usuario->esAuxQHSE()) return true;
 
         $p = $this->permisoEfectivo($usuario);
+
+        // En modo solo_lectura se necesita permiso explícito de descarga
+        if ($this->esSoloLectura()) {
+            return $p && $p->puede_descargar;
+        }
+
         return $p && $p->puede_descargar;
     }
 

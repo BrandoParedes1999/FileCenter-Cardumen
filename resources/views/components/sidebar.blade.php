@@ -6,8 +6,20 @@
     $logoPath     = $empresa->logo             ? asset('images/empresas/'.$empresa->logo) : asset('images/logo.png');
     $esCorp       = $empresa->es_corporativo   ?? false;
 
-    // Oscurecer ligeramente el color para hover/active
-    // Se hace via opacity en CSS, no calculando hex
+    // Conteo de solicitudes de subida pendientes para badge
+    $solSubidaPendientes = 0;
+    if (in_array(Auth::user()->rol, ['Superadmin','Aux_QHSE','Admin','Gerente'])) {
+        try {
+            $solSubidaPendientes = \App\Models\SolicitudSubida::where('status', 'Pendiente')
+                ->when(
+                    !in_array(Auth::user()->rol, ['Superadmin','Aux_QHSE']),
+                    fn($q) => $q->whereHas('carpeta', fn($c) => $c->where('empresa_id', Auth::user()->empresa_id))
+                )
+                ->count();
+        } catch (\Exception $e) {
+            $solSubidaPendientes = 0;
+        }
+    }
 @endphp
 
 <style>
@@ -44,10 +56,6 @@
         color: {{ $colorAccent }};
         border-color: {{ $colorAccent }}44;
     }
-    /* Línea de acento superior en topbar */
-    .fc-topbar-accent {
-        position: relative;
-    }
     .fc-topbar-accent::after {
         content: '';
         position: absolute;
@@ -56,11 +64,22 @@
         background: linear-gradient(90deg, {{ $colorAccent }}, {{ $colorBg }});
         opacity: 0.6;
     }
-    /* Badge de empresa en topbar y vistas */
     .fc-badge-empresa {
         background: {{ $colorAccent }}18;
         color: {{ $colorAccent }};
         border: 1px solid {{ $colorAccent }}33;
+    }
+
+    /* Badge de notificación en sidebar */
+    .fc-nav-badge {
+        font-size: 10px;
+        font-weight: 700;
+        background: #ef4444;
+        color: #fff;
+        border-radius: 999px;
+        padding: 1px 7px;
+        margin-left: auto;
+        line-height: 1.6;
     }
 </style>
 
@@ -68,7 +87,6 @@
 
     <div class="fc-logo-area">
         <div class="fc-logo-wrap">
-            {{-- Logo dinámico de la empresa --}}
             <img src="{{ $logoPath }}"
                  alt="{{ $empresa->siglas ?? 'FC' }}"
                  style="width:40px;height:40px;object-fit:contain;border-radius:8px;background:rgba(255,255,255,0.1);padding:4px"
@@ -106,14 +124,14 @@
             Mis Carpetas
         </a>
         <a href="{{ route('solicitudes.index') }}"
-           class="fc-nav-item {{ request()->routeIs('solicitudes.*') ? 'active' : '' }}">
+           class="fc-nav-item {{ request()->routeIs('solicitudes.*') && !request()->routeIs('solicitudes-subida.*') ? 'active' : '' }}">
             <svg viewBox="0 0 24 24" fill="currentColor">
                 <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
             </svg>
             Solicitudes
         </a>
-        <a href="{{ route('areas.index') }}" 
-            class="fc-nav-item {{ request()->routeIs('areas.*') ? 'active' : '' }}">
+        <a href="{{ route('areas.index') }}"
+           class="fc-nav-item {{ request()->routeIs('areas.*') ? 'active' : '' }}">
             <svg viewBox="0 0 24 24" fill="currentColor">
                 <path d="M10 3H3v7h7V3zm11 0h-7v7h7V3zM10 14H3v7h7v-7zm11 3h-7v4h7v-4z"/>
             </svg>
@@ -121,17 +139,31 @@
         </a>
     </div>
 
+    {{-- Solicitudes de subida (solo para gestores) --}}
+    @if(in_array(Auth::user()->rol, ['Superadmin', 'Aux_QHSE', 'Admin', 'Gerente']))
+    <div class="fc-nav-section">
+        <div class="fc-nav-label">Gestión de archivos</div>
+        <a href="{{ route('solicitudes-subida.index') }}"
+           class="fc-nav-item {{ request()->routeIs('solicitudes-subida.*') ? 'active' : '' }}">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
+            </svg>
+            Subidas pendientes
+            @if($solSubidaPendientes > 0)
+                <span class="fc-nav-badge">{{ $solSubidaPendientes }}</span>
+            @endif
+        </a>
+    </div>
+    @endif
+
     {{-- Sección corporativo/empresas --}}
     <div class="fc-nav-section">
         <div class="fc-nav-label">Cardumen</div>
-
-        {{-- Corporativo siempre visible --}}
         <a href="{{ route('carpetas.index') }}"
-           class="fc-nav-item {{ $esCorp && request()->routeIs('carpetas.*') ? 'active' : '' }}">
+           class="fc-nav-item">
             <div class="fc-dot" style="background:#a5b4fc"></div>
             Corporativo
         </a>
-
         <a href="{{ route('nosotros') }}"
            class="fc-nav-item {{ request()->routeIs('nosotros') ? 'active' : '' }}">
             <svg viewBox="0 0 24 24" fill="currentColor">
@@ -141,7 +173,7 @@
         </a>
     </div>
 
-    {{-- Administración (solo roles con acceso) --}}
+    {{-- Administración --}}
     @if(in_array(Auth::user()->rol, ['Superadmin', 'Aux_QHSE', 'Admin', 'Gerente']))
     <div class="fc-nav-section">
         <div class="fc-nav-label">Administración</div>
@@ -156,18 +188,17 @@
 
         @if(in_array(Auth::user()->rol, ['Superadmin', 'Aux_QHSE']))
         <a href="{{ route('empresas.index') }}"
-           class="fc-nav-item {{ request()->routeIs('empresas') ? 'active' : '' }}">
+           class="fc-nav-item {{ request()->routeIs('empresas.*') ? 'active' : '' }}">
             <svg viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/>
             </svg>
             Empresas
         </a>
         @endif
-
     </div>
     @endif
 
-    {{-- Footer con info del usuario --}}
+    {{-- Footer --}}
     <div class="fc-sidebar-footer">
         <div class="fc-user-info">
             <div class="fc-avatar"

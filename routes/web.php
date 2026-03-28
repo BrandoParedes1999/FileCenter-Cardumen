@@ -8,6 +8,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\SolicitudAccesoController;
+use App\Http\Controllers\SolicitudSubidaController;
 use App\Http\Controllers\PermisoCarpetaController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,11 +27,11 @@ Route::get('/', function () {
 Route::middleware(['auth', 'company.scope'])->group(function () {
 
     // ─────────────────────────────────────────
-    // DASHBOARDS POR ROL
+    // DASHBOARDS
     // ─────────────────────────────────────────
 
     Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->name('dashboard');
+        ->name('dashboard');
 
     // ─────────────────────────────────────────
     // CORPORATIVO
@@ -44,16 +45,15 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
     // ÁREAS
     // ─────────────────────────────────────────
 
-    Route::get('/areas',              [AreaController::class, 'index'])->name('areas.index');
-    Route::get('/areas/{empresa}',    [AreaController::class, 'show'])->name('areas.show');
-
+    Route::get('/areas',           [AreaController::class, 'index'])->name('areas.index');
+    Route::get('/areas/{empresa}', [AreaController::class, 'show'])->name('areas.show');
 
     // ─────────────────────────────────────────
     // PERFIL
     // ─────────────────────────────────────────
 
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile',  [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // ─────────────────────────────────────────
@@ -75,7 +75,7 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
         ->name('archivos.restaurar-version');
 
     // ─────────────────────────────────────────
-    // SOLICITUDES DE ACCESO
+    // SOLICITUDES DE ACCESO (cross-empresa)
     // ─────────────────────────────────────────
 
     Route::resource('solicitudes', SolicitudAccesoController::class)
@@ -86,6 +86,25 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
 
     Route::post('solicitudes/{solicitud}/rechazar', [SolicitudAccesoController::class, 'rechazar'])
         ->name('solicitudes.rechazar');
+
+    // ─────────────────────────────────────────
+    // SOLICITUDES DE SUBIDA (aprobación interna)
+    // ─────────────────────────────────────────
+    // Cuando Auxiliar/Empleado quieren subir a una carpeta
+    // con requiere_aprobacion_subida = true, el archivo queda
+    // en estado Pendiente hasta que Admin/Gerente lo apruebe.
+
+    Route::get('solicitudes-subida', [SolicitudSubidaController::class, 'index'])
+        ->name('solicitudes-subida.index');
+
+    Route::get('solicitudes-subida/{solicitudSubida}', [SolicitudSubidaController::class, 'show'])
+        ->name('solicitudes-subida.show');
+
+    Route::post('solicitudes-subida/{solicitudSubida}/aprobar', [SolicitudSubidaController::class, 'aprobar'])
+        ->name('solicitudes-subida.aprobar');
+
+    Route::post('solicitudes-subida/{solicitudSubida}/rechazar', [SolicitudSubidaController::class, 'rechazar'])
+        ->name('solicitudes-subida.rechazar');
 
     // ─────────────────────────────────────────
     // USUARIOS (CRUD)
@@ -104,23 +123,20 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
     // ─────────────────────────────────────────
 
     Route::prefix('carpetas/{carpeta}')->name('permisos.')->group(function () {
-        Route::get('permisos', [PermisoCarpetaController::class, 'index'])->name('index');
-        Route::post('permisos', [PermisoCarpetaController::class, 'store'])->name('store');
-        Route::put('permisos/{permiso}', [PermisoCarpetaController::class, 'update'])->name('update');
+        Route::get('permisos',              [PermisoCarpetaController::class, 'index'])->name('index');
+        Route::post('permisos',             [PermisoCarpetaController::class, 'store'])->name('store');
+        Route::put('permisos/{permiso}',    [PermisoCarpetaController::class, 'update'])->name('update');
         Route::delete('permisos/{permiso}', [PermisoCarpetaController::class, 'destroy'])->name('destroy');
     });
-
 
     // ─────────────────────────────────────────
     // EMPRESAS
     // ─────────────────────────────────────────
 
     Route::resource('empresas', EmpresaController::class);
-    
+
     Route::post('empresas/{empresa}/toggle-activo', [EmpresaController::class, 'toggleActivo'])
         ->name('empresas.toggle-activo');
-
-        
 });
 
 require __DIR__.'/auth.php';
