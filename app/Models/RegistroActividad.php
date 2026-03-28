@@ -28,15 +28,33 @@ class RegistroActividad extends Model
     ];
 
     // Valores ENUM válidos para 'accion'
+    // IMPORTANTE: si agregas aquí, también actualiza la migración
+    // del registro_de_actividad para el campo ENUM en BD.
     const ACCIONES = [
-        'subir', 'descargar', 'eliminar', 'editar',
-        'crear_carpeta', 'mover', 'ver',
-        'solicitar_acceso', 'aprobar_solicitud', 'rechazar_solicitud',
+        'subir',
+        'descargar',
+        'eliminar',
+        'editar',
+        'crear_carpeta',
+        'mover',
+        'ver',
+        // Solicitudes de acceso cross-empresa
+        'solicitar_acceso',
+        'aprobar_solicitud',
+        'rechazar_solicitud',
+        // Solicitudes de subida (aprobación interna)
+        'solicitar_subida',
+        'aprobar_subida',
+        'rechazar_subida',
+        // Versiones
         'restaurar_version',
-        'iniciar_sesion', 'cerrar_sesion', 'login_fallido', 'usuario_bloqueado',
+        // Sesión
+        'iniciar_sesion',
+        'cerrar_sesion',
+        'login_fallido',
+        'usuario_bloqueado',
     ];
 
-    // Valores ENUM válidos para 'recurso'
     const RECURSOS = ['archivo', 'carpeta', 'solicitud', 'usuario', 'version'];
 
     // RELACIONES
@@ -46,24 +64,20 @@ class RegistroActividad extends Model
         return $this->belongsTo(Usuario::class, 'usuario_id');
     }
 
-
-    // METODOS
-
+    // MÉTODOS
 
     /**
      * Registra una acción de auditoría.
-     *
      * Uso:
      *   RegistroActividad::registrar('subir', 'archivo', $archivo->id, 'Subió reporte.pdf');
-     *   RegistroActividad::registrar('login_fallido', 'usuario', $usuario->id, 'Intento fallido');
      */
     public static function registrar(
         string  $accion,
         string  $recurso,
         int     $recursoId,
-        ?string $detalles = null,
+        ?string $detalles  = null,
         ?int    $usuarioId = null,
-        ?string $ip = null
+        ?string $ip        = null
     ): self {
         return static::create([
             'usuario_id' => $usuarioId ?? (auth()->check() ? auth()->id() : null),

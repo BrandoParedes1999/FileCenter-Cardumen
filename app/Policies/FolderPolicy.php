@@ -10,10 +10,6 @@ class FolderPolicy
 {
     use HandlesAuthorization;
 
-    // ─────────────────────────────────────────────
-    // BEFORE — Superadmin y Aux_QHSE lo pueden todo
-    // ─────────────────────────────────────────────
-
     public function before(Usuario $usuario, string $ability): ?bool
     {
         if (in_array($usuario->rol, ['Superadmin', 'Aux_QHSE'])) {
@@ -22,18 +18,10 @@ class FolderPolicy
         return null;
     }
 
-    // ─────────────────────────────────────────────
-    // VER LISTADO
-    // ─────────────────────────────────────────────
-
     public function viewAny(Usuario $usuario): bool
     {
         return $usuario->es_activo;
     }
-
-    // ─────────────────────────────────────────────
-    // VER CARPETA INDIVIDUAL
-    // ─────────────────────────────────────────────
 
     public function view(Usuario $usuario, Carpeta $carpeta): bool
     {
@@ -45,7 +33,6 @@ class FolderPolicy
             return true;
         }
 
-        // Admin/Gerente ven todo de su empresa (gestores)
         if (in_array($usuario->rol, ['Admin', 'Gerente'])) {
             return true;
         }
@@ -53,18 +40,11 @@ class FolderPolicy
         return $carpeta->usuarioPuedeLeer($usuario);
     }
 
-    // ─────────────────────────────────────────────
-    // CREAR CARPETA RAÍZ
-    // ─────────────────────────────────────────────
-
     public function create(Usuario $usuario): bool
     {
         return in_array($usuario->rol, ['Admin', 'Gerente', 'Auxiliar']);
     }
 
-    /**
-     * Crear subcarpeta dentro de una carpeta específica.
-     */
     public function createIn(Usuario $usuario, Carpeta $carpetaPadre): bool
     {
         if ($carpetaPadre->empresa_id !== $usuario->empresa_id) {
@@ -77,11 +57,6 @@ class FolderPolicy
 
         return $carpetaPadre->usuarioPuedeSubir($usuario);
     }
-
-    // ─────────────────────────────────────────────
-    // ACTUALIZAR (renombrar, cambiar visibilidad)
-    // Admin/Gerente pueden gestionar carpetas de su empresa
-    // ─────────────────────────────────────────────
 
     public function update(Usuario $usuario, Carpeta $carpeta): bool
     {
@@ -100,10 +75,6 @@ class FolderPolicy
         return $carpeta->usuarioPuedeEditar($usuario);
     }
 
-    // ─────────────────────────────────────────────
-    // ELIMINAR
-    // ─────────────────────────────────────────────
-
     public function delete(Usuario $usuario, Carpeta $carpeta): bool
     {
         if ($carpeta->empresa_id !== $usuario->empresa_id) {
@@ -121,19 +92,11 @@ class FolderPolicy
         return $carpeta->usuarioPuedeBorrar($usuario);
     }
 
-    // ─────────────────────────────────────────────
-    // RESTAURAR
-    // ─────────────────────────────────────────────
-
     public function restore(Usuario $usuario, Carpeta $carpeta): bool
     {
         return $carpeta->empresa_id === $usuario->empresa_id
             && $usuario->rol === 'Admin';
     }
-
-    // ─────────────────────────────────────────────
-    // GESTIONAR PERMISOS
-    // ─────────────────────────────────────────────
 
     public function managePermissions(Usuario $usuario, Carpeta $carpeta): bool
     {
@@ -144,22 +107,34 @@ class FolderPolicy
         return in_array($usuario->rol, ['Admin', 'Gerente']);
     }
 
-    // ─────────────────────────────────────────────
-    // SUBIR ARCHIVOS
-    //
-    // CAMBIO: Admin y Gerente ahora también necesitan puede_subir
-    // para ser consistentes con la regla de PermisoCarpeta estricto.
-    // Si necesitas que Admin/Gerente siempre puedan subir sin permiso
-    // explícito, cambia la lógica aquí.
-    // ─────────────────────────────────────────────
-
+    /**
+     * ¿El usuario puede subir archivos a esta carpeta?
+     *
+     * Nota importante sobre requiere_aprobacion_subida:
+     * Este método devuelve TRUE si el usuario tiene permiso de subir,
+     * independientemente de si necesita aprobación. La lógica de
+     * "subida con aprobación" se maneja en ArchivoController::store()
+     * DESPUÉS de que esta policy autoriza el acceso a la ruta.
+     *
+     * Es decir: puede_subir = puede intentar subir. Si la carpeta
+     * requiere aprobación, el archivo quedará pendiente en vez de
+     * publicarse directamente.
+     */
     public function uploadTo(Usuario $usuario, Carpeta $carpeta): bool
     {
         if ($carpeta->empresa_id !== $usuario->empresa_id) {
             return false;
         }
 
-        // Carpeta pública: cualquiera puede subir si tiene rol con capacidad
+        // Carpeta en modo solo_lectura: NADIE puede subir
+        // (ni siquiera con permiso explícito, es readonly por diseño)
+        if ($carpeta->esSoloLectura()) {
+            // Solo Admin y Gerente pueden subir en solo_lectura
+            // para administración, pero Auxiliar/Empleado no
+            return in_array($usuario->rol, ['Admin', 'Gerente']);
+        }
+
+        // Carpeta pública: roles con capacidad de subir
         if ($carpeta->es_publico && in_array($usuario->rol, ['Admin', 'Gerente', 'Auxiliar'])) {
             return true;
         }
@@ -167,15 +142,20 @@ class FolderPolicy
         return $carpeta->usuarioPuedeSubir($usuario);
     }
 
-    // ─────────────────────────────────────────────
-    // DESCARGAR DESDE LA CARPETA
-    // (misma lógica que ArchivoPolicy::download)
-    // ─────────────────────────────────────────────
-
+    /**
+     * ¿El usuario puede descargar desde esta carpeta?
+     * Respeta el modo_acceso de la carpeta.
+     */
     public function downloadFrom(Usuario $usuario, Carpeta $carpeta): bool
     {
         if ($carpeta->empresa_id !== $usuario->empresa_id) {
             return false;
+        }
+
+        // modo solo_lectura: requiere permiso explícito
+        if ($carpeta->esSoloLectura()) {
+            $p = $carpeta->permisoEfectivo($usuario);
+            return $p && $p->puede_descargar;
         }
 
         if ($carpeta->es_publico) {

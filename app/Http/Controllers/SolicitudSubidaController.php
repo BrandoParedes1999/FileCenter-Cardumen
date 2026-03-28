@@ -10,7 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+
 use Illuminate\View\View;
 
 class SolicitudSubidaController extends Controller
@@ -164,7 +164,7 @@ class SolicitudSubidaController extends Controller
         ]);
 
         RegistroActividad::registrar(
-            'aprobar_solicitud', 'archivo', $archivoId,
+            'aprobar_subida', 'archivo', $archivoId,
             "Aprobó subida de \"{$solicitudSubida->nombre_original}\" de {$usuario->nombre_completo}"
         );
 
@@ -203,7 +203,7 @@ class SolicitudSubidaController extends Controller
         ]);
 
         RegistroActividad::registrar(
-            'rechazar_solicitud', 'carpeta', $solicitudSubida->carpeta_id,
+            'rechazar_subida', 'carpeta', $solicitudSubida->carpeta_id,
             "Rechazó subida de \"{$solicitudSubida->nombre_original}\""
         );
 
