@@ -48,26 +48,28 @@ class CompanyScope
                 ->exists();
 
             if (!$esPropiaEmpresa) {
-                // ¿Tiene solicitud aprobada y vigente para esta carpeta?
+                // ¿Es carpeta del corporativo? → todos los usuarios activos pueden acceder
+                $esCorporativo = \App\Models\Carpeta::where('id', $id)
+                    ->whereHas('empresa', fn($q) => $q->where('es_corporativo', true))
+                    ->withTrashed()
+                    ->exists();
+
+                if ($esCorporativo) {
+                    return; // Permitido: corporativo es accesible para todos
+                }
+
+                // ¿Tiene solicitud de acceso aprobada y vigente para esta carpeta?
                 $tieneAcceso = \App\Models\SolicitudAcceso::where('solicitante_id', $usuario->id)
                     ->where('carpeta_id', $id)
                     ->where('status', 'Aprobado')
                     ->where(function ($q) {
                         $q->whereNull('caduca_en')
-                          ->orWhere('caduca_en', '>', now());
+                        ->orWhere('caduca_en', '>', now());
                     })
                     ->exists();
 
                 if (!$tieneAcceso) {
-                    // ¿La carpeta pertenece a empresa corporativa y es pública?
-                    $esCorpPublica = \App\Models\Carpeta::where('id', $id)
-                        ->where('es_publico', true)
-                        ->whereHas('empresa', fn($q) => $q->where('es_corporativo', true))
-                        ->exists();
-
-                    if (!$esCorpPublica) {
-                        abort(403, 'No tienes acceso a esta carpeta.');
-                    }
+                    abort(403, 'No tienes acceso a esta carpeta.');
                 }
             }
         }
@@ -83,46 +85,36 @@ class CompanyScope
                 ->exists();
 
             if (!$esPropiaEmpresa) {
-                // ¿Tiene solicitud aprobada y vigente para este archivo?
+                // ¿Es archivo del corporativo? → permitido
+                $esCorporativo = \App\Models\Archivo::where('archivos.id', $id)
+                    ->join('carpetas', 'archivos.carpeta_id', '=', 'carpetas.id')
+                    ->join('empresas', 'carpetas.empresa_id', '=', 'empresas.id')
+                    ->where('empresas.es_corporativo', true)
+                    ->exists();
+
+                if ($esCorporativo) {
+                    return; // Permitido
+                }
+
+                // ¿Tiene solicitud aprobada para este archivo o su carpeta?
                 $tieneAcceso = \App\Models\SolicitudAcceso::where('solicitante_id', $usuario->id)
-                    ->where('archivo_id', $id)
+                    ->where(function ($q) use ($id) {
+                        $q->where('archivo_id', $id)
+                        ->orWhereIn('carpeta_id', function ($sub) use ($id) {
+                            $sub->select('carpeta_id')
+                                ->from('archivos')
+                                ->where('id', $id);
+                        });
+                    })
                     ->where('status', 'Aprobado')
                     ->where(function ($q) {
                         $q->whereNull('caduca_en')
-                          ->orWhere('caduca_en', '>', now());
+                        ->orWhere('caduca_en', '>', now());
                     })
                     ->exists();
 
-                // O solicitud aprobada para la carpeta contenedora
                 if (!$tieneAcceso) {
-                    $carpetaDelArchivo = \App\Models\Archivo::where('archivos.id', $id)
-                        ->join('carpetas', 'archivos.carpeta_id', '=', 'carpetas.id')
-                        ->value('carpetas.id');
-
-                    if ($carpetaDelArchivo) {
-                        $tieneAcceso = \App\Models\SolicitudAcceso::where('solicitante_id', $usuario->id)
-                            ->where('carpeta_id', $carpetaDelArchivo)
-                            ->where('status', 'Aprobado')
-                            ->where(function ($q) {
-                                $q->whereNull('caduca_en')
-                                  ->orWhere('caduca_en', '>', now());
-                            })
-                            ->exists();
-                    }
-                }
-
-                // ¿Es de empresa corporativa y carpeta pública?
-                if (!$tieneAcceso) {
-                    $esCorpPublica = \App\Models\Archivo::where('archivos.id', $id)
-                        ->join('carpetas', 'archivos.carpeta_id', '=', 'carpetas.id')
-                        ->join('empresas', 'carpetas.empresa_id', '=', 'empresas.id')
-                        ->where('carpetas.es_publico', true)
-                        ->where('empresas.es_corporativo', true)
-                        ->exists();
-
-                    if (!$esCorpPublica) {
-                        abort(403, 'No tienes acceso a este archivo.');
-                    }
+                    abort(403, 'No tienes acceso a este archivo.');
                 }
             }
         }
@@ -132,7 +124,14 @@ class CompanyScope
             $id = is_object($empresaId) ? $empresaId->id : $empresaId;
 
             if ((int) $id !== (int) $usuario->empresa_id) {
-                abort(403, 'No tienes acceso a esta empresa.');
+                // Permitir acceso a la empresa corporativa
+                $esCorporativo = \App\Models\Empresa::where('id', $id)
+                    ->where('es_corporativo', true)
+                    ->exists();
+
+                if (!$esCorporativo) {
+                    abort(403, 'No tienes acceso a esta empresa.');
+                }
             }
         }
     }

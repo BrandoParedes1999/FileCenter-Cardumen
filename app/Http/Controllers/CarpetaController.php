@@ -28,15 +28,10 @@ class CarpetaController extends Controller
             $carpetas = Carpeta::with(['empresa', 'hijos', 'creadoPor'])
                 ->whereNull('padre_id')
                 ->where(function ($q) use ($usuario) {
+                    // Su propia empresa
                     $q->where('empresa_id', $usuario->empresa_id)
-                      ->orWhereHas('empresa', fn($e) => $e->where('es_corporativo', true));
-                })
-                ->where(function ($q) use ($usuario) {
-                    $q->where('empresa_id', $usuario->empresa_id)
-                      ->orWhere(function ($q2) {
-                          $q2->whereHas('empresa', fn($e) => $e->where('es_corporativo', true))
-                             ->where('es_publico', true);
-                      });
+                    // O empresa corporativa (sin restricción de es_publico)
+                    ->orWhereHas('empresa', fn($e) => $e->where('es_corporativo', true));
                 })
                 ->orderByRaw('(SELECT es_corporativo FROM empresas WHERE empresas.id = carpetas.empresa_id) DESC')
                 ->orderBy('nombre')
@@ -231,24 +226,34 @@ class CarpetaController extends Controller
 
     private function crearPermisosIniciales(Carpeta $carpeta, int $creadoPor): void
     {
-        foreach (['Admin', 'Gerente'] as $rol) {
-            PermisoCarpeta::updateOrCreate(
-                [
-                    'carpeta_id' => $carpeta->id,
-                    'empresa_id' => $carpeta->empresa_id,
-                    'rol'        => $rol,
-                    'usuario_id' => null,
-                ],
-                [
-                    'puede_leer'      => true,
-                    'puede_subir'     => true,
-                    'puede_editar'    => true,
-                    'puede_borrar'    => true,
-                    'puede_descargar' => true,
-                    'heredar'         => true,
-                    'concedido_por'   => $creadoPor,
-                ]
-            );
+        $esCorporativo = \App\Models\Empresa::where('id', $carpeta->empresa_id)
+            ->where('es_corporativo', true)->exists();
+
+        if ($esCorporativo) {
+            // Permisos globales para Admin y Gerente de CUALQUIER empresa
+            foreach (['Admin', 'Gerente'] as $rol) {
+                PermisoCarpeta::updateOrCreate(
+                    ['carpeta_id' => $carpeta->id, 'empresa_id' => null, 'rol' => $rol, 'usuario_id' => null],
+                    [
+                        'puede_leer' => true, 'puede_subir' => false,
+                        'puede_editar' => false, 'puede_borrar' => false,
+                        'puede_descargar' => true, 'heredar' => true,
+                        'concedido_por' => $creadoPor,
+                    ]
+                );
+            }
+        } else {
+            foreach (['Admin', 'Gerente'] as $rol) {
+                PermisoCarpeta::updateOrCreate(
+                    ['carpeta_id' => $carpeta->id, 'empresa_id' => $carpeta->empresa_id, 'rol' => $rol, 'usuario_id' => null],
+                    [
+                        'puede_leer' => true, 'puede_subir' => true,
+                        'puede_editar' => true, 'puede_borrar' => true,
+                        'puede_descargar' => true, 'heredar' => true,
+                        'concedido_por' => $creadoPor,
+                    ]
+                );
+            }
         }
-    }
+    } 
 }

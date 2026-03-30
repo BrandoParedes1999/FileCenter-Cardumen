@@ -146,19 +146,10 @@ class LoginController extends Controller
         return redirect()->route('login')->with('status', 'Sesión cerrada correctamente.');
     }
 
-    // HELPERS PRIVADOS
-
-    /**
-     * Redirección según el rol del usuario.
-     */
+    // ENVIA SIEMPRE AL DASHBOARD
     private function redireccionPorRol(Usuario $usuario): string
-    {
-        return match ($usuario->rol) {
-            'Superadmin' => route('dashboard'),
-            'Aux_QHSE'   => route('qhse.dashboard'),
-            'Admin'      => route('empresa.dashboard'),
-            default      => route('dashboard'),
-        };
+    {   
+        return route('dashboard');
     }
 
     /**

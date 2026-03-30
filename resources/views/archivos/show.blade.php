@@ -93,7 +93,7 @@
                                         {{-- DESCARGAR: respeta modo_acceso Y permiso --}}
                                         @can('download', $archivo)
                                         <a href="{{ route('archivos.descargar', $archivo) }}"
-                                           class="fc-action-btn download"
+                                            class="fc-action-btn download"
                                            style="background:rgba(5,150,105,.08);color:#059669;border-color:rgba(5,150,105,.25)">
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
                                             Descargar

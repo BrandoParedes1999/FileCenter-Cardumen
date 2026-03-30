@@ -112,25 +112,27 @@ class Carpeta extends Model
         $permiso = $this->permisos()
             ->where('usuario_id', $usuario->id)
             ->first();
+        if ($permiso) return $permiso;
 
-        if ($permiso) {
-            return $permiso;
-        }
-
-        // 2. Permiso por empresa + rol
+        // 2. Permiso por empresa + rol del usuario
         $permiso = $this->permisos()
             ->where('empresa_id', $usuario->empresa_id)
             ->where('rol', $usuario->rol)
+            ->whereNull('usuario_id')
             ->first();
+        if ($permiso) return $permiso;
 
-        if ($permiso) {
-            return $permiso;
-        }
+        // 3. Permiso global (empresa_id = null) por rol — para corporativo
+        $permiso = $this->permisos()
+            ->whereNull('empresa_id')
+            ->whereNull('usuario_id')
+            ->where('rol', $usuario->rol)
+            ->first();
+        if ($permiso) return $permiso;
 
-        // 3. Heredar del padre
+        // 4. Heredar del padre
         if ($this->padre_id) {
             $padrePermiso = $this->padre->permisoEfectivo($usuario);
-            // Solo hereda si el permiso del padre tiene heredar=1
             if ($padrePermiso && $padrePermiso->heredar) {
                 return $padrePermiso;
             }
@@ -143,6 +145,20 @@ class Carpeta extends Model
     {
         if ($usuario->esSuperAdmin() || $usuario->esAuxQHSE()) return true;
         if ($this->es_publico) return true;
+
+        // Carpeta del corporativo → todos los usuarios activos pueden leer
+        if ($this->empresa && $this->empresa->es_corporativo) return true;
+        // Carga lazy-safe
+        if (!$this->relationLoaded('empresa')) {
+            $esCorp = \App\Models\Empresa::where('id', $this->empresa_id)
+                ->where('es_corporativo', true)->exists();
+            if ($esCorp) return true;
+        }
+
+        if (in_array($usuario->rol, ['Admin', 'Gerente'])
+            && $this->empresa_id === $usuario->empresa_id) {
+            return true;
+        }
 
         $p = $this->permisoEfectivo($usuario);
         return $p && $p->puede_leer;

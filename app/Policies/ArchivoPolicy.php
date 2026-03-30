@@ -24,29 +24,29 @@ class ArchivoPolicy
         return $usuario->es_activo;
     }
 
-    /**
-     * Ver detalle del archivo.
-     * - Misma empresa siempre puede si tiene puede_leer o carpeta pública.
-     * - Cross-empresa: CompanyScope ya validó solicitud aprobada.
-     */
     public function view(Usuario $usuario, Archivo $archivo): bool
     {
         $carpeta = $archivo->carpeta;
 
-        // Cross-empresa: CompanyScope ya lo validó, pero la policy
-        // solo da acceso si la carpeta es pública de corporativo.
+        // Corporativo → todos pueden ver
+        if ($carpeta->empresa && $carpeta->empresa->es_corporativo) return true;
+
         if ($carpeta->empresa_id !== $usuario->empresa_id) {
-            return $carpeta->es_publico
-                && ($carpeta->empresa->es_corporativo ?? false);
+            // Cross-empresa solo con solicitud aprobada
+            return \App\Models\SolicitudAcceso::where('solicitante_id', $usuario->id)
+                ->where(function ($q) use ($archivo, $carpeta) {
+                    $q->where('archivo_id', $archivo->id)
+                    ->orWhere('carpeta_id', $carpeta->id);
+                })
+                ->where('status', 'Aprobado')
+                ->where(function ($q) {
+                    $q->whereNull('caduca_en')->orWhere('caduca_en', '>', now());
+                })
+                ->exists();
         }
 
-        if ($carpeta->es_publico) {
-            return true;
-        }
-
-        if (in_array($usuario->rol, ['Admin', 'Gerente'])) {
-            return true;
-        }
+        if ($carpeta->es_publico) return true;
+        if (in_array($usuario->rol, ['Admin', 'Gerente'])) return true;
 
         return $carpeta->usuarioPuedeLeer($usuario);
     }

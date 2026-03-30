@@ -25,17 +25,16 @@ class FolderPolicy
 
     public function view(Usuario $usuario, Carpeta $carpeta): bool
     {
+        // Si es del corporativo, todos pueden ver
+        if ($carpeta->empresa && $carpeta->empresa->es_corporativo) return true;
+
         if ($carpeta->empresa_id !== $usuario->empresa_id) {
             return false;
         }
 
-        if ($carpeta->es_publico) {
-            return true;
-        }
+        if ($carpeta->es_publico) return true;
 
-        if (in_array($usuario->rol, ['Admin', 'Gerente'])) {
-            return true;
-        }
+        if (in_array($usuario->rol, ['Admin', 'Gerente'])) return true;
 
         return $carpeta->usuarioPuedeLeer($usuario);
     }
