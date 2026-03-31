@@ -137,6 +137,17 @@
             </svg>
             Mis Áreas
         </a>
+
+        {{-- NAV PRINCIPAL: después del item "Mis Áreas" --}}
+            @if(in_array(Auth::user()->rol, ['Superadmin', 'Aux_QHSE', 'Admin', 'Gerente']))
+            <a href="{{ route('permisos.global') }}"
+            class="fc-nav-item {{ request()->routeIs('permisos.global') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                </svg>
+                Permisos
+            </a>
+            @endif
     </div>
 
     {{-- Solicitudes de subida (solo para gestores) --}}
@@ -182,6 +193,8 @@
     @if(in_array(Auth::user()->rol, ['Superadmin', 'Aux_QHSE', 'Admin', 'Gerente']))
     <div class="fc-nav-section">
         <div class="fc-nav-label">Administración</div>
+
+        
 
         <a href="{{ route('usuarios.index') }}"
            class="fc-nav-item {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
