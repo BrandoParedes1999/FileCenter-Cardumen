@@ -10,6 +10,7 @@ use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\SolicitudAccesoController;
 use App\Http\Controllers\SolicitudSubidaController;
 use App\Http\Controllers\PermisoCarpetaController;
+use App\Http\Controllers\PermisosGlobalesController;
 use Illuminate\Support\Facades\Route;
 
 // ─────────────────────────────────────────────
@@ -137,6 +138,23 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
 
     Route::post('empresas/{empresa}/toggle-activo', [EmpresaController::class, 'toggleActivo'])
         ->name('empresas.toggle-activo');
+
+
+    // ─────────────────────────────────────────────
+    // PERMISOS GLOBALES (vista centralizada)
+    // ─────────────────────────────────────────────
+
+    Route::get('permisos', [PermisoCarpetaController::class, 'index'])->name('index');
+// → genera 'permisos.index'  ✓
+
+    Route::get('permisos-globales', [PermisosGlobalesController::class, 'index'])
+        ->name('permisos.global');
+
+    Route::put('permisos-globales/{permiso}', [PermisosGlobalesController::class, 'update'])
+        ->name('permisos.global.update');
+
+    Route::delete('permisos-globales/{permiso}', [PermisosGlobalesController::class, 'destroy'])
+        ->name('permisos.global.destroy');
 });
 
 require __DIR__.'/auth.php';

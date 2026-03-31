@@ -25,8 +25,8 @@ class FolderPolicy
 
     public function view(Usuario $usuario, Carpeta $carpeta): bool
     {
-        // Si es del corporativo, todos pueden ver
-        if ($carpeta->empresa && $carpeta->empresa->es_corporativo) return true;
+        // Corporativo → todos pueden ver
+        if ($this->esCorporativo($carpeta)) return true;
 
         if ($carpeta->empresa_id !== $usuario->empresa_id) {
             return false;
@@ -109,27 +109,23 @@ class FolderPolicy
     /**
      * ¿El usuario puede subir archivos a esta carpeta?
      *
-     * Nota importante sobre requiere_aprobacion_subida:
-     * Este método devuelve TRUE si el usuario tiene permiso de subir,
-     * independientemente de si necesita aprobación. La lógica de
-     * "subida con aprobación" se maneja en ArchivoController::store()
-     * DESPUÉS de que esta policy autoriza el acceso a la ruta.
-     *
-     * Es decir: puede_subir = puede intentar subir. Si la carpeta
-     * requiere aprobación, el archivo quedará pendiente en vez de
-     * publicarse directamente.
+     * Corporativo: nadie externo puede subir (solo SA/AuxQHSE via before()).
+     * El corporativo es de lectura/descarga para el resto de empleados.
      */
     public function uploadTo(Usuario $usuario, Carpeta $carpeta): bool
     {
+        // Nadie de otra empresa sube al corporativo
+        // (SA/AuxQHSE ya fueron capturados por before())
+        if ($this->esCorporativo($carpeta)) {
+            return false;
+        }
+
         if ($carpeta->empresa_id !== $usuario->empresa_id) {
             return false;
         }
 
-        // Carpeta en modo solo_lectura: NADIE puede subir
-        // (ni siquiera con permiso explícito, es readonly por diseño)
+        // Carpeta en modo solo_lectura: solo Admin y Gerente pueden subir
         if ($carpeta->esSoloLectura()) {
-            // Solo Admin y Gerente pueden subir en solo_lectura
-            // para administración, pero Auxiliar/Empleado no
             return in_array($usuario->rol, ['Admin', 'Gerente']);
         }
 
@@ -143,10 +139,20 @@ class FolderPolicy
 
     /**
      * ¿El usuario puede descargar desde esta carpeta?
-     * Respeta el modo_acceso de la carpeta.
+     *
+     * Corporativo → todos pueden descargar (salvo modo solo_lectura).
      */
     public function downloadFrom(Usuario $usuario, Carpeta $carpeta): bool
     {
+        // ── Corporativo ───────────────────────────────────────────
+        if ($this->esCorporativo($carpeta)) {
+            if ($carpeta->esSoloLectura()) {
+                $p = $carpeta->permisoEfectivo($usuario);
+                return $p && $p->puede_descargar;
+            }
+            return true;
+        }
+
         if ($carpeta->empresa_id !== $usuario->empresa_id) {
             return false;
         }
@@ -162,5 +168,18 @@ class FolderPolicy
         }
 
         return $carpeta->usuarioPuedeDescargar($usuario);
+    }
+
+    // ── Helpers ─────────────────────────────────────────────────
+
+    private function esCorporativo(Carpeta $carpeta): bool
+    {
+        if ($carpeta->relationLoaded('empresa')) {
+            return (bool) $carpeta->empresa?->es_corporativo;
+        }
+
+        return \App\Models\Empresa::where('id', $carpeta->empresa_id)
+            ->where('es_corporativo', true)
+            ->exists();
     }
 }

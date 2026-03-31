@@ -28,15 +28,15 @@ class ArchivoPolicy
     {
         $carpeta = $archivo->carpeta;
 
-        // Corporativo → todos pueden ver
-        if ($carpeta->empresa && $carpeta->empresa->es_corporativo) return true;
+        // Corporativo → todos los usuarios activos pueden ver
+        if ($this->esCarpetaCorporativa($carpeta)) return true;
 
         if ($carpeta->empresa_id !== $usuario->empresa_id) {
             // Cross-empresa solo con solicitud aprobada
             return \App\Models\SolicitudAcceso::where('solicitante_id', $usuario->id)
                 ->where(function ($q) use ($archivo, $carpeta) {
                     $q->where('archivo_id', $archivo->id)
-                    ->orWhere('carpeta_id', $carpeta->id);
+                      ->orWhere('carpeta_id', $carpeta->id);
                 })
                 ->where('status', 'Aprobado')
                 ->where(function ($q) {
@@ -63,6 +63,11 @@ class ArchivoPolicy
     {
         $carpeta = $archivo->carpeta;
 
+        // Corporativo: solo Admin/Gerente/Superadmin pueden editar
+        if ($this->esCarpetaCorporativa($carpeta)) {
+            return in_array($usuario->rol, ['Admin', 'Gerente']);
+        }
+
         if ($carpeta->empresa_id !== $usuario->empresa_id) {
             return false;
         }
@@ -85,6 +90,11 @@ class ArchivoPolicy
     {
         $carpeta = $archivo->carpeta;
 
+        // Nadie externo puede borrar del corporativo (solo SA/AuxQHSE via before())
+        if ($this->esCarpetaCorporativa($carpeta)) {
+            return false;
+        }
+
         if ($carpeta->empresa_id !== $usuario->empresa_id) {
             return false;
         }
@@ -101,17 +111,17 @@ class ArchivoPolicy
     }
 
     /**
-     * DESCARGAR — lógica completa:
+     * DESCARGAR — lógica completa con soporte de corporativo:
      *
-     * 1. Carpeta en modo 'solo_lectura': NADIE descarga sin puede_descargar explícito.
-     *    Esto aplica incluso a Admin y Gerente de la empresa.
+     * 1. Carpeta del corporativo → TODOS los usuarios activos pueden descargar,
+     *    SALVO que la carpeta esté en modo 'solo_lectura' (entonces necesitan
+     *    permiso explícito de descarga en PermisoCarpeta).
      *
-     * 2. Carpeta de otra empresa: solo si hay solicitud de acceso aprobada
-     *    con tipo_acceso = 'Descargar' (CompanyScope ya validó el acceso;
-     *    aquí validamos el tipo específico de permiso).
+     * 2. Carpeta de otra empresa (cross-empresa, no corporativo): solo si hay
+     *    solicitud aprobada con tipo_acceso = 'Descargar'.
      *
      * 3. Carpeta pública de misma empresa: todos pueden descargar
-     *    SALVO que sea modo solo_lectura.
+     *    SALVO modo solo_lectura.
      *
      * 4. Resto: verifica puede_descargar en PermisoCarpeta.
      */
@@ -119,26 +129,36 @@ class ArchivoPolicy
     {
         $carpeta = $archivo->carpeta;
 
-        // ── Cross-empresa ─────────────────────────────────────────
+        // ── Corporativo ───────────────────────────────────────────
+        // Todos los usuarios de cualquier empresa pueden descargar
+        // del corporativo, excepto si la carpeta es solo_lectura
+        // (en ese caso necesitan permiso explícito).
+        if ($this->esCarpetaCorporativa($carpeta)) {
+            if ($carpeta->esSoloLectura()) {
+                $p = $carpeta->permisoEfectivo($usuario);
+                return $p && $p->puede_descargar;
+            }
+            // modo 'con_descarga' o 'normal' → acceso libre
+            return true;
+        }
+
+        // ── Cross-empresa (no corporativo) ────────────────────────
         if ($carpeta->empresa_id !== $usuario->empresa_id) {
-            // Verificar que la solicitud aprobada permita descarga
             return \App\Models\SolicitudAcceso::where('solicitante_id', $usuario->id)
                 ->where(function ($q) use ($archivo, $carpeta) {
                     $q->where('archivo_id', $archivo->id)
-                    ->orWhere('carpeta_id', $carpeta->id);
+                      ->orWhere('carpeta_id', $carpeta->id);
                 })
                 ->where('status', 'Aprobado')
                 ->where('tipo_acceso', 'Descargar')
                 ->where(function ($q) {
                     $q->whereNull('caduca_en')
-                    ->orWhere('caduca_en', '>', now());
+                      ->orWhere('caduca_en', '>', now());
                 })
                 ->exists();
         }
 
-        // ── Carpeta en modo solo_lectura ──────────────────────────
-        // En este modo TODOS los roles (incluido Admin/Gerente)
-        // necesitan puede_descargar explícito en PermisoCarpeta.
+        // ── Carpeta en modo solo_lectura (misma empresa) ──────────
         if ($carpeta->esSoloLectura()) {
             $p = $carpeta->permisoEfectivo($usuario);
             return $p && $p->puede_descargar;
@@ -150,7 +170,6 @@ class ArchivoPolicy
         }
 
         // ── Carpeta privada normal ────────────────────────────────
-        // Todos los roles necesitan puede_descargar en PermisoCarpeta.
         return $carpeta->usuarioPuedeDescargar($usuario);
     }
 
@@ -158,5 +177,22 @@ class ArchivoPolicy
     {
         return $archivo->carpeta->empresa_id === $usuario->empresa_id
             && $usuario->rol === 'Admin';
+    }
+
+    // ── Helpers ─────────────────────────────────────────────────
+
+    /**
+     * Determina si la carpeta pertenece a la empresa corporativa.
+     * Usa la relación si ya está cargada; si no, hace una consulta puntual.
+     */
+    private function esCarpetaCorporativa(\App\Models\Carpeta $carpeta): bool
+    {
+        if ($carpeta->relationLoaded('empresa')) {
+            return (bool) $carpeta->empresa?->es_corporativo;
+        }
+
+        return \App\Models\Empresa::where('id', $carpeta->empresa_id)
+            ->where('es_corporativo', true)
+            ->exists();
     }
 }

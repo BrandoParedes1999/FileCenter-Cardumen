@@ -18,8 +18,8 @@ class Carpeta extends Model
         'nombre',
         'path',
         'es_publico',
-        'modo_acceso',                  // 'solo_lectura' | 'con_descarga' | 'normal'
-        'requiere_aprobacion_subida',   // bool: Auxiliar/Empleado deben pedir aprobación
+        'modo_acceso',
+        'requiere_aprobacion_subida',
         'creado_por',
     ];
 
@@ -83,20 +83,29 @@ class Carpeta extends Model
 
     // HELPERS DE MODO DE ACCESO
 
-    /**
-     * ¿La carpeta es de solo lectura? (sin descarga para nadie salvo permiso explícito)
-     */
     public function esSoloLectura(): bool
     {
         return $this->modo_acceso === 'solo_lectura';
     }
 
-    /**
-     * ¿La carpeta permite descarga por defecto?
-     */
     public function permiteDescargaBase(): bool
     {
         return in_array($this->modo_acceso, ['con_descarga', 'normal']);
+    }
+
+    /**
+     * Determina si esta carpeta pertenece a la empresa corporativa.
+     * Usa la relación si ya está cargada para evitar queries extra.
+     */
+    public function esDeCorporativo(): bool
+    {
+        if ($this->relationLoaded('empresa')) {
+            return (bool) $this->empresa?->es_corporativo;
+        }
+
+        return Empresa::where('id', $this->empresa_id)
+            ->where('es_corporativo', true)
+            ->exists();
     }
 
     // LÓGICA DE PERMISOS CON HERENCIA
@@ -147,13 +156,7 @@ class Carpeta extends Model
         if ($this->es_publico) return true;
 
         // Carpeta del corporativo → todos los usuarios activos pueden leer
-        if ($this->empresa && $this->empresa->es_corporativo) return true;
-        // Carga lazy-safe
-        if (!$this->relationLoaded('empresa')) {
-            $esCorp = \App\Models\Empresa::where('id', $this->empresa_id)
-                ->where('es_corporativo', true)->exists();
-            if ($esCorp) return true;
-        }
+        if ($this->esDeCorporativo()) return true;
 
         if (in_array($usuario->rol, ['Admin', 'Gerente'])
             && $this->empresa_id === $usuario->empresa_id) {
@@ -189,17 +192,28 @@ class Carpeta extends Model
     }
 
     /**
-     * ¿El usuario puede descargar?
+     * ¿El usuario puede descargar archivos de esta carpeta?
      *
-     * Regla combinada:
-     * 1. Superadmin / Aux_QHSE → siempre sí
-     * 2. Carpeta en modo 'solo_lectura' → nadie descarga salvo que tenga
-     *    puede_descargar explícito en su PermisoCarpeta
-     * 3. Resto: verifica puede_descargar en el permiso efectivo
+     * Reglas por prioridad:
+     * 1. Superadmin / Aux_QHSE → siempre sí.
+     * 2. Carpeta del corporativo → todos los usuarios activos pueden descargar,
+     *    SALVO modo 'solo_lectura' donde se exige permiso explícito.
+     * 3. Carpeta en modo 'solo_lectura' (misma empresa) → necesita
+     *    puede_descargar explícito en PermisoCarpeta.
+     * 4. Resto → verifica puede_descargar en el permiso efectivo.
      */
     public function usuarioPuedeDescargar(Usuario $usuario): bool
     {
         if ($usuario->esSuperAdmin() || $usuario->esAuxQHSE()) return true;
+
+        // Corporativo: todos pueden descargar salvo modo solo_lectura
+        if ($this->esDeCorporativo()) {
+            if ($this->esSoloLectura()) {
+                $p = $this->permisoEfectivo($usuario);
+                return $p && $p->puede_descargar;
+            }
+            return true;
+        }
 
         $p = $this->permisoEfectivo($usuario);
 
