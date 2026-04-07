@@ -68,7 +68,8 @@
                                                 data-color="{{ $emp->color_primario ?? '#4f46e5' }}"
                                                 data-corp="{{ $emp->es_corporativo ? '1' : '0' }}"
                                                 data-nombre="{{ $emp->nombre }}"
-                                                {{ old('empresa_id') == $emp->id ? 'selected' : '' }}>
+                                                {{-- Bug 1 fix: pre-seleccionar si viene empresa_id por query param --}}
+                                                {{ (old('empresa_id') ?? $empresaIdPreseleccionada) == $emp->id ? 'selected' : '' }}>
                                             {{ $emp->es_corporativo ? '🏢 ' : '🏭 ' }}{{ $emp->nombre }}
                                         </option>
                                     @endforeach
@@ -98,13 +99,14 @@
                                     </div>
                                 </div>
                             @else
+                                {{-- Admin/Gerente/Auxiliar: empresa automática --}}
                                 <input type="hidden" name="empresa_id" value="{{ Auth::user()->empresa_id }}">
                                 <div class="fc-info-chip">
                                     <div class="fc-info-chip-icon">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="#4f46e5"><path d="M12 7V3H2v18h20V7H12z"/></svg>
                                     </div>
                                     <div>
-                                        <div class="fc-info-chip-label">Tu empresa</div>
+                                        <div class="fc-info-chip-label">Tu empresa (asignada automáticamente)</div>
                                         <div class="fc-info-chip-name">{{ Auth::user()->empresa->nombre ?? '—' }}</div>
                                     </div>
                                 </div>
@@ -122,7 +124,7 @@
                                 @enderror
                             </div>
 
-                            {{-- ══ MODO DE ACCESO ══════════════════════════════════════ --}}
+                            {{-- ══ MODO DE ACCESO ══ --}}
                             <div class="fc-field">
                                 <label>Modo de acceso *</label>
                                 <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
@@ -199,7 +201,7 @@
                                 @enderror
                             </div>
 
-                            {{-- ══ VISIBILIDAD ══════════════════════════════════════════ --}}
+                            {{-- ══ VISIBILIDAD ══ --}}
                             <div class="fc-field">
                                 <label>Visibilidad</label>
                                 <label class="fc-checkbox-wrap">
@@ -213,7 +215,7 @@
                                 </label>
                             </div>
 
-                            {{-- ══ APROBACIÓN DE SUBIDAS ════════════════════════════════ --}}
+                            {{-- ══ APROBACIÓN DE SUBIDAS ══ --}}
                             <div class="fc-field">
                                 <label>Control de subidas</label>
                                 <label class="fc-checkbox-wrap" style="border-color:rgba(245,158,11,0.3);background:rgba(245,158,11,0.03)">
@@ -225,7 +227,7 @@
                                             ⏳ Requerir aprobación para subir
                                         </div>
                                         <div class="fc-checkbox-hint">
-                                            Cuando Auxiliar o Empleado suben un archivo, queda pendiente de
+                                            Cuando cualquier usuario sube un archivo, queda pendiente de
                                             aprobación por un Admin o Gerente antes de publicarse.
                                             Admin y Gerente siempre pueden subir directamente.
                                         </div>
@@ -271,14 +273,20 @@ function actualizarDestino(select) {
 }
 
 function selectModo(valor, labelEl) {
-    // Quitar selección visual de todos
     document.querySelectorAll('input[name="modo_acceso"]').forEach(radio => {
         const lbl = radio.closest('label');
         if (lbl) lbl.style.borderColor = 'var(--fc-border)';
     });
-    // Marcar el seleccionado
     const colores = { solo_lectura: '#6366f1', con_descarga: '#059669', normal: '#6366f1' };
     labelEl.style.borderColor = colores[valor] || '#6366f1';
 }
+
+// Bug 1 fix: si viene empresa_id preseleccionada, activar el chip de destino
+document.addEventListener('DOMContentLoaded', function() {
+    const select = document.getElementById('empresa_id');
+    if (select && select.value) {
+        actualizarDestino(select);
+    }
+});
 </script>
 </x-app-layout>

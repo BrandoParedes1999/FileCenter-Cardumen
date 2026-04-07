@@ -109,8 +109,13 @@ class FolderPolicy
     /**
      * ¿El usuario puede subir archivos a esta carpeta?
      *
-     * Corporativo: nadie externo puede subir (solo SA/AuxQHSE via before()).
-     * El corporativo es de lectura/descarga para el resto de empleados.
+     * FIX Bug 2: Si la carpeta tiene requiere_aprobacion_subida = true,
+     * CUALQUIER usuario de la misma empresa puede "subir" — pero el
+     * ArchivoController detecta que necesita aprobación y lo enruta
+     * a la cola de solicitudes pendientes en lugar de publicar directamente.
+     *
+     * Esto permite que Empleados y Auxiliares vean el botón "Subir" y
+     * lleguen al formulario de carga; su archivo quedará como Pendiente.
      */
     public function uploadTo(Usuario $usuario, Carpeta $carpeta): bool
     {
@@ -124,12 +129,18 @@ class FolderPolicy
             return false;
         }
 
-        // Carpeta en modo solo_lectura: solo Admin y Gerente pueden subir
+        // ▶ Si la carpeta requiere aprobación de subida, cualquier rol
+        //   de la misma empresa puede intentarlo — irá a pendiente.
+        if ($carpeta->requiere_aprobacion_subida) {
+            return true;
+        }
+
+        // Carpeta en modo solo_lectura: solo Admin y Gerente pueden subir directo
         if ($carpeta->esSoloLectura()) {
             return in_array($usuario->rol, ['Admin', 'Gerente']);
         }
 
-        // Carpeta pública: roles con capacidad de subir
+        // Carpeta pública: roles con capacidad de subir directa
         if ($carpeta->es_publico && in_array($usuario->rol, ['Admin', 'Gerente', 'Auxiliar'])) {
             return true;
         }

@@ -30,15 +30,16 @@ class PermisosGlobalesController extends Controller
         $esAdmin = in_array($usuario->rol, ['Superadmin', 'Aux_QHSE']);
 
         // ── Filtros ──────────────────────────────────────────────
-        $filtroTipo     = $request->query('tipo', 'todos');   // todos | usuario | rol
-        $filtroCarpeta  = $request->query('carpeta_id');
-        $filtroEmpresa  = $request->query('empresa_id');
-        $filtroUsuario  = $request->query('usuario_id');
-        $busqueda       = $request->query('q', '');
+        $filtroTipo    = $request->query('tipo', 'todos');
+        $filtroCarpeta = $request->query('carpeta_id');
+        $filtroEmpresa = $request->query('empresa_id');
+        $filtroUsuario = $request->query('usuario_id');
+        $busqueda      = $request->query('q', '');
 
         // ── Query base ────────────────────────────────────────────
+        // FIX: eager load 'carpeta.empresa' para que nunca sea null
         $query = PermisoCarpeta::with([
-            'carpeta.empresa',
+            'carpeta.empresa',   // ← carga empresa junto con la carpeta
             'usuario.empresa',
             'empresa',
             'concedidoPor',
@@ -110,9 +111,9 @@ class PermisosGlobalesController extends Controller
 
         // ── Estadísticas ──────────────────────────────────────────
         $stats = [
-            'total'           => $permisos->count(),
-            'por_usuario'     => $permisos->whereNotNull('usuario_id')->count(),
-            'por_rol'         => $permisos->whereNull('usuario_id')->count(),
+            'total'                 => $permisos->count(),
+            'por_usuario'           => $permisos->whereNotNull('usuario_id')->count(),
+            'por_rol'               => $permisos->whereNull('usuario_id')->count(),
             'carpetas_con_permisos' => $permisos->pluck('carpeta_id')->unique()->count(),
         ];
 
@@ -135,8 +136,7 @@ class PermisosGlobalesController extends Controller
     }
 
     /**
-     * Actualiza un permiso individual (toggle de capacidad o múltiples campos).
-     * Soporta actualización inline desde la vista global.
+     * Actualiza un permiso individual desde la vista global.
      */
     public function update(Request $request, PermisoCarpeta $permiso): RedirectResponse
     {
@@ -155,7 +155,7 @@ class PermisosGlobalesController extends Controller
 
         RegistroActividad::registrar(
             'editar', 'carpeta', $permiso->carpeta_id,
-            "Permiso actualizado (id={$permiso->id}) en carpeta: {$permiso->carpeta->nombre}"
+            "Permiso actualizado (id={$permiso->id}) en carpeta: {$permiso->carpeta?->nombre}"
         );
 
         return back()->with('success', 'Permiso actualizado correctamente.');
@@ -168,7 +168,7 @@ class PermisosGlobalesController extends Controller
     {
         $this->autorizarEditar($permiso);
 
-        $nombreCarpeta = $permiso->carpeta->nombre ?? '—';
+        $nombreCarpeta = $permiso->carpeta?->nombre ?? '—';
         $permiso->delete();
 
         RegistroActividad::registrar(
@@ -189,7 +189,7 @@ class PermisosGlobalesController extends Controller
 
         if (
             in_array($usuario->rol, ['Admin', 'Gerente']) &&
-            $permiso->carpeta->empresa_id === $usuario->empresa_id
+            $permiso->carpeta?->empresa_id === $usuario->empresa_id
         ) return;
 
         abort(403, 'No tienes permiso para modificar este acceso.');
