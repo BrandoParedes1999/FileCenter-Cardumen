@@ -498,211 +498,220 @@
             @endif
 
             @forelse($permisosPorCarpeta as $carpetaId => $permisosCarpeta)
-
+ 
+@php
+    $carpeta = $permisosCarpeta->first()->carpeta;
+ 
+    
+    $empresa     = $carpeta?->empresa;
+    $colorAccent = $empresa?->color_secundario ?? '#6366f1';
+    $colorBg     = $empresa?->color_primario   ?? '#4f46e5';
+@endphp
+ 
+<div class="pg-group">
+ 
+    {{-- Header del grupo --}}
+    <div class="pg-group-header">
+        <div class="pg-group-icon"
+             style="background:{{ $colorAccent }}18">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="{{ $colorAccent }}">
+                <path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/>
+            </svg>
+        </div>
+        @if($carpeta)
+        <a href="{{ route('carpetas.show', $carpetaId) }}" class="pg-folder-link" style="flex:1;min-width:0">
+            <div class="pg-group-name">{{ $carpeta->nombre ?? 'Carpeta eliminada' }}</div>
+            <div class="pg-group-path">
+                @if($empresa)
+                    <span style="color:{{ $colorAccent }};font-weight:600">{{ $empresa->siglas }}</span>
+                    <span style="color:#cbd5e1"> · </span>
+                @endif
+                {{ $carpeta->path ?? '' }}
+            </div>
+        </a>
+        @else
+        <div style="flex:1;min-width:0">
+            <div class="pg-group-name" style="color:#94a3b8">Carpeta eliminada (ID: {{ $carpetaId }})</div>
+            <div class="pg-group-path">Esta carpeta ya no existe en el sistema</div>
+        </div>
+        @endif
+        <span class="pg-group-count">{{ $permisosCarpeta->count() }} permiso{{ $permisosCarpeta->count() != 1 ? 's' : '' }}</span>
+        <div class="pg-group-actions">
+            {{-- Modo de acceso badge --}}
+            @if($carpeta?->esSoloLectura())
+            <span style="font-size:10px;font-weight:600;background:rgba(99,102,241,.1);color:#4f46e5;padding:3px 8px;border-radius:10px">
+                👁 Solo lectura
+            </span>
+            @elseif($carpeta?->requiere_aprobacion_subida)
+            <span style="font-size:10px;font-weight:600;background:rgba(245,158,11,.1);color:#d97706;padding:3px 8px;border-radius:10px">
+                ⏳ Con aprobación
+            </span>
+            @endif
+            @if($carpeta)
+            <a href="{{ route('permisos.index', $carpetaId) }}" class="pg-goto-btn">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                </svg>
+                Gestionar
+            </a>
+            @endif
+        </div>
+    </div>
+ 
+    <div class="pg-group-sep"></div>
+ 
+    {{-- Filas de permisos --}}
+    @foreach($permisosCarpeta as $permiso)
+    @php
+        $esRol = is_null($permiso->usuario_id);
+        $rolClase = '';
+        if ($permiso->usuario) {
+            $rolClase = match($permiso->usuario->rol ?? '') {
+                'Superadmin', 'Aux_QHSE' => 'badge-super',
+                'Admin', 'Gerente'        => 'badge-user',
+                default                   => 'badge-rol',
+            };
+        }
+    @endphp
+ 
+    <div class="pg-perm-row {{ $esRol ? 'tipo-rol' : '' }}">
+ 
+        {{-- Avatar / ícono --}}
+        @if(!$esRol && $permiso->usuario)
+        <div class="pg-avatar"
+             style="background:linear-gradient(135deg,{{ $colorBg }},{{ $colorAccent }})">
+            {{ strtoupper(substr($permiso->usuario->nombre ?? '?',0,1)) }}{{ strtoupper(substr($permiso->usuario->paterno ?? '',0,1)) }}
+        </div>
+        @else
+        <div class="pg-avatar rol-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#7c3aed">
+                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+            </svg>
+        </div>
+        @endif
+ 
+        {{-- Info --}}
+        <div class="pg-perm-info">
+            @if(!$esRol && $permiso->usuario)
+            <div class="pg-perm-name">{{ $permiso->usuario->nombre_completo }}</div>
+            <div class="pg-perm-sub">
+                {{ $permiso->usuario->email }}
+                @if($permiso->usuario->departamento)
+                    · {{ $permiso->usuario->departamento }}
+                @endif
+            </div>
+            @else
+            <div class="pg-perm-name">
+                {{ $permiso->empresa?->nombre ?? 'Todas las empresas' }}
+                @if($permiso->rol) · {{ $permiso->rol }} @endif
+            </div>
+            <div class="pg-perm-sub">Permiso por rol de empresa</div>
+            @endif
+        </div>
+ 
+        {{-- Capacidades: toggle inline --}}
+        <div class="pg-caps">
             @php
-                $carpeta = $permisosCarpeta->first()->carpeta;
-                $empresa = $carpeta->empresa;
-                $colorAccent = $empresa->color_secundario ?? '#6366f1';
-                $colorBg     = $empresa->color_primario   ?? '#4f46e5';
+                $capacidades = [
+                    'puede_leer'      => ['lbl' => 'Leer'],
+                    'puede_subir'     => ['lbl' => 'Subir'],
+                    'puede_editar'    => ['lbl' => 'Editar'],
+                    'puede_borrar'    => ['lbl' => 'Borrar'],
+                    'puede_descargar' => ['lbl' => 'Bajar'],
+                    'heredar'         => ['lbl' => 'Her.'],
+                ];
             @endphp
-
-            <div class="pg-group">
-
-                {{-- Header del grupo --}}
-                <div class="pg-group-header">
-                    <div class="pg-group-icon"
-                         style="background:{{ $colorAccent }}18">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="{{ $colorAccent }}">
-                            <path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/>
-                        </svg>
-                    </div>
-                    <a href="{{ route('carpetas.show', $carpetaId) }}" class="pg-folder-link" style="flex:1;min-width:0">
-                        <div class="pg-group-name">{{ $carpeta->nombre ?? 'Carpeta eliminada' }}</div>
-                        <div class="pg-group-path">
-                            @if($empresa)
-                                <span style="color:{{ $colorAccent }};font-weight:600">{{ $empresa->siglas }}</span>
-                                <span style="color:#cbd5e1"> · </span>
-                            @endif
-                            {{ $carpeta->path ?? '' }}
-                        </div>
-                    </a>
-                    <span class="pg-group-count">{{ $permisosCarpeta->count() }} permiso{{ $permisosCarpeta->count() != 1 ? 's' : '' }}</span>
-                    <div class="pg-group-actions">
-                        {{-- Modo de acceso badge --}}
-                        @if($carpeta?->esSoloLectura())
-                        <span style="font-size:10px;font-weight:600;background:rgba(99,102,241,.1);color:#4f46e5;padding:3px 8px;border-radius:10px">
-                            👁 Solo lectura
-                        </span>
-                        @elseif($carpeta?->requiere_aprobacion_subida)
-                        <span style="font-size:10px;font-weight:600;background:rgba(245,158,11,.1);color:#d97706;padding:3px 8px;border-radius:10px">
-                            ⏳ Con aprobación
-                        </span>
+ 
+            @foreach($capacidades as $campo => $meta)
+            <div class="pg-cap-wrap">
+                <form method="POST"
+                      action="{{ route('permisos.global.update', $permiso) }}"
+                      style="display:inline">
+                    @csrf @method('PUT')
+                    @foreach(array_keys($capacidades) as $c)
+                        @if($c !== $campo)
+                        <input type="hidden" name="{{ $c }}" value="{{ $permiso->$c ? '1' : '0' }}">
                         @endif
-                        <a href="{{ route('permisos.index', $carpetaId) }}" class="pg-goto-btn">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-                            </svg>
-                            Gestionar
-                        </a>
-                    </div>
-                </div>
-
-                <div class="pg-group-sep"></div>
-
-                {{-- Filas de permisos --}}
-                @foreach($permisosCarpeta as $permiso)
-                @php
-                    $esRol = is_null($permiso->usuario_id);
-                    $rolClase = '';
-                    if ($permiso->usuario) {
-                        $rolClase = match($permiso->usuario->rol) {
-                            'Superadmin', 'Aux_QHSE' => 'badge-super',
-                            'Admin', 'Gerente'       => 'badge-user',
-                            default                  => 'badge-rol',
-                        };
-                    }
-                @endphp
-
-                <div class="pg-perm-row {{ $esRol ? 'tipo-rol' : '' }}">
-
-                    {{-- Avatar / ícono --}}
-                    @if(!$esRol && $permiso->usuario)
-                    <div class="pg-avatar"
-                         style="background:linear-gradient(135deg,{{ $colorBg }},{{ $colorAccent }})">
-                        {{ strtoupper(substr($permiso->usuario->nombre,0,1)) }}{{ strtoupper(substr($permiso->usuario->paterno,0,1)) }}
-                    </div>
-                    @else
-                    <div class="pg-avatar rol-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#7c3aed">
-                            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-                        </svg>
-                    </div>
-                    @endif
-
-                    {{-- Info --}}
-                    <div class="pg-perm-info">
-                        @if(!$esRol && $permiso->usuario)
-                        <div class="pg-perm-name">{{ $permiso->usuario->nombre_completo }}</div>
-                        <div class="pg-perm-sub">
-                            {{ $permiso->usuario->email }}
-                            @if($permiso->usuario->departamento)
-                                · {{ $permiso->usuario->departamento }}
-                            @endif
-                        </div>
-                        @else
-                        <div class="pg-perm-name">
-                            {{ $permiso->empresa->nombre ?? 'Todas las empresas' }}
-                            @if($permiso->rol) · {{ $permiso->rol }} @endif
-                        </div>
-                        <div class="pg-perm-sub">Permiso por rol de empresa</div>
-                        @endif
-                    </div>
-
-                    {{-- Capacidades: toggle inline ──────────────────── --}}
-                    <div class="pg-caps">
-                        @php
-                            $capacidades = [
-                                'puede_leer'      => ['lbl' => 'Leer'],
-                                'puede_subir'     => ['lbl' => 'Subir'],
-                                'puede_editar'    => ['lbl' => 'Editar'],
-                                'puede_borrar'    => ['lbl' => 'Borrar'],
-                                'puede_descargar' => ['lbl' => 'Bajar'],
-                                'heredar'         => ['lbl' => 'Her.'],
-                            ];
-                        @endphp
-
-                        @foreach($capacidades as $campo => $meta)
-                        <div class="pg-cap-wrap">
-                            <form method="POST"
-                                  action="{{ route('permisos.global.update', $permiso) }}"
-                                  style="display:inline">
-                                @csrf @method('PUT')
-                                {{-- Enviar todos los campos con sus valores actuales, cambiando solo este --}}
-                                @foreach(array_keys($capacidades) as $c)
-                                    @if($c !== $campo)
-                                    <input type="hidden" name="{{ $c }}" value="{{ $permiso->$c ? '1' : '0' }}">
-                                    @endif
-                                @endforeach
-                                <input type="hidden" name="{{ $campo }}" value="{{ $permiso->$campo ? '0' : '1' }}">
-                                <button type="submit"
-                                        class="pg-cap-btn {{ $permiso->$campo ? 'on' : 'off' }}"
-                                        title="{{ $permiso->$campo ? 'Quitar: ' : 'Dar: ' }}{{ $meta['lbl'] }}">
-                                    {{ $permiso->$campo ? '✓' : '–' }}
-                                </button>
-                            </form>
-                            <div class="pg-cap-lbl">{{ $meta['lbl'] }}</div>
-                        </div>
-                        @endforeach
-                    </div>
-
-                    {{-- Badge de rol --}}
-                    @if(!$esRol && $permiso->usuario)
-                    <span class="pg-badge {{ $rolClase }}">{{ $permiso->usuario->rol }}</span>
-                    @else
-                    <span class="pg-badge pg-badge-corp">Por rol</span>
-                    @endif
-
-                    {{-- Acciones --}}
-                    <div class="pg-row-actions">
-                        {{-- Editar completo --}}
-                        <button type="button"
-                                class="pg-act-btn"
-                                title="Editar permiso completo"
-                                onclick="abrirModalEditar(
-                                    {{ $permiso->id }},
-                                    '{{ addslashes(!$esRol && $permiso->usuario ? $permiso->usuario->nombre_completo : ($permiso->empresa->nombre ?? 'Todas las empresas') . ($permiso->rol ? ' · '.$permiso->rol : '')) }}',
-                                    '{{ addslashes($carpeta->nombre ?? '') }}',
-                                    {{ $permiso->puede_leer ? 'true' : 'false' }},
-                                    {{ $permiso->puede_subir ? 'true' : 'false' }},
-                                    {{ $permiso->puede_editar ? 'true' : 'false' }},
-                                    {{ $permiso->puede_borrar ? 'true' : 'false' }},
-                                    {{ $permiso->puede_descargar ? 'true' : 'false' }},
-                                    {{ $permiso->heredar ? 'true' : 'false' }}
-                                )">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                            </svg>
-                        </button>
-
-                        {{-- Revocar --}}
-                        <button type="button"
-                                class="pg-act-btn danger"
-                                title="Revocar permiso"
-                                onclick="confirmarRevocar({{ $permiso->id }}, '{{ addslashes(!$esRol && $permiso->usuario ? $permiso->usuario->nombre_completo : ($permiso->empresa->nombre ?? 'rol')) }}', '{{ addslashes($carpeta->nombre ?? '') }}')">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                @endforeach
-
+                    @endforeach
+                    <input type="hidden" name="{{ $campo }}" value="{{ $permiso->$campo ? '0' : '1' }}">
+                    <button type="submit"
+                            class="pg-cap-btn {{ $permiso->$campo ? 'on' : 'off' }}"
+                            title="{{ $permiso->$campo ? 'Quitar: ' : 'Dar: ' }}{{ $meta['lbl'] }}">
+                        {{ $permiso->$campo ? '✓' : '–' }}
+                    </button>
+                </form>
+                <div class="pg-cap-lbl">{{ $meta['lbl'] }}</div>
             </div>
-            @empty
-
-            {{-- Estado vacío --}}
-            <div class="pg-empty">
-                <div class="pg-empty-icon">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="#a5b4fc">
-                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-                    </svg>
-                </div>
-                <div class="pg-empty-title">No hay permisos</div>
-                <div class="pg-empty-sub">
-                    @if($busqueda || $filtroTipo !== 'todos' || $filtroCarpeta || $filtroEmpresa)
-                        No se encontraron permisos con los filtros aplicados.
-                        <a href="{{ route('permisos.global') }}" style="color:#6366f1;display:block;margin-top:6px">Limpiar filtros</a>
-                    @else
-                        Ninguna carpeta tiene permisos configurados aún.
-                        Crea una carpeta y asigna permisos desde su vista de detalle.
-                    @endif
-                </div>
-                <a href="{{ route('carpetas.index') }}" class="fc-btn fc-btn-primary">
-                    Ir a carpetas
-                </a>
-            </div>
-
-            @endforelse
+            @endforeach
+        </div>
+ 
+        {{-- Badge de rol --}}
+        @if(!$esRol && $permiso->usuario)
+        <span class="pg-badge {{ $rolClase }}">{{ $permiso->usuario->rol }}</span>
+        @else
+        <span class="pg-badge pg-badge-corp">Por rol</span>
+        @endif
+ 
+        {{-- Acciones --}}
+        <div class="pg-row-actions">
+            {{-- Editar completo --}}
+            <button type="button"
+                    class="pg-act-btn"
+                    title="Editar permiso completo"
+                    onclick="abrirModalEditar(
+                        {{ $permiso->id }},
+                        '{{ addslashes(!$esRol && $permiso->usuario ? $permiso->usuario->nombre_completo : ($permiso->empresa?->nombre ?? 'Todas las empresas') . ($permiso->rol ? ' · '.$permiso->rol : '')) }}',
+                        '{{ addslashes($carpeta?->nombre ?? 'Carpeta eliminada') }}',
+                        {{ $permiso->puede_leer ? 'true' : 'false' }},
+                        {{ $permiso->puede_subir ? 'true' : 'false' }},
+                        {{ $permiso->puede_editar ? 'true' : 'false' }},
+                        {{ $permiso->puede_borrar ? 'true' : 'false' }},
+                        {{ $permiso->puede_descargar ? 'true' : 'false' }},
+                        {{ $permiso->heredar ? 'true' : 'false' }}
+                    )">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                </svg>
+            </button>
+ 
+            {{-- Revocar --}}
+            <button type="button"
+                    class="pg-act-btn danger"
+                    title="Revocar permiso"
+                    onclick="confirmarRevocar({{ $permiso->id }}, '{{ addslashes(!$esRol && $permiso->usuario ? $permiso->usuario->nombre_completo : ($permiso->empresa?->nombre ?? 'rol')) }}', '{{ addslashes($carpeta?->nombre ?? '') }}')">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    @endforeach
+ 
+</div>
+@empty
+ 
+{{-- Estado vacío --}}
+<div class="pg-empty">
+    <div class="pg-empty-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="#a5b4fc">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+        </svg>
+    </div>
+    <div class="pg-empty-title">No hay permisos</div>
+    <div class="pg-empty-sub">
+        @if($busqueda || $filtroTipo !== 'todos' || $filtroCarpeta || $filtroEmpresa)
+            No se encontraron permisos con los filtros aplicados.
+            <a href="{{ route('permisos.global') }}" style="color:#6366f1;display:block;margin-top:6px">Limpiar filtros</a>
+        @else
+            Ninguna carpeta tiene permisos configurados aún.
+        @endif
+    </div>
+    <a href="{{ route('carpetas.index') }}" class="fc-btn fc-btn-primary">
+        Ir a carpetas
+    </a>
+</div>
+ 
+@endforelse
 
         </div>{{-- /pg-content --}}
     </div>{{-- /fc-main --}}

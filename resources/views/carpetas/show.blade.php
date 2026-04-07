@@ -382,11 +382,15 @@
             </a>
             @endcan
 
-            @can('create', App\Models\Archivo::class)
-            <a href="{{ route('archivos.create', ['carpeta_id' => $carpeta->id]) }}" class="fc-btn-upload">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
-                Subir archivo
-            </a>
+            @can('uploadTo', $carpeta)
+                <a href="{{ route('archivos.create', ['carpeta_id' => $carpeta->id]) }}" class="fc-btn-upload">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+                    @if($carpeta->requiere_aprobacion_subida && !in_array(Auth::user()->rol, ['Superadmin','Aux_QHSE','Admin','Gerente']))
+                        Solicitar subida
+                    @else
+                        Subir archivo
+                    @endif
+                </a>
             @endcan
 
             @can('update', $carpeta)
@@ -513,11 +517,15 @@
                 </div>
                 <div class="fc-empty-title">Sin archivos aún</div>
                 <div class="fc-empty-sub">Sube el primer archivo a esta carpeta.</div>
-                @can('create', App\Models\Archivo::class)
-                <a href="{{ route('archivos.create', ['carpeta_id' => $carpeta->id]) }}" class="fc-btn-upload">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
-                    Subir archivo
-                </a>
+                @can('uploadTo', $carpeta)
+                    <a href="{{ route('archivos.create', ['carpeta_id' => $carpeta->id]) }}" class="fc-btn-upload">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+                        @if($carpeta->requiere_aprobacion_subida && !in_array(Auth::user()->rol, ['Superadmin','Aux_QHSE','Admin','Gerente']))
+                            Solicitar subida de archivo
+                        @else 
+                            Subir archivo
+                        @endif
+                    </a>
                 @endcan
             </div>
             @else

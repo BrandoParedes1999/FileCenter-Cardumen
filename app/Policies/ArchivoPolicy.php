@@ -53,7 +53,10 @@ class ArchivoPolicy
 
     public function create(Usuario $usuario): bool
     {
-        return in_array($usuario->rol, ['Admin', 'Gerente', 'Auxiliar']);
+        // Empleado también puede intentar subir; si la carpeta tiene
+        // requiere_aprobacion_subida=true, ArchivoController lo enruta
+        // a la cola de solicitudes pendientes en lugar de publicar directo.
+        return in_array($usuario->rol, ['Admin', 'Gerente', 'Auxiliar', 'Empleado']);
     }
 
     /**
@@ -111,38 +114,35 @@ class ArchivoPolicy
     }
 
     /**
-     * DESCARGAR — lógica completa con soporte de corporativo:
+     * DESCARGAR — lógica completa:
      *
-     * 1. Carpeta del corporativo → TODOS los usuarios activos pueden descargar,
-     *    SALVO que la carpeta esté en modo 'solo_lectura' (entonces necesitan
-     *    permiso explícito de descarga en PermisoCarpeta).
+     * ► Si existe un permiso EXPLÍCITO (por usuario) para este usuario,
+     *   ese permiso tiene prioridad absoluta, incluso sobre carpetas públicas.
+     *   Esto arregla el bug donde remover puede_descargar no tenía efecto.
      *
-     * 2. Carpeta de otra empresa (cross-empresa, no corporativo): solo si hay
-     *    solicitud aprobada con tipo_acceso = 'Descargar'.
-     *
-     * 3. Carpeta pública de misma empresa: todos pueden descargar
-     *    SALVO modo solo_lectura.
-     *
-     * 4. Resto: verifica puede_descargar en PermisoCarpeta.
+     * ► Si NO hay permiso explícito, se aplican las reglas por defecto
+     *   (corporativo libre, carpeta pública libre, etc.).
      */
     public function download(Usuario $usuario, Archivo $archivo): bool
     {
         $carpeta = $archivo->carpeta;
 
-        // ── Corporativo ───────────────────────────────────────────
-        // Todos los usuarios de cualquier empresa pueden descargar
-        // del corporativo, excepto si la carpeta es solo_lectura
-        // (en ese caso necesitan permiso explícito).
+        // ── Corporativo ───────────────────────────────────────────────────
         if ($this->esCarpetaCorporativa($carpeta)) {
             if ($carpeta->esSoloLectura()) {
                 $p = $carpeta->permisoEfectivo($usuario);
                 return $p && $p->puede_descargar;
             }
-            // modo 'con_descarga' o 'normal' → acceso libre
+            // Modo normal/con_descarga: comprobar si hay permiso explícito
+            $p = $carpeta->permisoEfectivo($usuario);
+            if ($p !== null) {
+                return $p->puede_descargar;
+            }
+            // Sin permiso explícito en corporativo → acceso libre
             return true;
         }
 
-        // ── Cross-empresa (no corporativo) ────────────────────────
+        // ── Cross-empresa (no corporativo) ────────────────────────────────
         if ($carpeta->empresa_id !== $usuario->empresa_id) {
             return \App\Models\SolicitudAcceso::where('solicitante_id', $usuario->id)
                 ->where(function ($q) use ($archivo, $carpeta) {
@@ -158,19 +158,37 @@ class ArchivoPolicy
                 ->exists();
         }
 
-        // ── Carpeta en modo solo_lectura (misma empresa) ──────────
+        // ── Carpeta en modo solo_lectura (misma empresa) ──────────────────
         if ($carpeta->esSoloLectura()) {
             $p = $carpeta->permisoEfectivo($usuario);
             return $p && $p->puede_descargar;
         }
 
-        // ── Carpeta pública de misma empresa ──────────────────────
+        // ── Verificar permiso explícito PRIMERO (prioridad sobre es_publico) ─
+        // Esto soluciona el bug: si quitas puede_descargar a un usuario en una
+        // carpeta pública, el cambio ahora SÍ tiene efecto.
+        $permisoExplicito = $carpeta->permisos()
+            ->where('usuario_id', $usuario->id)
+            ->first();
+
+        if ($permisoExplicito !== null) {
+            return (bool) $permisoExplicito->puede_descargar;
+        }
+
+        // ── Sin permiso individual: verificar permiso por rol ─────────────
+        $permisoRol = $carpeta->permisoEfectivo($usuario); // busca empresa+rol
+        if ($permisoRol !== null) {
+            return (bool) $permisoRol->puede_descargar;
+        }
+
+        // ── Sin ningún permiso explícito: aplicar regla por defecto ──────
+        // Carpeta pública de la misma empresa → puede descargar
         if ($carpeta->es_publico) {
             return true;
         }
 
-        // ── Carpeta privada normal ────────────────────────────────
-        return $carpeta->usuarioPuedeDescargar($usuario);
+        // Carpeta privada sin permiso → no puede descargar
+        return false;
     }
 
     public function restore(Usuario $usuario, Archivo $archivo): bool
@@ -181,10 +199,6 @@ class ArchivoPolicy
 
     // ── Helpers ─────────────────────────────────────────────────
 
-    /**
-     * Determina si la carpeta pertenece a la empresa corporativa.
-     * Usa la relación si ya está cargada; si no, hace una consulta puntual.
-     */
     private function esCarpetaCorporativa(\App\Models\Carpeta $carpeta): bool
     {
         if ($carpeta->relationLoaded('empresa')) {

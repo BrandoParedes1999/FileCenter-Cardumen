@@ -80,6 +80,10 @@ class CarpetaController extends Controller
         $padre    = $request->query('padre_id') ? Carpeta::findOrFail($request->query('padre_id')) : null;
         $empresas = collect();
 
+        // Bug 1 fix: capturar empresa_id del query string para pre-seleccionarla
+        // (cuando se llega desde areas.show o carpetas.index con un contexto de empresa)
+        $empresaIdPreseleccionada = $request->query('empresa_id');
+
         if (in_array($usuario->rol, ['Superadmin', 'Aux_QHSE']) && !$padre) {
             $empresas = Empresa::where('activo', true)
                 ->orderByDesc('es_corporativo')
@@ -87,7 +91,7 @@ class CarpetaController extends Controller
                 ->get();
         }
 
-        return view('carpetas.create', compact('padre', 'usuario', 'empresas'));
+        return view('carpetas.create', compact('padre', 'usuario', 'empresas', 'empresaIdPreseleccionada'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -126,7 +130,7 @@ class CarpetaController extends Controller
             'creado_por'                 => $usuario->id,
         ]);
 
-        // Auto-crear permisos para Admin y Gerente
+        // Auto-crear permisos para todos los roles
         if (!$esPublico) {
             $this->crearPermisosIniciales($carpeta, $usuario->id);
         }
@@ -224,36 +228,69 @@ class CarpetaController extends Controller
         return $migas;
     }
 
+    /**
+     * Crea permisos iniciales para TODOS los roles de la empresa.
+     *
+     * Bug 3 fix: ahora también crea entradas para Auxiliar y Empleado,
+     * de modo que aparecen en la pantalla de permisos de la carpeta
+     * y el administrador puede ajustar sus capacidades fácilmente.
+     *
+     * Permisos por defecto:
+     *   - Admin / Gerente: acceso completo
+     *   - Auxiliar:        leer + subir + descargar (sin editar ni borrar)
+     *   - Empleado:        leer + descargar (solo lectura con descarga)
+     */
     private function crearPermisosIniciales(Carpeta $carpeta, int $creadoPor): void
     {
         $esCorporativo = \App\Models\Empresa::where('id', $carpeta->empresa_id)
             ->where('es_corporativo', true)->exists();
 
         if ($esCorporativo) {
-            // Permisos globales para Admin y Gerente de CUALQUIER empresa
-            foreach (['Admin', 'Gerente'] as $rol) {
+            // Permisos globales para todos los roles (empresa_id = null → aplica a todas)
+            $permisosRol = [
+                'Admin'    => ['leer' => true,  'subir' => false, 'editar' => false, 'borrar' => false, 'descargar' => true],
+                'Gerente'  => ['leer' => true,  'subir' => false, 'editar' => false, 'borrar' => false, 'descargar' => true],
+                'Auxiliar' => ['leer' => true,  'subir' => false, 'editar' => false, 'borrar' => false, 'descargar' => true],
+                'Empleado' => ['leer' => true,  'subir' => false, 'editar' => false, 'borrar' => false, 'descargar' => true],
+            ];
+
+            foreach ($permisosRol as $rol => $caps) {
                 PermisoCarpeta::updateOrCreate(
                     ['carpeta_id' => $carpeta->id, 'empresa_id' => null, 'rol' => $rol, 'usuario_id' => null],
                     [
-                        'puede_leer' => true, 'puede_subir' => false,
-                        'puede_editar' => false, 'puede_borrar' => false,
-                        'puede_descargar' => true, 'heredar' => true,
-                        'concedido_por' => $creadoPor,
+                        'puede_leer'      => $caps['leer'],
+                        'puede_subir'     => $caps['subir'],
+                        'puede_editar'    => $caps['editar'],
+                        'puede_borrar'    => $caps['borrar'],
+                        'puede_descargar' => $caps['descargar'],
+                        'heredar'         => true,
+                        'concedido_por'   => $creadoPor,
                     ]
                 );
             }
         } else {
-            foreach (['Admin', 'Gerente'] as $rol) {
+            // Permisos por empresa específica
+            $permisosRol = [
+                'Admin'    => ['leer' => true,  'subir' => true,  'editar' => true,  'borrar' => true,  'descargar' => true],
+                'Gerente'  => ['leer' => true,  'subir' => true,  'editar' => true,  'borrar' => true,  'descargar' => true],
+                'Auxiliar' => ['leer' => true,  'subir' => true,  'editar' => false, 'borrar' => false, 'descargar' => true],
+                'Empleado' => ['leer' => true,  'subir' => false, 'editar' => false, 'borrar' => false, 'descargar' => true],
+            ];
+
+            foreach ($permisosRol as $rol => $caps) {
                 PermisoCarpeta::updateOrCreate(
                     ['carpeta_id' => $carpeta->id, 'empresa_id' => $carpeta->empresa_id, 'rol' => $rol, 'usuario_id' => null],
                     [
-                        'puede_leer' => true, 'puede_subir' => true,
-                        'puede_editar' => true, 'puede_borrar' => true,
-                        'puede_descargar' => true, 'heredar' => true,
-                        'concedido_por' => $creadoPor,
+                        'puede_leer'      => $caps['leer'],
+                        'puede_subir'     => $caps['subir'],
+                        'puede_editar'    => $caps['editar'],
+                        'puede_borrar'    => $caps['borrar'],
+                        'puede_descargar' => $caps['descargar'],
+                        'heredar'         => true,
+                        'concedido_por'   => $creadoPor,
                     ]
                 );
             }
         }
-    } 
+    }
 }
