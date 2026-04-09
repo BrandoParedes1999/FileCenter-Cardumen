@@ -144,9 +144,6 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
     // PERMISOS GLOBALES (vista centralizada)
     // ─────────────────────────────────────────────
 
-    Route::get('permisos', [PermisoCarpetaController::class, 'index'])->name('index');
-// → genera 'permisos.index'  ✓
-
     Route::get('permisos-globales', [PermisosGlobalesController::class, 'index'])
         ->name('permisos.global');
 
@@ -155,6 +152,10 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
 
     Route::delete('permisos-globales/{permiso}', [PermisosGlobalesController::class, 'destroy'])
         ->name('permisos.global.destroy');
+
+
+    Route::get('/actualizaciones-recientes', [DashboardController::class, 'actualizaciones'])
+    ->name('actualizaciones.recientes');
 });
 
 require __DIR__.'/auth.php';
