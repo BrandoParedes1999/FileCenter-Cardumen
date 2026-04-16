@@ -4,21 +4,20 @@
 
 .fc-wrapper {
     display: flex; height: 100dvh; width: 100%;
-    background: #f8fafc; color: #1e293b;
+    background: #f1f5f9; color: #1e293b;
     font-family: 'Segoe UI', system-ui, sans-serif;
     overflow: hidden;
 }
-
 
 /* ══ MAIN ══ */
 .fc-main { flex: 1; display: flex; flex-direction: column; height: 100dvh; overflow: hidden; min-width: 0; }
 
 .fc-topbar {
-    height: 48px; background: #fff;
+    height: 52px; background: #fff;
     border-bottom: 1px solid #e2e8f0;
     display: flex; align-items: center;
     padding: 0 28px; flex-shrink: 0; gap: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
 }
 .fc-topbar-title {
     font-size: 12px; font-weight: 700; color: #4f46e5;
@@ -47,17 +46,16 @@
 .fc-topbar-role { font-size: 10px; color: #7c3aed; }
 
 .fc-content {
-    flex: 1; overflow-y: auto; padding: 24px 28px;
+    flex: 1; overflow-y: auto; padding: 28px 28px 36px;
     scrollbar-width: thin; scrollbar-color: #e2e8f0 transparent;
-    background: #f8fafc;
+    background: #f1f5f9;
 }
 
 /* ══ SLIDER ══ */
 .slider-wrap {
-    position: relative; border-radius: 18px; overflow: hidden;
-    margin-bottom: 36px; height: 260px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 8px 32px rgba(79,70,229,0.12);
+    position: relative; border-radius: 20px; overflow: hidden;
+    height: 268px; border: 1px solid #e2e8f0;
+    box-shadow: 0 8px 32px rgba(79,70,229,0.13);
 }
 .slider-track {
     display: flex; height: 100%;
@@ -67,12 +65,12 @@
 .slide-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .slide-overlay {
     position: absolute; inset: 0;
-    background: linear-gradient(90deg, rgba(0,0,0,.68) 0%, rgba(0,0,0,.25) 60%, transparent 100%);
+    background: linear-gradient(90deg, rgba(0,0,0,.70) 0%, rgba(0,0,0,.28) 60%, transparent 100%);
 }
 .slide-content {
     position: absolute; inset: 0;
     display: flex; flex-direction: column; justify-content: center;
-    padding: 0 48px;
+    padding: 0 52px;
 }
 .slide-tag {
     font-size: 10px; font-weight: 700; letter-spacing: .15em;
@@ -81,7 +79,7 @@
 }
 .slide-tag::before { content: ''; width: 20px; height: 1px; background: rgba(255,255,255,.4); }
 .slide-title { font-size: 28px; font-weight: 700; color: #fff; line-height: 1.2; margin-bottom: 10px; text-shadow: 0 2px 12px rgba(0,0,0,.4); }
-.slide-sub { font-size: 13px; color: rgba(255,255,255,.75); line-height: 1.6; max-width: 460px; }
+.slide-sub { font-size: 13px; color: rgba(255,255,255,.78); line-height: 1.65; max-width: 460px; }
 .slider-btn {
     position: absolute; top: 50%; transform: translateY(-50%);
     width: 38px; height: 38px; border-radius: 50%;
@@ -104,72 +102,137 @@
 .s-dot.active { background: #fff; width: 32px; }
 .slider-counter {
     position: absolute; bottom: 16px; right: 20px;
-    font-size: 11px; color: rgba(255,255,255,.5);
-    font-weight: 600; z-index: 10;
+    font-size: 11px; color: rgba(255,255,255,.5); font-weight: 600; z-index: 10;
 }
 
-/* ══ ETIQUETA SECCIÓN ══ */
-.section-label { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
-.section-label-text {
-    font-size: 10px; font-weight: 700; color: #7c3aed;
-    text-transform: uppercase; letter-spacing: .12em; white-space: nowrap;
+/* ══ DIVISORES DE SECCIÓN ══ */
+.section-divider {
+    display: flex; align-items: center;
+    margin: 38px 0 24px; position: relative;
 }
-.section-label-line { flex: 1; height: 1px; background: #e2e8f0; }
-
-/* ══ MISIÓN / VISIÓN / VALORES ══ */
-.grid-mvv {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 18px; margin-bottom: 32px; align-items: start;
+.section-divider::before {
+    content: ''; position: absolute; left: 0; right: 0; top: 50%;
+    height: 1px; background: #e2e8f0;
+}
+.section-divider-inner {
+    display: flex; align-items: center; gap: 12px;
+    background: #f1f5f9; padding-right: 20px; position: relative; z-index: 1;
+}
+.section-divider-icon {
+    width: 34px; height: 34px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; border: 1px solid;
+}
+.section-divider-label {
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .14em; color: #94a3b8; margin-bottom: 3px; line-height: 1;
+}
+.section-divider-title {
+    font-size: 14px; font-weight: 700; color: #1e293b; line-height: 1;
+}
+.section-divider-tail {
+    flex: 1; display: flex; justify-content: flex-end;
+    background: #f1f5f9; padding-left: 20px; position: relative; z-index: 1;
+}
+.section-divider-badge {
+    font-size: 10px; font-weight: 600; color: #64748b;
+    background: #fff; border: 1px solid #e2e8f0;
+    padding: 4px 12px; border-radius: 20px; letter-spacing: .03em;
+    white-space: nowrap;
 }
 
+/* ══ MISIÓN / VISIÓN ══ */
+.grid-mv {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 18px; align-items: start;
+}
 .mvv-card {
     background: #fff; border: 1px solid #e2e8f0;
-    border-radius: 18px; overflow: hidden;
+    border-radius: 18px; overflow: hidden; position: relative;
     transition: border-color .2s, transform .2s, box-shadow .2s;
-    position: relative;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
 }
 .mvv-card:hover {
-    border-color: #c7d2fe;
-    transform: translateY(-3px);
-    box-shadow: 0 12px 32px rgba(79,70,229,0.12);
+    border-color: #c7d2fe; transform: translateY(-3px);
+    box-shadow: 0 14px 36px rgba(79,70,229,0.11);
 }
-
 .mvv-card-img {
-    width: 100%; height: 160px; object-fit: cover;
-    display: block; filter: brightness(.9);
-    transition: filter .3s;
+    width: 100%; height: 156px; object-fit: cover;
+    display: block; filter: brightness(.9); transition: filter .3s;
 }
-.mvv-card:hover .mvv-card-img { filter: brightness(1); }
-
+.mvv-card:hover .mvv-card-img { filter: brightness(1.02); }
 .mvv-card-overlay {
-    position: absolute; top: 0; left: 0; right: 0; height: 160px;
-    pointer-events: none;
+    position: absolute; top: 0; left: 0; right: 0; height: 156px; pointer-events: none;
 }
-.mvv-card.mision  .mvv-card-overlay { background: linear-gradient(180deg, rgba(124,58,237,0.25) 0%, transparent 100%); }
-.mvv-card.vision  .mvv-card-overlay { background: linear-gradient(180deg, rgba(8,145,178,0.25) 0%, transparent 100%); }
-.mvv-card.valores .mvv-card-overlay { background: linear-gradient(180deg, rgba(5,150,105,0.25) 0%, transparent 100%); }
-
+.mvv-card.mision .mvv-card-overlay { background: linear-gradient(180deg, rgba(124,58,237,0.22) 0%, transparent 100%); }
+.mvv-card.vision .mvv-card-overlay { background: linear-gradient(180deg, rgba(8,145,178,0.22) 0%, transparent 100%); }
 .mvv-accent { height: 3px; }
-.mvv-card.mision  .mvv-accent { background: linear-gradient(90deg,#7c3aed,#4f46e5); }
-.mvv-card.vision  .mvv-accent { background: linear-gradient(90deg,#0891b2,#06b6d4); }
-.mvv-card.valores .mvv-accent { background: linear-gradient(90deg,#059669,#10b981); }
-
-.mvv-body { padding: 24px 26px 28px; }
+.mvv-card.mision .mvv-accent { background: linear-gradient(90deg,#7c3aed,#4f46e5); }
+.mvv-card.vision .mvv-accent { background: linear-gradient(90deg,#0891b2,#06b6d4); }
+.mvv-body { padding: 22px 24px 26px; }
 .mvv-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
 .mvv-icon { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .mvv-title { font-size: 17px; font-weight: 700; color: #1e293b; }
 .mvv-sub   { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: .08em; margin-top: 2px; }
-.mvv-text  { font-size: 13px; color: #475569; line-height: 1.8; }
+.mvv-text  { font-size: 13px; color: #475569; line-height: 1.85; }
 
-.valor-row { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
-.valor-row:last-child { border-bottom: none; padding-bottom: 0; }
-.valor-ico { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; }
-.valor-name { font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 2px; }
-.valor-desc { font-size: 12px; color: #64748b; line-height: 1.5; }
+/* ══ TARJETAS DE VALOR ══ */
+.grid-valores {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    gap: 14px; align-items: stretch;
+}
+.valor-card {
+    background: #fff; border: 1px solid #e2e8f0;
+    border-radius: 16px; overflow: hidden;
+    transition: border-color .22s, transform .22s, box-shadow .22s;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    display: flex; flex-direction: column;
+}
+.valor-card:hover {
+    border-color: #c7d2fe; transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(79,70,229,0.11);
+}
+.valor-card-band {
+    height: 58px; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0;
+}
+.valor-card-ico {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; background: rgba(255,255,255,0.22);
+}
+.valor-card-stripe { height: 2px; flex-shrink: 0; }
+.valor-card-body { padding: 16px 17px 20px; display: flex; flex-direction: column; gap: 9px; flex: 1; }
+.valor-card-title { font-size: 13px; font-weight: 700; color: #1e293b; }
+.valor-card-pill {
+    display: inline-flex; align-items: center; width: fit-content;
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .1em; padding: 3px 9px; border-radius: 20px; border: 1px solid;
+}
+.valor-card-desc { font-size: 12px; color: #64748b; line-height: 1.75; flex: 1; }
+
+.valor-card.v-purple .valor-card-band   { background: linear-gradient(135deg,#6d28d9,#4f46e5); }
+.valor-card.v-purple .valor-card-stripe { background: linear-gradient(90deg,#6d28d9,#4f46e5); }
+.valor-card.v-purple .valor-card-pill   { background: rgba(109,40,217,0.08); color: #6d28d9; border-color: rgba(109,40,217,0.2); }
+
+.valor-card.v-cyan .valor-card-band     { background: linear-gradient(135deg,#0891b2,#06b6d4); }
+.valor-card.v-cyan .valor-card-stripe   { background: linear-gradient(90deg,#0891b2,#06b6d4); }
+.valor-card.v-cyan .valor-card-pill     { background: rgba(8,145,178,0.08); color: #0e7490; border-color: rgba(8,145,178,0.2); }
+
+.valor-card.v-green .valor-card-band    { background: linear-gradient(135deg,#059669,#10b981); }
+.valor-card.v-green .valor-card-stripe  { background: linear-gradient(90deg,#059669,#10b981); }
+.valor-card.v-green .valor-card-pill    { background: rgba(5,150,105,0.08); color: #047857; border-color: rgba(5,150,105,0.2); }
+
+.valor-card.v-amber .valor-card-band    { background: linear-gradient(135deg,#d97706,#f59e0b); }
+.valor-card.v-amber .valor-card-stripe  { background: linear-gradient(90deg,#d97706,#f59e0b); }
+.valor-card.v-amber .valor-card-pill    { background: rgba(217,119,6,0.08); color: #b45309; border-color: rgba(217,119,6,0.2); }
+
+.valor-card.v-rose .valor-card-band     { background: linear-gradient(135deg,#be123c,#f43f5e); }
+.valor-card.v-rose .valor-card-stripe   { background: linear-gradient(90deg,#be123c,#f43f5e); }
+.valor-card.v-rose .valor-card-pill     { background: rgba(190,18,60,0.08); color: #be123c; border-color: rgba(190,18,60,0.2); }
 
 /* ══ EMPRESAS ══ */
-.grid-empresas { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 0; }
+.grid-empresas { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
 .emp-card {
     background: #fff; border: 1px solid #e2e8f0;
     border-radius: 16px; overflow: hidden; cursor: pointer;
@@ -178,7 +241,7 @@
 }
 .emp-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 16px 40px rgba(79,70,229,0.15);
+    box-shadow: 0 16px 40px rgba(79,70,229,0.14);
     border-color: #c7d2fe;
 }
 .emp-stripe { height: 4px; }
@@ -204,9 +267,12 @@
 .emp-card:hover .emp-arrow { color: #7c3aed; }
 
 /* ══ FOOTER ══ */
-.nos-footer { margin-top: 36px; border-top: 1px solid #e2e8f0; padding-top: 32px; padding-bottom: 8px; }
+.nos-footer {
+    border-radius: 18px; padding: 30px 28px 20px;
+    background: #fff; border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
 .nos-footer-inner { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 36px; margin-bottom: 28px; }
-
 .footer-brand-logo {
     width: 52px; height: 52px; border-radius: 14px;
     display: flex; align-items: center; justify-content: center;
@@ -216,45 +282,34 @@
 .footer-brand-logo img { width: 100%; height: 100%; object-fit: contain; }
 .footer-brand-name { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
 .footer-brand-desc { font-size: 12px; color: #64748b; line-height: 1.75; max-width: 220px; }
-
 .footer-col-title {
     font-size: 10px; font-weight: 700; color: #94a3b8;
     text-transform: uppercase; letter-spacing: .12em;
     margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
 }
 .footer-col-title::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
-
 .footer-socials { display: flex; flex-direction: column; gap: 8px; }
 .footer-social-link {
     display: flex; align-items: center; gap: 10px;
     text-decoration: none; padding: 10px 14px;
     border-radius: 10px; border: 1px solid #e2e8f0;
-    background: #fff; transition: border-color .2s, background .2s, box-shadow .2s;
+    background: #f8fafc; transition: border-color .2s, background .2s, box-shadow .2s;
 }
-.footer-social-link:hover {
-    border-color: #c7d2fe;
-    background: #f5f3ff;
-    box-shadow: 0 4px 12px rgba(124,58,237,0.08);
-}
+.footer-social-link:hover { border-color: #c7d2fe; background: #f5f3ff; box-shadow: 0 4px 12px rgba(124,58,237,0.08); }
 .footer-social-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .footer-social-name   { font-size: 13px; font-weight: 600; color: #374151; }
 .footer-social-handle { font-size: 11px; color: #9ca3af; margin-top: 1px; }
-
 .footer-address-items { display: flex; flex-direction: column; gap: 8px; }
 .footer-address-item {
     display: flex; align-items: flex-start; gap: 10px;
     padding: 11px 13px; border-radius: 10px;
-    border: 1px solid #e2e8f0; background: #fff;
+    border: 1px solid #e2e8f0; background: #f8fafc;
     transition: border-color .2s, box-shadow .2s;
 }
-.footer-address-item:hover {
-    border-color: #c7d2fe;
-    box-shadow: 0 4px 12px rgba(124,58,237,0.07);
-}
+.footer-address-item:hover { border-color: #c7d2fe; box-shadow: 0 4px 12px rgba(124,58,237,0.07); }
 .footer-address-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .footer-address-label { font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: .09em; margin-bottom: 2px; font-weight: 600; }
 .footer-address-value { font-size: 12px; color: #475569; line-height: 1.5; }
-
 .footer-bottom {
     display: flex; align-items: center; justify-content: space-between;
     padding-top: 20px; border-top: 1px solid #e2e8f0;
@@ -308,54 +363,57 @@
 .modal-stat-label { font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 4px; font-weight: 600; }
 .modal-stat-value { font-size: 15px; font-weight: 700; color: #1e293b; }
 
-/* ══ MODO OSCURO — nosotros ══ */
-.dark .fc-wrapper  { background: #0d0c1d; }
-.dark .fc-main     { background: #0d0c1d; }
-.dark .fc-content  { background: #0d0c1d; }
-.dark .fc-topbar   { background: #13111f; border-color: #1e1b4b; }
-.dark .fc-topbar-title { color: #e0e7ff; }
-.dark .fc-topbar-sub   { color: #6366f1; }
+/* ══ MODO OSCURO ══ */
+.dark .fc-wrapper  { background: #09081a; }
+.dark .fc-main     { background: #09081a; }
+.dark .fc-content  { background: #09081a; }
+.dark .fc-topbar   { background: #110f1e; border-color: #1e1b4b; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+.dark .fc-topbar-title { color: #c7d2fe; }
+.dark .fc-topbar-sub   { color: #4f46e5; }
 .dark .fc-topbar-name  { color: #e0e7ff; }
 
-/* Slider */
 .dark .slider-wrap { border-color: #1e1b4b; }
 
-/* Cards MVV */
-.dark .mvv-card         { background: #13111f; border-color: #1e1b4b; }
+.dark .section-divider::before  { background: #1e1b4b; }
+.dark .section-divider-inner    { background: #09081a; }
+.dark .section-divider-tail     { background: #09081a; }
+.dark .section-divider-title    { color: #e0e7ff; }
+.dark .section-divider-label    { color: #4f46e5; }
+.dark .section-divider-badge    { background: #110f1e; border-color: #1e1b4b; color: #6366f1; }
+
+.dark .mvv-card         { background: #110f1e; border-color: #1e1b4b; }
 .dark .mvv-title        { color: #e0e7ff; }
 .dark .mvv-text         { color: #a5b4fc; }
-.dark .valor-row        { border-color: #1e1b4b; }
-.dark .valor-name       { color: #e0e7ff; }
-.dark .valor-desc       { color: #6366f1; }
+.dark .mvv-sub          { color: #4f46e5; }
 
-/* Empresas */
-.dark .emp-card         { background: #13111f; border-color: #1e1b4b; }
+.dark .valor-card           { background: #110f1e; border-color: #1e1b4b; }
+.dark .valor-card-title     { color: #e0e7ff; }
+.dark .valor-card-desc      { color: #a5b4fc; }
+
+.dark .emp-card         { background: #110f1e; border-color: #1e1b4b; }
 .dark .emp-img-wrap     { background: #1e1b4b; border-color: #2d2a5e; }
 .dark .emp-name         { color: #e0e7ff; }
 .dark .emp-desc         { color: #a5b4fc; }
 .dark .emp-footer       { border-color: #1e1b4b; }
 
-/* Footer */
-.dark .nos-footer              { border-color: #1e1b4b; }
-.dark .nos-footer-inner        { color: #e0e7ff; }
+.dark .nos-footer              { background: #110f1e; border-color: #1e1b4b; box-shadow: none; }
 .dark .footer-brand-name       { color: #e0e7ff; }
 .dark .footer-brand-desc       { color: #a5b4fc; }
 .dark .footer-brand-logo       { background: #1e1b4b; border-color: #2d2a5e; }
 .dark .footer-col-title        { color: #4f46e5; }
 .dark .footer-col-title::after { background: #1e1b4b; }
-.dark .footer-social-link      { background: #13111f; border-color: #1e1b4b; }
-.dark .footer-social-link:hover{ background: #1e1b4b; border-color: #4f46e5; }
+.dark .footer-social-link      { background: #1e1b4b; border-color: #2d2a5e; }
+.dark .footer-social-link:hover{ background: #2d2a5e; border-color: #4f46e5; }
 .dark .footer-social-name      { color: #e0e7ff; }
 .dark .footer-social-handle    { color: #6366f1; }
-.dark .footer-address-item     { background: #13111f; border-color: #1e1b4b; }
+.dark .footer-address-item     { background: #1e1b4b; border-color: #2d2a5e; }
 .dark .footer-address-label    { color: #4f46e5; }
 .dark .footer-address-value    { color: #a5b4fc; }
 .dark .footer-bottom           { border-color: #1e1b4b; }
 .dark .footer-copy             { color: #6366f1; }
 .dark .footer-copy span        { color: #a5b4fc; }
 
-/* Modales */
-.dark .modal-box          { background: #13111f; border-color: #1e1b4b; }
+.dark .modal-box          { background: #110f1e; border-color: #1e1b4b; }
 .dark .modal-header-img   { background: #1e1b4b; border-color: #2d2a5e; }
 .dark .modal-close        { background: #1e1b4b; border-color: #2d2a5e; color: #a5b4fc; }
 .dark .modal-company-name { color: #e0e7ff; }
@@ -365,16 +423,12 @@
 .dark .modal-stat         { background: #1e1b4b; border-color: #2d2a5e; }
 .dark .modal-stat-label   { color: #6366f1; }
 .dark .modal-stat-value   { color: #e0e7ff; }
-
-/* Section labels */
-.dark .section-label-text { color: #a5b4fc; }
-.dark .section-label-line { background: #1e1b4b; }
 </style>
 
 <div class="fc-wrapper">
 
     {{-- ══ SIDEBAR ══ --}}
-@include('components.sidebar')
+    @include('components.sidebar')
 
     {{-- ══ MAIN ══ --}}
     <div class="fc-main">
@@ -404,7 +458,7 @@
             <div class="slider-wrap">
                 <div class="slider-track" id="sliderTrack">
                     <div class="slide">
-                        <img class="slide-img" src="{{ asset('images/Barco.png') }}" alt="Cardumen">
+                        <img class="slide-img" src="{{ asset('images/Barco.webp') }}" alt="Cardumen">
                         <div class="slide-overlay"></div>
                         <div class="slide-content">
                             <div class="slide-tag">Cardumen · Grupo empresarial</div>
@@ -413,7 +467,7 @@
                         </div>
                     </div>
                     <div class="slide">
-                        <img class="slide-img" src="{{ asset('images/Carpetas.jpg') }}" alt="Misión">
+                        <img class="slide-img" src="{{ asset('images/Carpetas.webp') }}" alt="Misión">
                         <div class="slide-overlay"></div>
                         <div class="slide-content">
                             <div class="slide-tag">Nuestra misión</div>
@@ -422,7 +476,7 @@
                         </div>
                     </div>
                     <div class="slide">
-                        <img class="slide-img" src="{{ asset('images/QHSE.png') }}" alt="Visión">
+                        <img class="slide-img" src="{{ asset('images/QHSE.webp') }}" alt="Visión">
                         <div class="slide-overlay"></div>
                         <div class="slide-content">
                             <div class="slide-tag">Nuestra visión</div>
@@ -431,7 +485,7 @@
                         </div>
                     </div>
                     <div class="slide">
-                        <img class="slide-img" src="{{ asset('images/Collage.png') }}" alt="Nuestro Cardumen">
+                        <img class="slide-img" src="{{ asset('images/Collage.webp') }}" alt="Nuestro Cardumen">
                         <div class="slide-overlay"></div>
                         <div class="slide-content">
                             <div class="slide-tag">Nuestro Cardumen</div>
@@ -451,15 +505,28 @@
                 <div class="slider-counter" id="sliderCounter">1 / 4</div>
             </div>
 
-            {{-- MISIÓN / VISIÓN / VALORES --}}
-            <div class="section-label">
-                <div class="section-label-text">Filosofía corporativa</div>
-                <div class="section-label-line"></div>
+            {{-- ─── DIVISOR: FILOSOFÍA CORPORATIVA ─── --}}
+            <div class="section-divider">
+                <div class="section-divider-inner">
+                    <div class="section-divider-icon" style="background:rgba(79,70,229,0.08);border-color:rgba(79,70,229,0.2)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#4f46e5">
+                            <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="section-divider-label">Sección</div>
+                        <div class="section-divider-title">Filosofía corporativa</div>
+                    </div>
+                </div>
+                <div class="section-divider-tail">
+                    <span class="section-divider-badge">Misión · Visión</span>
+                </div>
             </div>
 
-            <div class="grid-mvv">
+            {{-- MISIÓN + VISIÓN --}}
+            <div class="grid-mv">
                 <div class="mvv-card mision">
-                    <img class="mvv-card-img" src="{{ asset('images/Mision.png') }}" alt="Misión">
+                    <img class="mvv-card-img" src="{{ asset('images/Mision.webp') }}" alt="Misión">
                     <div class="mvv-card-overlay"></div>
                     <div class="mvv-accent"></div>
                     <div class="mvv-body">
@@ -474,12 +541,12 @@
                                 <div class="mvv-sub">¿Por qué existimos?</div>
                             </div>
                         </div>
-                        <p class="mvv-text">Proveer una plataforma segura, eficiente y centralizada para la gestión documental del sistema QHSE, facilitando el acceso, control y trazabilidad de la información crítica de la organización Cardumen y sus áreas operativas, impulsando la mejora continua en cada proceso.</p>
+                        <p class="mvv-text">Brindar soluciones logísticas integrales y de servicios a nuestros clientes de la industria petrolera en el Golfo de México, con las fortalezas de activos estratégicos para ofrecerles una amplia gama de operaciones con altos estándares de calidad y seguridad, satisfaciendo sus necesidades y ayudándolos a encontrar oportunidades de mejoras.</p>
                     </div>
                 </div>
 
                 <div class="mvv-card vision">
-                    <img class="mvv-card-img" src="{{ asset('images/Vision.png') }}" alt="Visión">
+                    <img class="mvv-card-img" src="{{ asset('images/Vision.webp') }}" alt="Visión">
                     <div class="mvv-card-overlay"></div>
                     <div class="mvv-accent"></div>
                     <div class="mvv-body">
@@ -494,55 +561,106 @@
                                 <div class="mvv-sub">¿A dónde vamos?</div>
                             </div>
                         </div>
-                        <p class="mvv-text">Ser el sistema de referencia en gestión documental QHSE dentro del sector marítimo e industrial, reconocido por su confiabilidad, trazabilidad e innovación, contribuyendo a la excelencia operativa de todas las áreas de Cardumen a nivel nacional.</p>
-                    </div>
-                </div>
-
-                <div class="mvv-card valores">
-                    <img class="mvv-card-img" src="{{ asset('images/Valores.jpg') }}" alt="Valores">
-                    <div class="mvv-card-overlay"></div>
-                    <div class="mvv-accent"></div>
-                    <div class="mvv-body">
-                        <div class="mvv-header">
-                            <div class="mvv-icon" style="background:rgba(5,150,105,0.1)">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="#059669">
-                                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <div class="mvv-title">Valores</div>
-                                <div class="mvv-sub">¿Cómo lo hacemos?</div>
-                            </div>
-                        </div>
-                        <div class="valor-row">
-                            <div class="valor-ico" style="background:rgba(124,58,237,0.08)">🔒</div>
-                            <div><div class="valor-name">Seguridad</div><div class="valor-desc">Protección total de la información y los datos.</div></div>
-                        </div>
-                        <div class="valor-row">
-                            <div class="valor-ico" style="background:rgba(8,145,178,0.08)">📋</div>
-                            <div><div class="valor-name">Trazabilidad</div><div class="valor-desc">Registro completo de cada acción en el sistema.</div></div>
-                        </div>
-                        <div class="valor-row">
-                            <div class="valor-ico" style="background:rgba(5,150,105,0.08)">🤝</div>
-                            <div><div class="valor-name">Colaboración</div><div class="valor-desc">Trabajo conjunto entre todas las áreas.</div></div>
-                        </div>
-                        <div class="valor-row">
-                            <div class="valor-ico" style="background:rgba(217,119,6,0.08)">⭐</div>
-                            <div><div class="valor-name">Excelencia</div><div class="valor-desc">Mejora continua en todos los procesos.</div></div>
-                        </div>
+                        <p class="mvv-text">Ser una empresa referente de servicios de logística integral y servicios en el mercado nacional e internacional, brindando soluciones innovadoras, optimizando los recursos y protegiendo el medio ambiente.</p>
                     </div>
                 </div>
             </div>
 
-            {{-- NUESTRO CARDUMEN --}}
-            <div class="section-label">
-                <div class="section-label-text">Nuestro Cardumen</div>
-                <div class="section-label-line"></div>
+            {{-- ─── DIVISOR: VALORES ─── --}}
+            <div class="section-divider">
+                <div class="section-divider-inner">
+                    <div class="section-divider-icon" style="background:rgba(5,150,105,0.08);border-color:rgba(5,150,105,0.22)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#059669">
+                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="section-divider-label">Sección</div>
+                        <div class="section-divider-title">Valores corporativos</div>
+                    </div>
+                </div>
+                <div class="section-divider-tail">
+                    <span class="section-divider-badge">5 valores · Cómo lo hacemos</span>
+                </div>
             </div>
+
+            {{-- VALORES (5 tarjetas) --}}
+            <div class="grid-valores">
+
+                <div class="valor-card v-purple">
+                    <div class="valor-card-band"><div class="valor-card-ico">🔒</div></div>
+                    <div class="valor-card-stripe"></div>
+                    <div class="valor-card-body">
+                        <div class="valor-card-title">Honestidad</div>
+                        <span class="valor-card-pill">Integridad</span>
+                        <p class="valor-card-desc">Actuamos con integridad y transparencia en todas nuestras actividades y operaciones comerciales para generar confianza con nuestros clientes y partes interesadas.</p>
+                    </div>
+                </div>
+
+                <div class="valor-card v-cyan">
+                    <div class="valor-card-band"><div class="valor-card-ico">📋</div></div>
+                    <div class="valor-card-stripe"></div>
+                    <div class="valor-card-body">
+                        <div class="valor-card-title">Lealtad</div>
+                        <span class="valor-card-pill">Compromiso inst.</span>
+                        <p class="valor-card-desc">Apoyamos las decisiones y acciones de la alta dirección, trabajando alineados con los objetivos de la organización en todo momento.</p>
+                    </div>
+                </div>
+
+                <div class="valor-card v-green">
+                    <div class="valor-card-band"><div class="valor-card-ico">🤝</div></div>
+                    <div class="valor-card-stripe"></div>
+                    <div class="valor-card-body">
+                        <div class="valor-card-title">Respeto</div>
+                        <span class="valor-card-pill">Inclusión</span>
+                        <p class="valor-card-desc">Valoramos las necesidades y opiniones de los demás, aceptando la diversidad e inclusión sin importar origen, género, raza, religión u orientación sexual.</p>
+                    </div>
+                </div>
+
+                <div class="valor-card v-amber">
+                    <div class="valor-card-band"><div class="valor-card-ico">⭐</div></div>
+                    <div class="valor-card-stripe"></div>
+                    <div class="valor-card-body">
+                        <div class="valor-card-title">Compromiso</div>
+                        <span class="valor-card-pill">Dedicación</span>
+                        <p class="valor-card-desc">Estamos dispuestos a trabajar duro y esforzarnos para alcanzar los objetivos de la organización con la más alta dedicación.</p>
+                    </div>
+                </div>
+
+                <div class="valor-card v-rose">
+                    <div class="valor-card-band"><div class="valor-card-ico">🧩</div></div>
+                    <div class="valor-card-stripe"></div>
+                    <div class="valor-card-body">
+                        <div class="valor-card-title">Trabajo en Equipo</div>
+                        <span class="valor-card-pill">Colaboración</span>
+                        <p class="valor-card-desc">Trabajamos juntos para lograr un objetivo común, compartiendo ideas, habilidades y recursos para lograr el éxito de la empresa.</p>
+                    </div>
+                </div>
+
+            </div>
+
+            {{-- ─── DIVISOR: NUESTRO CARDUMEN ─── --}}
+            <div class="section-divider">
+                <div class="section-divider-inner">
+                    <div class="section-divider-icon" style="background:rgba(6,182,212,0.08);border-color:rgba(6,182,212,0.22)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#0891b2">
+                            <path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="section-divider-label">Sección</div>
+                        <div class="section-divider-title">Nuestro Cardumen</div>
+                    </div>
+                </div>
+                <div class="section-divider-tail">
+                    <span class="section-divider-badge">4 empresas · Un solo grupo</span>
+                </div>
+            </div>
+
             <div class="grid-empresas">
                 <div class="emp-card" onclick="openModal('seaward')">
                     <div class="emp-stripe" style="background:#06b6d4"></div>
-                    <div class="emp-img-wrap"><img src="{{ asset('images/Seaward-Logistic-Logo-.png') }}" alt="Seaward"></div>
+                    <div class="emp-img-wrap"><img src="{{ asset('images/Seaward-Logistic-Logo-.webp') }}" alt="Seaward"></div>
                     <div class="emp-body">
                         <div class="emp-name">Seaward Logistic</div>
                         <div class="emp-desc">Servicios logísticos para la industria Oil & Gas</div>
@@ -554,7 +672,7 @@
                 </div>
                 <div class="emp-card" onclick="openModal('seatools')">
                     <div class="emp-stripe" style="background:#f97316"></div>
-                    <div class="emp-img-wrap"><img src="{{ asset('images/Seatools-Original.png') }}" alt="Seatools"></div>
+                    <div class="emp-img-wrap"><img src="{{ asset('images/Seatools-Original.webp') }}" alt="Seatools"></div>
                     <div class="emp-body">
                         <div class="emp-name">Seatools</div>
                         <div class="emp-desc">Equipamiento y maquinaria industrial de alto rendimiento</div>
@@ -566,7 +684,7 @@
                 </div>
                 <div class="emp-card" onclick="openModal('tws')">
                     <div class="emp-stripe" style="background:#f59e0b"></div>
-                    <div class="emp-img-wrap"><img src="{{ asset('images/The White Shark 1.png') }}" alt="The White Shark"></div>
+                    <div class="emp-img-wrap"><img src="{{ asset('images/The White Shark 1.webp') }}" alt="The White Shark"></div>
                     <div class="emp-body">
                         <div class="emp-name">The White Shark</div>
                         <div class="emp-desc">Catering y suministros para operaciones offshore</div>
@@ -578,7 +696,7 @@
                 </div>
                 <div class="emp-card" onclick="openModal('omc')">
                     <div class="emp-stripe" style="background:#22c55e"></div>
-                    <div class="emp-img-wrap"><img src="{{ asset('images/Original OMC.png') }}" alt="OMC"></div>
+                    <div class="emp-img-wrap"><img src="{{ asset('images/Original OMC.webp') }}" alt="OMC"></div>
                     <div class="emp-body">
                         <div class="emp-name">OMC</div>
                         <div class="emp-desc">Agencia naviera y gestión de trámites portuarios</div>
@@ -590,13 +708,30 @@
                 </div>
             </div>
 
-            {{-- PIE DE PÁGINA --}}
+            {{-- ─── DIVISOR: CONTACTO ─── --}}
+            <div class="section-divider">
+                <div class="section-divider-inner">
+                    <div class="section-divider-icon" style="background:rgba(124,58,237,0.08);border-color:rgba(124,58,237,0.2)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#7c3aed">
+                            <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="section-divider-label">Sección</div>
+                        <div class="section-divider-title">Contacto e información</div>
+                    </div>
+                </div>
+                <div class="section-divider-tail">
+                    <span class="section-divider-badge">Cardumen · Cdad del Carmen, Camp.</span>
+                </div>
+            </div>
+
+            {{-- FOOTER --}}
             <div class="nos-footer">
                 <div class="nos-footer-inner">
-
                     <div>
                         <div class="footer-brand-logo">
-                            <img src="{{ asset('images/logo.png') }}" alt="Logo Cardumen">
+                            <img src="{{ asset('images/logo.webp') }}" alt="Logo Cardumen">
                         </div>
                         <div class="footer-brand-name">Cardumen</div>
                         <div class="footer-brand-desc">
@@ -605,7 +740,6 @@
                             Comprometidos con la excelencia operativa y la gestión documental de calidad.
                         </div>
                     </div>
-
                     <div>
                         <div class="footer-col-title">Síguenos</div>
                         <div class="footer-socials">
@@ -633,7 +767,6 @@
                             </a>
                         </div>
                     </div>
-
                     <div>
                         <div class="footer-col-title">Contacto</div>
                         <div class="footer-address-items">
@@ -645,7 +778,7 @@
                                 </div>
                                 <div>
                                     <div class="footer-address-label">Dirección</div>
-                                    <div class="footer-address-value">Av. Periférico Carlos Pellicer<br>Cárdenas, Villahermosa, Tab.</div>
+                                    <div class="footer-address-value">C.55 102,Caleta<br>24115 Cdad.del Carmen,Camp.</div>
                                 </div>
                             </div>
                             <div class="footer-address-item">
@@ -667,14 +800,12 @@
                                 </div>
                                 <div>
                                     <div class="footer-address-label">Teléfono</div>
-                                    <div class="footer-address-value">+52 (993) 123 4567</div>
+                                    <div class="footer-address-value">+52 (938) 159 3520</div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
                 </div>
-
                 <div class="footer-bottom">
                     <div class="footer-copy">
                         © {{ date('Y') }} <span>Cardumen</span> · Todos los derechos reservados
@@ -691,7 +822,7 @@
 <div class="modal-overlay" id="modal-seaward" onclick="closeOnOverlay(event,'seaward')">
     <div class="modal-box">
         <div class="modal-header-img">
-            <img src="{{ asset('images/Seaward-Logistic-Logo-.png') }}" alt="Seaward">
+            <img src="{{ asset('images/Seaward-Logistic-Logo-.webp') }}" alt="Seaward">
             <button class="modal-close" onclick="closeModal('seaward')">✕</button>
             <div class="modal-stripe" style="background:#06b6d4"></div>
         </div>
@@ -711,7 +842,7 @@
 <div class="modal-overlay" id="modal-seatools" onclick="closeOnOverlay(event,'seatools')">
     <div class="modal-box">
         <div class="modal-header-img">
-            <img src="{{ asset('images/Seatools-Original.png') }}" alt="Seatools">
+            <img src="{{ asset('images/Seatools-Original.webp') }}" alt="Seatools">
             <button class="modal-close" onclick="closeModal('seatools')">✕</button>
             <div class="modal-stripe" style="background:#f97316"></div>
         </div>
@@ -731,7 +862,7 @@
 <div class="modal-overlay" id="modal-tws" onclick="closeOnOverlay(event,'tws')">
     <div class="modal-box">
         <div class="modal-header-img">
-            <img src="{{ asset('images/The White Shark 1.png') }}" alt="The White Shark">
+            <img src="{{ asset('images/The White Shark 1.webp') }}" alt="The White Shark">
             <button class="modal-close" onclick="closeModal('tws')">✕</button>
             <div class="modal-stripe" style="background:#f59e0b"></div>
         </div>
@@ -751,7 +882,7 @@
 <div class="modal-overlay" id="modal-omc" onclick="closeOnOverlay(event,'omc')">
     <div class="modal-box">
         <div class="modal-header-img">
-            <img src="{{ asset('images/Original OMC.png') }}" alt="OMC">
+            <img src="{{ asset('images/Original OMC.webp') }}" alt="OMC">
             <button class="modal-close" onclick="closeModal('omc')">✕</button>
             <div class="modal-stripe" style="background:#22c55e"></div>
         </div>

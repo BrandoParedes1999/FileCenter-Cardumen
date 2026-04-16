@@ -90,7 +90,7 @@
             <img src="{{ $logoPath }}"
                  alt="{{ $empresa->siglas ?? 'FC' }}"
                  style="width:40px;height:40px;object-fit:contain;border-radius:8px;background:rgba(255,255,255,0.1);padding:4px"
-                 onerror="this.src='{{ asset('images/logo.png') }}'">
+                 onerror="this.src='{{ asset('images/logo.webp') }}'">
             <div>
                 <div class="fc-logo-text">
                     {{ $esCorp ? 'FileCenter Cardumen' : ($empresa->nombre ?? 'FileCenter') }}

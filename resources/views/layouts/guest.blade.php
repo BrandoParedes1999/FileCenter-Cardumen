@@ -276,7 +276,7 @@
 
                         {{-- SET 1 --}}
                         <div class="vhs-card">
-                            <img class="vhs-logo" src="{{ asset('images/Seaward-Logistic-Logo-.png') }}" alt="Seaward">
+                            <img class="vhs-logo" src="{{ asset('images/Seaward-Logistic-Logo-.webp') }}" alt="Seaward">
                             <div>
                                 <div class="vhs-name">Seaward Logistic</div>
                                 <div class="vhs-sector">Oil & Gas Services</div>
@@ -285,7 +285,7 @@
                         </div>
 
                         <div class="vhs-card">
-                            <img class="vhs-logo" src="{{ asset('images/Seatools-Original.png') }}" alt="Seatools">
+                            <img class="vhs-logo" src="{{ asset('images/Seatools-Original.webp') }}" alt="Seatools">
                             <div>
                                 <div class="vhs-name">Seatools</div>
                                 <div class="vhs-sector">Industrial Equipment</div>
@@ -294,7 +294,7 @@
                         </div>
 
                         <div class="vhs-card">
-                            <img class="vhs-logo" src="{{ asset('images/The White Shark 1.png') }}" alt="The White Shark">
+                            <img class="vhs-logo" src="{{ asset('images/The White Shark 1.webp') }}" alt="The White Shark">
                             <div>
                                 <div class="vhs-name">The White Shark</div>
                                 <div class="vhs-sector">Catering & Supplies</div>
@@ -303,7 +303,7 @@
                         </div>
 
                         <div class="vhs-card">
-                            <img class="vhs-logo" src="{{ asset('images/Original OMC.png') }}" alt="OMC">
+                            <img class="vhs-logo" src="{{ asset('images/Original OMC.webp') }}" alt="OMC">
                             <div>
                                 <div class="vhs-name">OMC</div>
                                 <div class="vhs-sector">Shipping Agency</div>
