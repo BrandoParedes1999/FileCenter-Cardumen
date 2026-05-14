@@ -363,4 +363,56 @@ class ArchivoController extends Controller
             ->route('carpetas.show', $carpeta)
             ->with('success', "Nueva versión (v{$nuevaVersion}) de \"{$archivo->nombre_original}\" subida.");
     }
+
+     public function ver(Archivo $archivo): View
+    {
+        $this->authorize('view', $archivo);
+ 
+        if (!Storage::disk('filecenter')->exists($archivo->ruta_disco)) {
+            abort(404, 'El archivo no se encuentra en el disco.');
+        }
+ 
+        $archivo->load(['carpeta', 'subidoPor']);
+ 
+        RegistroActividad::registrar(
+            'ver', 'archivo', $archivo->id,
+            "Visualizó online: {$archivo->nombre_original}"
+        );
+ 
+        return view('archivos.visor', compact('archivo'));
+    }
+ 
+    /**
+     * Sirve el contenido del archivo para el visor (inline, no attachment).
+     * No incrementa el contador de descargas — solo es para visualización.
+     */
+    public function contenido(Archivo $archivo): StreamedResponse
+    {
+        $this->authorize('view', $archivo);
+ 
+        if (!Storage::disk('filecenter')->exists($archivo->ruta_disco)) {
+            abort(404);
+        }
+ 
+        $mimeTypes = [
+            'pdf'  => 'application/pdf',
+            'doc'  => 'application/msword',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'xls'  => 'application/vnd.ms-excel',
+            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ];
+ 
+        $ext      = strtolower($archivo->extension);
+        $mime     = $mimeTypes[$ext] ?? ($archivo->tipo_mime ?? 'application/octet-stream');
+        $nombre   = $archivo->nombre_original;
+ 
+        // 'inline' hace que el navegador muestre el archivo en lugar de descargarlo.
+        // Para DOCX/XLSX el navegador no puede mostrarlo nativamente,
+        // por eso el visor.blade.php usa mammoth.js / SheetJS para procesarlo.
+        return Storage::disk('filecenter')->response(
+            $archivo->ruta_disco,
+            $nombre,
+            ['Content-Disposition' => "inline; filename=\"{$nombre}\""]
+        );
+    }
 }

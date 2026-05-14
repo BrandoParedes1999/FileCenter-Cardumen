@@ -11,6 +11,7 @@ use App\Http\Controllers\SolicitudAccesoController;
 use App\Http\Controllers\SolicitudSubidaController;
 use App\Http\Controllers\PermisoCarpetaController;
 use App\Http\Controllers\PermisosGlobalesController;
+use App\Http\Controllers\BuscadorController;
 use Illuminate\Support\Facades\Route;
 
 // ─────────────────────────────────────────────
@@ -74,6 +75,11 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
 
     Route::post('archivos/{archivo}/restaurar-version', [ArchivoController::class, 'restaurarVersion'])
         ->name('archivos.restaurar-version');
+
+    Route::get('archivos/{archivo}/ver',      [ArchivoController::class, 'ver'])      
+        ->name('archivos.ver');
+    Route::get('archivos/{archivo}/contenido',[ArchivoController::class, 'contenido'])
+        ->name('archivos.contenido');
 
     // ─────────────────────────────────────────
     // SOLICITUDES DE ACCESO (cross-empresa)
@@ -156,6 +162,9 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
 
     Route::get('/actualizaciones-recientes', [DashboardController::class, 'actualizaciones'])
     ->name('actualizaciones.recientes');
+
+    Route::get('buscador-index', [BuscadorController::class, 'index'])
+        ->name('buscar');
 });
 
 require __DIR__.'/auth.php';

@@ -90,49 +90,74 @@
                                     </div>
 
                                     <div class="fc-file-actions">
-                                        {{-- DESCARGAR: respeta modo_acceso Y permiso --}}
-                                        @can('download', $archivo)
-                                        <a href="{{ route('archivos.descargar', $archivo) }}"
-                                            class="fc-action-btn download"
-                                           style="background:rgba(5,150,105,.08);color:#059669;border-color:rgba(5,150,105,.25)">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                                            Descargar
-                                        </a>
-                                        @else
-                                        {{-- Mostrar por qué no puede descargar --}}
-                                        @if($archivo->carpeta->esSoloLectura())
-                                        <span style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:5px;padding:9px 0">
-                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="#94a3b8"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5z"/></svg>
-                                            Solo lectura — descarga no disponible
-                                        </span>
-                                        @else
-                                        <a href="{{ route('solicitudes.create', ['archivo_id' => $archivo->id]) }}"
-                                           class="fc-action-btn solicitar"
-                                           style="background:rgba(245,158,11,.08);color:#d97706;border-color:rgba(245,158,11,.25)">
-                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-                                            Solicitar acceso
-                                        </a>
-                                        @endif
-                                        @endcan
-
-                                        @can('update', $archivo)
-                                        <button onclick="toggleEditDesc()"
-                                                class="fc-action-btn edit"
-                                                style="background:rgba(99,102,241,.08);color:#4f46e5;border-color:rgba(99,102,241,.25)">
-                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-                                            Editar descripción
-                                        </button>
-                                        @endcan
-
-                                        @can('delete', $archivo)
-                                        <button onclick="document.getElementById('modalEliminar').classList.add('open')"
-                                                class="fc-action-btn delete"
-                                                style="background:rgba(220,38,38,.08);color:#dc2626;border-color:rgba(220,38,38,.25)">
-                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-                                            Eliminar
-                                        </button>
-                                        @endcan
-                                    </div>
+ 
+    {{-- VER EN LÍNEA: cualquier usuario con permiso 'view' puede usarlo --}}
+    @can('view', $archivo)
+    <a href="{{ route('archivos.ver', $archivo) }}"
+       class="fc-action-btn"
+       style="background:rgba(79,70,229,.08);color:#4f46e5;border-color:rgba(79,70,229,.25)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+        </svg>
+        Ver en línea
+    </a>
+    @endcan
+ 
+    {{-- DESCARGAR: solo si tiene permiso de descarga --}}
+    @can('download', $archivo)
+    <a href="{{ route('archivos.descargar', $archivo) }}"
+       class="fc-action-btn download"
+       style="background:rgba(5,150,105,.08);color:#059669;border-color:rgba(5,150,105,.25)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+        </svg>
+        Descargar
+    </a>
+    @else
+        {{-- Si no puede descargar, mostrar por qué --}}
+        @if($archivo->carpeta->esSoloLectura())
+        <span style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:5px;padding:9px 0">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="#94a3b8">
+                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5z"/>
+            </svg>
+            Solo lectura — descarga no disponible
+        </span>
+        @else
+        <a href="{{ route('solicitudes.create', ['archivo_id' => $archivo->id]) }}"
+           class="fc-action-btn solicitar"
+           style="background:rgba(245,158,11,.08);color:#d97706;border-color:rgba(245,158,11,.25)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+            </svg>
+            Solicitar acceso
+        </a>
+        @endif
+    @endcan
+ 
+    {{-- EDITAR descripción --}}
+    @can('update', $archivo)
+    <button onclick="toggleEditDesc()"
+            class="fc-action-btn edit"
+            style="background:rgba(99,102,241,.08);color:#4f46e5;border-color:rgba(99,102,241,.25)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+        </svg>
+        Editar descripción
+    </button>
+    @endcan
+ 
+    {{-- ELIMINAR --}}
+    @can('delete', $archivo)
+    <button onclick="document.getElementById('modalEliminar').classList.add('open')"
+            class="fc-action-btn delete"
+            style="background:rgba(220,38,38,.08);color:#dc2626;border-color:rgba(220,38,38,.25)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+        </svg>
+        Eliminar
+    </button>
+    @endcan
+</div>
                                 </div>
                             </div>
 
