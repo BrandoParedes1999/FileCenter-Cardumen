@@ -56,7 +56,7 @@ class RegistroActividad extends Model
         'usuario_bloqueado',
     ];
 
-    const RECURSOS = ['archivo', 'carpeta', 'solicitud', 'usuario', 'version'];
+    const RECURSOS = ['archivo', 'carpeta', 'solicitud', 'usuario', 'version', 'sistema'];
 
     // RELACIONES
 
@@ -71,11 +71,12 @@ class RegistroActividad extends Model
      * Registra una acción de auditoría.
      * Uso:
      *   RegistroActividad::registrar('subir', 'archivo', $archivo->id, 'Subió reporte.pdf');
+     *   RegistroActividad::registrar('ver', 'sistema', null, 'Vista global de permisos');
      */
     public static function registrar(
         string  $accion,
         string  $recurso,
-        int     $recursoId,
+        ?int    $recursoId,
         ?string $detalles  = null,
         ?int    $usuarioId = null,
         ?string $ip        = null
