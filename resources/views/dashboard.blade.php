@@ -11,25 +11,99 @@
         {{-- Área principal --}}
         <div class="fc-main">
 
-            {{-- Topbar --}}
-            <header class="fc-topbar">
-                <input class="fc-search" placeholder="Buscar archivos, carpetas..." />
-                <div class="fc-topbar-right">
-                    <div class="fc-notif">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#64748b">
-                            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
-                        </svg>
-                        <div class="fc-notif-badge">2</div>
-                    </div>
-                    <div class="fc-topbar-avatar">
-                        {{ strtoupper(substr(Auth::user()->nombre, 0, 1)) . strtoupper(substr(Auth::user()->paterno, 0, 1)) }}
-                    </div>
-                    <div>
-                        <div class="fc-topbar-name">{{ Auth::user()->nombre_completo }}</div>
-                        <div class="fc-topbar-role">{{ Auth::user()->rol }}</div>
-                    </div>
-                </div>
-            </header>
+{{-- Topbar --}}
+<header class="fc-topbar">
+
+    {{-- ── Buscador funcional ── --}}
+    <form method="GET" action="{{ route('buscar') }}" style="flex:1;max-width:400px">
+        <div style="position:relative">
+            <svg style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none"
+                 width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="#94a3b8" stroke-width="2" stroke-linecap="round">
+                <circle cx="11" cy="11" r="6"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input
+                class="fc-search"
+                type="text"
+                name="q"
+                placeholder="Buscar archivos, carpetas..."
+                autocomplete="off"
+                style="padding-left:34px">
+        </div>
+    </form>
+
+    <div class="fc-topbar-right">
+
+        {{-- ── Badge de notificaciones dinámico ── --}}
+        @php
+            $usuario = Auth::user();
+
+            // Para admins/gestores: solicitudes pendientes de revisar
+            // Para empleados/auxiliares: sus propias solicitudes procesadas no vistas
+            if (in_array($usuario->rol, ['Superadmin', 'Aux_QHSE', 'Admin', 'Gerente'])) {
+
+                $pendientesSubida = \App\Models\SolicitudSubida::where('status', 'Pendiente')
+                    ->when(
+                        !in_array($usuario->rol, ['Superadmin', 'Aux_QHSE']),
+                        fn($q) => $q->whereHas('carpeta', fn($c) => $c->where('empresa_id', $usuario->empresa_id))
+                    )
+                    ->count();
+
+                $pendientesAcceso = \App\Models\SolicitudAcceso::where('status', 'Pendiente')
+                    ->when(
+                        !in_array($usuario->rol, ['Superadmin', 'Aux_QHSE']),
+                        fn($q) => $q->where('empresa_objetivo_id', $usuario->empresa_id)
+                    )
+                    ->count();
+
+                $totalNotif = $pendientesSubida + $pendientesAcceso;
+                $urlNotif   = $pendientesSubida >= $pendientesAcceso
+                    ? route('solicitudes-subida.index')
+                    : route('solicitudes.index');
+
+            } else {
+                // Empleado/Auxiliar: solicitudes propias resueltas recientemente (últimas 48h)
+                $totalNotif = \App\Models\SolicitudAcceso::where('solicitante_id', $usuario->id)
+                    ->whereIn('status', ['Aprobado', 'Rechazado'])
+                    ->where('updated_at', '>=', now()->subHours(48))
+                    ->count()
+                    +
+                    \App\Models\SolicitudSubida::where('solicitante_id', $usuario->id)
+                    ->whereIn('status', ['Aprobado', 'Rechazado'])
+                    ->where('updated_at', '>=', now()->subHours(48))
+                    ->count();
+
+                $urlNotif = route('solicitudes.index');
+            }
+        @endphp
+
+        <a href="{{ $urlNotif }}"
+           class="fc-notif"
+           title="{{ $totalNotif > 0 ? $totalNotif . ' pendiente(s)' : 'Sin notificaciones' }}"
+           style="text-decoration:none;position:relative">
+            <svg width="20" height="20" viewBox="0 0 24 24"
+                 fill="{{ $totalNotif > 0 ? '#6366f1' : '#94a3b8' }}">
+                <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+            </svg>
+            @if($totalNotif > 0)
+            <div class="fc-notif-badge"
+                 style="{{ $totalNotif > 9 ? 'min-width:18px;border-radius:9px;padding:0 4px' : '' }}">
+                {{ $totalNotif > 99 ? '99+' : $totalNotif }}
+            </div>
+            @endif
+        </a>
+
+        {{-- ── Avatar y nombre ── --}}
+        <div class="fc-topbar-avatar">
+            {{ strtoupper(substr($usuario->nombre, 0, 1)) . strtoupper(substr($usuario->paterno, 0, 1)) }}
+        </div>
+        <div>
+            <div class="fc-topbar-name">{{ $usuario->nombre_completo }}</div>
+            <div class="fc-topbar-role">{{ $usuario->rol }}</div>
+        </div>
+
+    </div>
+</header>
 
             {{-- Contenido --}}
             <div class="fc-content">
