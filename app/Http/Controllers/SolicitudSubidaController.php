@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Archivo;
 use App\Models\RegistroActividad;
 use App\Models\SolicitudSubida;
+use App\Models\Usuario;
 use App\Models\VersionArchivo;
+use App\Notifications\SolicitudSubidaRecibida;
+use App\Notifications\SolicitudSubidaResuelta;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -168,6 +171,9 @@ class SolicitudSubidaController extends Controller
             "Aprobó subida de \"{$solicitudSubida->nombre_original}\" de {$usuario->nombre_completo}"
         );
 
+        $solicitudSubida->load(['carpeta', 'solicitante']);
+        $solicitudSubida->solicitante->notify(new SolicitudSubidaResuelta($solicitudSubida));
+
         return redirect()
             ->route('solicitudes-subida.index')
             ->with('success', "Archivo \"{$solicitudSubida->nombre_original}\" aprobado y publicado en la carpeta.");
@@ -206,6 +212,9 @@ class SolicitudSubidaController extends Controller
             'rechazar_subida', 'carpeta', $solicitudSubida->carpeta_id,
             "Rechazó subida de \"{$solicitudSubida->nombre_original}\""
         );
+
+        $solicitudSubida->load(['carpeta', 'solicitante']);
+        $solicitudSubida->solicitante->notify(new SolicitudSubidaResuelta($solicitudSubida));
 
         return redirect()
             ->route('solicitudes-subida.index')

@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('registro_de_actividad', function (Blueprint $table) {
-            $table->dropForeign('fk_log_usuario');
+            $table->dropForeign(['usuario_id']);
             $table->unsignedInteger('usuario_id')->nullable()->change();
             $table->foreign('usuario_id', 'fk_log_usuario')
                 ->references('id')->on('usuarios')
@@ -25,7 +25,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('registro_de_actividad', function (Blueprint $table) {
-            $table->dropForeign('fk_log_usuario');
+            $table->dropForeign(['usuario_id']);
             $table->unsignedInteger('usuario_id')->nullable(false)->change();
             $table->foreign('usuario_id', 'fk_log_usuario')
                 ->references('id')->on('usuarios')

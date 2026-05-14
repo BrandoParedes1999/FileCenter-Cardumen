@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
             EmpresasSeeder::class,
             UsuariosSeeder::class,
             RolesSeeder::class,
-            //CarpetasSeeder::class,
+            CarpetasSeeder::class,
         ]);
     }
 }
