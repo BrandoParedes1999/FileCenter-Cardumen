@@ -168,8 +168,8 @@
                 </svg>
             </div>
             <div>
-                <div class="rp-title">Reportes de Actividad</div>
-                <div class="rp-sub">Auditoría completa de acciones en la plataforma · Solo Superadmin</div>
+                <div class="rp-title">Reporte de Uso de Archivos</div>
+                <div class="rp-sub">Quién subió, descargó, visualizó o eliminó archivos · Solo Superadmin / Aux_QHSE</div>
             </div>
             <div class="fc-topbar-avatar" style="margin-left:auto">
                 {{ strtoupper(substr(Auth::user()->nombre,0,1)) }}{{ strtoupper(substr(Auth::user()->paterno,0,1)) }}
@@ -238,33 +238,12 @@
                     <div class="rp-field">
                         <label>Tipo de acción</label>
                         <select name="accion">
-                            <option value="">Todas las acciones</option>
-                            <optgroup label="Archivos">
-                                <option value="subir"      {{ request('accion') === 'subir'      ? 'selected' : '' }}>Subir archivo</option>
-                                <option value="descargar"  {{ request('accion') === 'descargar'  ? 'selected' : '' }}>Descargar archivo</option>
-                                <option value="eliminar"   {{ request('accion') === 'eliminar'   ? 'selected' : '' }}>Eliminar archivo</option>
-                                <option value="ver"        {{ request('accion') === 'ver'        ? 'selected' : '' }}>Visualizar</option>
-                                <option value="editar"     {{ request('accion') === 'editar'     ? 'selected' : '' }}>Editar</option>
-                                <option value="restaurar_version" {{ request('accion') === 'restaurar_version' ? 'selected' : '' }}>Restaurar versión</option>
-                            </optgroup>
-                            <optgroup label="Sesión">
-                                <option value="iniciar_sesion"  {{ request('accion') === 'iniciar_sesion'  ? 'selected' : '' }}>Iniciar sesión</option>
-                                <option value="cerrar_sesion"   {{ request('accion') === 'cerrar_sesion'   ? 'selected' : '' }}>Cerrar sesión</option>
-                                <option value="login_fallido"   {{ request('accion') === 'login_fallido'   ? 'selected' : '' }}>Login fallido</option>
-                                <option value="usuario_bloqueado" {{ request('accion') === 'usuario_bloqueado' ? 'selected' : '' }}>Usuario bloqueado</option>
-                            </optgroup>
-                            <optgroup label="Solicitudes">
-                                <option value="solicitar_acceso"  {{ request('accion') === 'solicitar_acceso'  ? 'selected' : '' }}>Solicitar acceso</option>
-                                <option value="aprobar_solicitud" {{ request('accion') === 'aprobar_solicitud' ? 'selected' : '' }}>Aprobar solicitud</option>
-                                <option value="rechazar_solicitud"{{ request('accion') === 'rechazar_solicitud'? 'selected' : '' }}>Rechazar solicitud</option>
-                                <option value="solicitar_subida"  {{ request('accion') === 'solicitar_subida'  ? 'selected' : '' }}>Solicitar subida</option>
-                                <option value="aprobar_subida"    {{ request('accion') === 'aprobar_subida'    ? 'selected' : '' }}>Aprobar subida</option>
-                                <option value="rechazar_subida"   {{ request('accion') === 'rechazar_subida'   ? 'selected' : '' }}>Rechazar subida</option>
-                            </optgroup>
-                            <optgroup label="Administración">
-                                <option value="crear_carpeta" {{ request('accion') === 'crear_carpeta' ? 'selected' : '' }}>Crear carpeta</option>
-                                <option value="crear_usuario" {{ request('accion') === 'crear_usuario' ? 'selected' : '' }}>Crear usuario</option>
-                            </optgroup>
+                            <option value="">Todas (subir, descargar, ver, eliminar)</option>
+                            <option value="subir"             {{ request('accion') === 'subir'             ? 'selected' : '' }}>Subir archivo</option>
+                            <option value="descargar"         {{ request('accion') === 'descargar'         ? 'selected' : '' }}>Descargar archivo</option>
+                            <option value="ver"               {{ request('accion') === 'ver'               ? 'selected' : '' }}>Visualizar archivo</option>
+                            <option value="eliminar"          {{ request('accion') === 'eliminar'          ? 'selected' : '' }}>Eliminar archivo</option>
+                            <option value="restaurar_version" {{ request('accion') === 'restaurar_version' ? 'selected' : '' }}>Restaurar versión</option>
                         </select>
                     </div>
 

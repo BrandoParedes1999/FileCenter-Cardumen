@@ -220,6 +220,111 @@
                     {{-- Áreas --}}
                     <x-areas-grid :areas="$empresas" link="#" />
 
+                    {{-- ── Tabla de archivos recientes ── --}}
+                    @if($archivosRecientes->isNotEmpty())
+                    <div style="margin-top:22px">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="#6366f1">
+                                <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/>
+                            </svg>
+                            <span style="font-size:13px;font-weight:700;color:#1e293b">Archivos recientes</span>
+                            @if(!$esEmpleado)
+                            <a href="{{ route('archivos.index') }}"
+                               style="margin-left:auto;font-size:11px;color:#6366f1;text-decoration:none;
+                                      padding:3px 10px;border:1px solid rgba(99,102,241,.2);
+                                      border-radius:20px;background:rgba(99,102,241,.05)">
+                                Ver todos →
+                            </a>
+                            @endif
+                        </div>
+
+                        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden">
+                            <table style="width:100%;border-collapse:collapse;font-size:12px">
+                                <thead>
+                                    <tr style="background:#fafbfc;border-bottom:1px solid #f1f5f9">
+                                        <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em">Archivo</th>
+                                        @if($esAdmin)
+                                        <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em">Empresa</th>
+                                        @endif
+                                        <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em">Subido por</th>
+                                        <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em">Fecha</th>
+                                        <th style="padding:8px 14px;text-align:center;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @foreach($archivosRecientes as $af)
+                                @php
+                                    $extColor = match(strtolower($af->extension ?? '')) {
+                                        'pdf'          => ['#dc2626', '#fee2e2'],
+                                        'doc', 'docx'  => ['#2563eb', '#dbeafe'],
+                                        'xls', 'xlsx'  => ['#059669', '#d1fae5'],
+                                        default        => ['#64748b', '#f1f5f9'],
+                                    };
+                                @endphp
+                                <tr style="border-bottom:1px solid #f8fafc;transition:background .1s"
+                                    onmouseover="this.style.background='#fafbff'"
+                                    onmouseout="this.style.background=''">
+                                    <td style="padding:9px 14px;max-width:220px">
+                                        <div style="display:flex;align-items:center;gap:8px">
+                                            <span style="font-size:10px;font-weight:700;color:{{ $extColor[0] }};
+                                                         background:{{ $extColor[1] }};padding:2px 6px;
+                                                         border-radius:4px;text-transform:uppercase;flex-shrink:0">
+                                                {{ strtoupper($af->extension ?? '?') }}
+                                            </span>
+                                            <span style="font-size:12px;color:#1e293b;font-weight:500;
+                                                         white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                                                {{ $af->nombre_original }}
+                                            </span>
+                                        </div>
+                                        <div style="font-size:10px;color:#94a3b8;margin-top:2px;padding-left:44px">
+                                            📁 {{ $af->carpeta?->nombre ?? '—' }}
+                                        </div>
+                                    </td>
+                                    @if($esAdmin)
+                                    <td style="padding:9px 14px;font-size:11px;color:#64748b;white-space:nowrap">
+                                        {{ $af->carpeta?->empresa?->siglas ?? '—' }}
+                                    </td>
+                                    @endif
+                                    <td style="padding:9px 14px;font-size:11px;color:#64748b;white-space:nowrap">
+                                        {{ $af->subidoPor?->nombre ?? '—' }}
+                                    </td>
+                                    <td style="padding:9px 14px;font-size:11px;color:#94a3b8;white-space:nowrap;font-family:monospace">
+                                        {{ $af->created_at?->format('d/m/Y') }}
+                                    </td>
+                                    <td style="padding:9px 14px;text-align:center">
+                                        <div style="display:flex;justify-content:center;gap:4px">
+                                            <a href="{{ route('archivos.ver', $af) }}"
+                                               title="Ver archivo"
+                                               style="width:28px;height:28px;border-radius:7px;border:1px solid #e2e8f0;
+                                                      background:#f8fafc;color:#94a3b8;display:flex;align-items:center;
+                                                      justify-content:center;text-decoration:none;transition:all .15s"
+                                               onmouseover="this.style.background='#ede9fe';this.style.color='#6366f1';this.style.borderColor='#c4b5fd'"
+                                               onmouseout="this.style.background='#f8fafc';this.style.color='#94a3b8';this.style.borderColor='#e2e8f0'">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                                                </svg>
+                                            </a>
+                                            <a href="{{ route('archivos.descargar', $af) }}"
+                                               title="Descargar archivo"
+                                               style="width:28px;height:28px;border-radius:7px;border:1px solid #e2e8f0;
+                                                      background:#f8fafc;color:#94a3b8;display:flex;align-items:center;
+                                                      justify-content:center;text-decoration:none;transition:all .15s"
+                                               onmouseover="this.style.background='#d1fae5';this.style.color='#059669';this.style.borderColor='#6ee7b7'"
+                                               onmouseout="this.style.background='#f8fafc';this.style.color='#94a3b8';this.style.borderColor='#e2e8f0'">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    @endif
+
                 </div>{{-- /fc-content-main --}}
 
                 {{-- Panel lateral derecho --}}
@@ -231,7 +336,55 @@
                     {{-- Roles --}}
                     <x-roles-sidebar :roles="$usuariosPorRol" :maxRol="$maxRol" />
 
-                    
+                    {{-- ── Usuarios en línea (solo Superadmin) ── --}}
+                    @if(Auth::user()->rol === 'Superadmin')
+                    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;
+                                padding:16px;margin-top:16px">
+                        <div style="display:flex;align-items:center;gap:7px;margin-bottom:12px">
+                            <div style="width:8px;height:8px;border-radius:50%;background:#22c55e;
+                                        box-shadow:0 0 0 3px rgba(34,197,94,.2)"></div>
+                            <span style="font-size:13px;font-weight:700;color:#1e293b">Usuarios en línea</span>
+                            <span style="margin-left:auto;font-size:11px;font-weight:600;
+                                         background:rgba(34,197,94,.1);color:#16a34a;
+                                         padding:2px 8px;border-radius:20px">
+                                {{ $usuariosEnLinea->count() }} activo{{ $usuariosEnLinea->count() != 1 ? 's' : '' }}
+                            </span>
+                        </div>
+
+                        @forelse($usuariosEnLinea as $ul)
+                        <div style="display:flex;align-items:center;gap:8px;padding:7px 0;
+                                    border-bottom:1px solid #f8fafc">
+                            <div style="width:30px;height:30px;border-radius:50%;flex-shrink:0;
+                                        background:linear-gradient(135deg,#4f46e5,#7c3aed);
+                                        display:flex;align-items:center;justify-content:center;
+                                        color:#fff;font-size:10px;font-weight:700;position:relative">
+                                {{ strtoupper(substr($ul->nombre,0,1)) }}{{ strtoupper(substr($ul->paterno,0,1)) }}
+                                <div style="position:absolute;bottom:-1px;right:-1px;
+                                            width:9px;height:9px;border-radius:50%;
+                                            background:#22c55e;border:1.5px solid #fff"></div>
+                            </div>
+                            <div style="flex:1;min-width:0">
+                                <div style="font-size:12px;font-weight:600;color:#1e293b;
+                                            white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                                    {{ $ul->nombre }} {{ $ul->paterno }}
+                                </div>
+                                <div style="font-size:10px;color:#94a3b8">
+                                    {{ $ul->rol }}
+                                    @if($ul->empresa) · {{ $ul->empresa->siglas }} @endif
+                                </div>
+                            </div>
+                        </div>
+                        @empty
+                        <div style="text-align:center;padding:16px 0;font-size:12px;color:#94a3b8">
+                            Sin usuarios activos en este momento
+                        </div>
+                        @endforelse
+
+                        <div style="margin-top:8px;font-size:10px;color:#cbd5e1;text-align:center">
+                            Activos en los últimos 15 minutos
+                        </div>
+                    </div>
+                    @endif
 
                 </div>{{-- /fc-content-side --}}
 

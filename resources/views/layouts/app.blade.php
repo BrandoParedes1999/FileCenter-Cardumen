@@ -52,6 +52,51 @@
 
 @auth
 <style>
+/* ── Tooltips de ayuda ──────────────────────────────────────── */
+.fc-help {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #e2e8f0; color: #64748b;
+    font-size: 10px; font-weight: 700; cursor: default;
+    vertical-align: middle; margin-left: 5px;
+    position: relative; user-select: none; flex-shrink: 0;
+    border: 1px solid #cbd5e1;
+    transition: background .15s, color .15s;
+}
+.fc-help:hover { background: #6366f1; color: #fff; border-color: #6366f1; }
+.fc-help::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%; transform: translateX(-50%);
+    background: #0f172a; color: #f1f5f9;
+    font-size: 11px; font-weight: 400; line-height: 1.5;
+    padding: 8px 12px; border-radius: 8px;
+    white-space: pre-wrap; max-width: 260px; min-width: 160px;
+    pointer-events: none; opacity: 0;
+    transition: opacity .15s;
+    z-index: 9000;
+    box-shadow: 0 4px 16px rgba(0,0,0,.25);
+    text-align: left;
+}
+.fc-help::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 2px);
+    left: 50%; transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #0f172a;
+    pointer-events: none; opacity: 0;
+    transition: opacity .15s;
+    z-index: 9000;
+}
+.fc-help:hover::after,
+.fc-help:hover::before { opacity: 1; }
+
+/* Ajuste si el tooltip se sale por la izquierda */
+.fc-help.tip-right::after { left: 0; transform: none; }
+.fc-help.tip-right::before { left: 8px; transform: none; }
+
 #fc-poll-toast {
     position: fixed;
     bottom: 28px;
