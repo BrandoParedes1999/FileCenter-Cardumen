@@ -1,59 +1,140 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# FileCenter Cardumen
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistema de gestión documental multi-empresa construido con **Laravel 12**, Blade, Alpine.js y Tailwind CSS.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Descripción
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+FileCenter Cardumen permite a un grupo de empresas administrar sus archivos y carpetas con control granular de permisos, flujos de aprobación y auditoría completa de actividad. Una empresa corporativa puede ser visible para todas las demás; cada empresa tiene su propio espacio privado.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## Características principales
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+| Módulo | Descripción |
+|---|---|
+| **Autenticación** | Login con bloqueo por intentos fallidos (5 intentos → bloqueo temporal configurable) |
+| **Multi-empresa** | `CompanyScope` middleware garantiza que cada usuario solo vea datos de su empresa |
+| **Carpetas** | Estructura jerárquica con herencia de permisos hacia subcarpetas |
+| **Permisos granulares** | 5 bits por entrada: leer, descargar, subir, editar, borrar + heredar |
+| **Solicitudes de acceso** | Empleados solicitan acceso a carpetas de otras empresas; Admin/Gerente aprueba |
+| **Solicitudes de subida** | Carpetas con `requiere_aprobacion_subida` enrutan archivos a revisión antes de publicarlos |
+| **Notificaciones email** | Avisos automáticos al crear/aprobar/rechazar solicitudes (mailer configurable) |
+| **Reporte de actividad** | Historial filtrable con exportación CSV; acceso restringido a Superadmin/Aux_QHSE |
+| **Gestor de permisos global** | Vista centralizada de todos los permisos con edición inline |
+| **Limpieza automática** | Comando Artisan `filecenter:limpiar-temporales` ejecutado diariamente a las 02:00 |
+| **Auditoría** | Registro de todas las acciones relevantes vía Spatie Activity Log |
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## Roles y jerarquía
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```
+Superadmin   — acceso total a todas las empresas y configuración global
+Aux_QHSE     — lectura global + reportes; no puede modificar permisos
+Admin        — gestiona usuarios, carpetas y permisos de su empresa
+Gerente      — aprueba solicitudes; acceso amplio dentro de su empresa
+Auxiliar     — acceso según permisos explícitos de carpeta
+Empleado     — acceso mínimo; puede solicitar acceso o subida
+```
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Requisitos
 
-## Contributing
+- PHP 8.2+
+- MySQL 8+ (o MariaDB 10.6+)
+- Composer
+- Node.js 18+ / npm
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## Instalación
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+# 1. Clonar el repositorio
+git clone <url-del-repositorio>
+cd FileCenter-Cardumen
 
-## Security Vulnerabilities
+# 2. Instalar dependencias
+composer install
+npm install && npm run build
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# 3. Configurar entorno
+cp .env.example .env
+php artisan key:generate
 
-## License
+# 4. Configurar base de datos en .env
+#    DB_DATABASE=FileCenter
+#    DB_USERNAME=...
+#    DB_PASSWORD=...
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# 5. Ejecutar migraciones y seeders
+php artisan migrate --seed
+
+# 6. (Opcional) Configurar el scheduler de Laravel en cron
+#    * * * * * php /ruta/al/proyecto/artisan schedule:run >> /dev/null 2>&1
+
+# 7. Levantar el servidor
+php artisan serve
+```
+
+---
+
+## Estructura de base de datos (tablas principales)
+
+| Tabla | Propósito |
+|---|---|
+| `empresas` | Empresas del grupo; `es_corporativo=1` identifica la corporativa |
+| `usuarios` | Usuarios con `rol` ENUM y control de bloqueo por fuerza bruta |
+| `carpetas` | Árbol de carpetas con `padre_id`, `path`, `modo_acceso` |
+| `archivos` | Archivos con versiones y metadatos |
+| `permisos_de_carpeta` | Permisos usuario/rol por carpeta (5 bits + heredar) |
+| `solicitudes_acceso` | Solicitudes de acceso inter-empresa |
+| `solicitudes_subida` | Archivos en cola de aprobación antes de publicarse |
+| `registro_actividad` | Log de auditoría de todas las acciones |
+
+---
+
+## Variables de entorno relevantes
+
+```env
+# Correo — en desarrollo usar 'log', en producción configurar SMTP
+MAIL_MAILER=log
+MAIL_FROM_ADDRESS="noreply@filecenter.example.com"
+
+# Cola — usar 'database' para producción, ejecutar: php artisan queue:work
+QUEUE_CONNECTION=database
+
+# Disco de archivos (configurable en config/filesystems.php)
+FILESYSTEM_DISK=local
+```
+
+---
+
+## Tests
+
+```bash
+php artisan test
+```
+
+La suite cubre: permisos de carpeta, acceso a archivos, solicitudes de acceso, solicitudes de subida, bloqueo por fuerza bruta y control de acceso por roles (89 tests, 151 assertions).
+
+---
+
+## Comandos Artisan
+
+```bash
+# Limpiar archivos temporales huérfanos (se ejecuta automáticamente vía scheduler)
+php artisan filecenter:limpiar-temporales --dias=7
+
+# Vista previa sin borrar nada
+php artisan filecenter:limpiar-temporales --dry-run
+```
+
+---
+
+## Licencia
+
+Uso interno — todos los derechos reservados.

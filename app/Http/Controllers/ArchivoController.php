@@ -240,7 +240,7 @@ class ArchivoController extends Controller
         Storage::disk('filecenter')->put($rutaTemporal, file_get_contents($file->getRealPath()));
 
         // Crear solicitud de subida
-        \App\Models\SolicitudSubida::create([
+        $solicitudSubida = \App\Models\SolicitudSubida::create([
             'carpeta_id'            => $carpeta->id,
             'solicitante_id'        => $usuario->id,
             'nombre_original'       => $file->getClientOriginalName(),
@@ -253,6 +253,15 @@ class ArchivoController extends Controller
             'descripcion'           => $request->descripcion,
             'status'                => 'Pendiente',
         ]);
+
+        // Notificar a Admin/Gerente de la empresa
+        $solicitudSubida->load(['carpeta', 'solicitante']);
+        \App\Models\Usuario::where('empresa_id', $carpeta->empresa_id)
+            ->whereIn('rol', ['Admin', 'Gerente'])
+            ->where('es_activo', true)
+            ->each(fn($admin) => $admin->notify(
+                new \App\Notifications\SolicitudSubidaRecibida($solicitudSubida)
+            ));
 
         RegistroActividad::registrar(
             'solicitar_subida', 'carpeta', $carpeta->id,

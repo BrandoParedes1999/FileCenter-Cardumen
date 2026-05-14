@@ -7,6 +7,9 @@ use App\Models\Carpeta;
 use App\Models\Empresa;
 use App\Models\RegistroActividad;
 use App\Models\SolicitudAcceso;
+use App\Models\Usuario;
+use App\Notifications\SolicitudAccesoRecibida;
+use App\Notifications\SolicitudAccesoResuelta;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -178,6 +181,13 @@ class SolicitudAccesoController extends Controller
             "Solicitó acceso a empresa_id={$validated['empresa_objetivo_id']}"
         );
 
+        // Notificar a Admin y Gerente de la empresa objetivo
+        $solicitud->load(['carpeta', 'solicitante']);
+        Usuario::where('empresa_id', $validated['empresa_objetivo_id'])
+            ->whereIn('rol', ['Admin', 'Gerente'])
+            ->where('es_activo', true)
+            ->each(fn($admin) => $admin->notify(new SolicitudAccesoRecibida($solicitud)));
+
         return redirect()
             ->route('solicitudes.show', $solicitud)
             ->with('success', 'Solicitud enviada correctamente. Será revisada por un administrador.');
@@ -203,11 +213,14 @@ class SolicitudAccesoController extends Controller
         $caduca = $request->caduca_en ? \Carbon\Carbon::parse($request->caduca_en) : null;
 
         $solicitud->aprobar(Auth::id(), $request->comentario_revisor, $caduca);
+        $solicitud->load(['carpeta', 'revisor', 'solicitante']);
 
         RegistroActividad::registrar(
             'aprobar_solicitud', 'solicitud', $solicitud->id,
             "Aprobó solicitud de {$solicitud->solicitante->nombre_completo}"
         );
+
+        $solicitud->solicitante->notify(new SolicitudAccesoResuelta($solicitud));
 
         return redirect()
             ->route('solicitudes.index')
@@ -233,11 +246,14 @@ class SolicitudAccesoController extends Controller
         ]);
 
         $solicitud->rechazar(Auth::id(), $request->comentario_revisor);
+        $solicitud->load(['carpeta', 'revisor', 'solicitante']);
 
         RegistroActividad::registrar(
             'rechazar_solicitud', 'solicitud', $solicitud->id,
             "Rechazó solicitud de {$solicitud->solicitante->nombre_completo}"
         );
+
+        $solicitud->solicitante->notify(new SolicitudAccesoResuelta($solicitud));
 
         return redirect()
             ->route('solicitudes.index')
