@@ -126,7 +126,7 @@
                                     <label>Estado inicial</label>
                                     <label class="fc-checkbox-wrap">
                                         <input type="hidden" name="es_activo" value="0">
-                                        <input type="checkbox" name="es_activo" value="1" {{ old('es_activo', '1') ? 'checked' : '' }}>
+                                        <input type="checkbox" name="es_activo" value="1" {{ old('es_activo', '1') == '1' ? 'checked' : '' }}>
                                         <div>
                                             <div class="fc-checkbox-label">✅ Usuario activo</div>
                                             <div class="fc-checkbox-hint">El usuario podrá iniciar sesión inmediatamente</div>
