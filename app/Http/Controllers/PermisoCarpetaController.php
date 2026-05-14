@@ -81,6 +81,7 @@ class PermisoCarpetaController extends Controller
 
     public function update(Request $request, Carpeta $carpeta, PermisoCarpeta $permiso): RedirectResponse
     {
+        abort_if($permiso->carpeta_id !== $carpeta->id, 404);
         $this->autorizarGestionar($carpeta);
 
         $validated = $request->validate([
@@ -102,6 +103,7 @@ class PermisoCarpetaController extends Controller
 
     public function destroy(Carpeta $carpeta, PermisoCarpeta $permiso): RedirectResponse
     {
+        abort_if($permiso->carpeta_id !== $carpeta->id, 404);
         $this->autorizarGestionar($carpeta);
 
         $permiso->delete();

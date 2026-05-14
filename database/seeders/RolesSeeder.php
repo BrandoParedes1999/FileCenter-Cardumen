@@ -38,7 +38,7 @@ class RolesSeeder extends Seeder
         if ($superadmin) {
             $rol = Role::where('name', 'Superadmin')->first();
             if ($rol) {
-                DB::table('model_has_roles')->insert([
+                DB::table('model_has_roles')->insertOrIgnore([
                     'role_id'    => $rol->id,
                     'model_type' => 'App\Models\Usuario',
                     'model_id'   => $superadmin->id,

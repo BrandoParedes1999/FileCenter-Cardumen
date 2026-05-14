@@ -58,6 +58,8 @@
                         <div class="fc-form-body">
 
                             {{-- Empresa objetivo --}}
+                            {{-- Solo se muestra el select cuando no hay recurso preseleccionado --}}
+                            @if(!(isset($archivo) && $archivo) && !(isset($carpeta) && $carpeta))
                             <div class="fc-field">
                                 <label for="empresa_objetivo_id">Empresa a la que solicitas acceso *</label>
                                 <select id="empresa_objetivo_id" name="empresa_objetivo_id" required>
@@ -76,6 +78,7 @@
                                 <span class="fc-field-error">{{ $message }}</span>
                                 @enderror
                             </div>
+                            @endif
 
                             {{-- Archivo preseleccionado --}}
                             @if(isset($archivo) && $archivo)
