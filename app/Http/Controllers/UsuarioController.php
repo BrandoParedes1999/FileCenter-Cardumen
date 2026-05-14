@@ -8,7 +8,6 @@ use App\Models\Usuario;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
@@ -125,7 +124,7 @@ class UsuarioController extends Controller
             'paterno'      => $validated['paterno'],
             'materno'      => $validated['materno'] ?? '',
             'email'        => strtolower($validated['email']),
-            'password'     => Hash::make($validated['password']),
+            'password'     => $validated['password'],
             'rol'          => $validated['rol'],
             'departamento' => $validated['departamento'] ?? null,
             'es_activo'    => $validated['es_activo'] ?? true,
@@ -134,7 +133,7 @@ class UsuarioController extends Controller
         // Sincronizar rol con Spatie
         $usuario->assignRoleSynced($validated['rol']);
 
-        RegistroActividad::registrar('editar', 'usuario', $usuario->id,
+        RegistroActividad::registrar('crear_usuario', 'usuario', $usuario->id,
             "Creó usuario: {$usuario->nombre_completo} ({$usuario->rol})");
 
         return redirect()->route('usuarios.show', $usuario)
@@ -193,7 +192,7 @@ class UsuarioController extends Controller
         ];
 
         if (!empty($validated['password'])) {
-            $data['password'] = Hash::make($validated['password']);
+            $data['password'] = $validated['password'];
         }
 
         $rolAnterior = $usuario->rol;
