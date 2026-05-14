@@ -10,6 +10,7 @@ use App\Models\SolicitudAcceso;
 use App\Models\SolicitudSubida;
 use App\Models\Usuario;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
 
@@ -93,9 +94,20 @@ class DashboardController extends Controller
             $maxRol = $usuariosPorRol->max('total') ?: 1;
         }
 
-        // ── 5. ARCHIVOS RECIENTES (Empleado) ──────────────────────
+        // ── 5. ARCHIVOS RECIENTES (tabla del dashboard) ───────────
         $archivosRecientes = collect();
-        if ($esEmpleado) {
+        if (!$esEmpleado) {
+            $archivosRecientes = Archivo::with(['carpeta.empresa', 'subidoPor'])
+                ->where('esta_eliminado', false)
+                ->when(
+                    !$esAdmin,
+                    fn($q) => $q->whereHas('carpeta', fn($c) => $c->where('empresa_id', $empresaId))
+                )
+                ->latest('created_at')
+                ->take(8)
+                ->get();
+        } else {
+            // Empleado: sus propios archivos accesibles
             $archivosRecientes = Archivo::where('esta_eliminado', false)
                 ->whereHas('carpeta', fn($q) => $q->where('empresa_id', $empresaId))
                 ->latest('created_at')->take(6)->get();
@@ -114,7 +126,6 @@ class DashboardController extends Controller
         }
 
         // ── 7. SOLICITUDES DE SUBIDA PENDIENTES ───────────────────
-        // Solo para gestores (Admin/Gerente/Superadmin/Aux_QHSE)
         $solicitudesSubidaPendientes = 0;
         if (!$esEmpleado) {
             try {
@@ -129,6 +140,24 @@ class DashboardController extends Controller
             }
         }
 
+        // ── 8. USUARIOS ACTIVOS EN LA APP (solo Superadmin) ───────
+        // Usuarios con sesión activa en los últimos 15 minutos.
+        $usuariosEnLinea = collect();
+        if ($rol === 'Superadmin') {
+            $umbral = now()->subMinutes(15)->timestamp;
+            $usuariosEnLinea = Usuario::whereIn(
+                'id',
+                DB::table('sessions')
+                    ->whereNotNull('user_id')
+                    ->where('last_activity', '>=', $umbral)
+                    ->pluck('user_id')
+            )
+            ->with('empresa')
+            ->where('es_activo', true)
+            ->orderBy('paterno')
+            ->get();
+        }
+
         return view('dashboard', compact(
             'usuario', 'rol', 'esAdmin', 'esGestor', 'esEmpleado',
             'totalUsuarios', 'totalEmpresas', 'totalArchivos', 'totalCarpetas',
@@ -136,34 +165,31 @@ class DashboardController extends Controller
             'actividad', 'archivosRecientes',
             'usuariosPorRol', 'maxRol',
             'solicitudesPendientes',
-            'solicitudesSubidaPendientes'
+            'solicitudesSubidaPendientes',
+            'usuariosEnLinea',
         ));
     }
 
-        // ══════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════════════
     // POLLING — endpoint ligero para detectar cambios
     // GET /actualizaciones-recientes
-    // Devuelve JSON con contadores actuales.
-    // El JS del frontend compara con el estado anterior y muestra
-    // un toast si algo cambió.
     // ══════════════════════════════════════════════════════════════
- 
-      public function actualizaciones(): \Illuminate\Http\JsonResponse
+
+    public function actualizaciones(): JsonResponse
     {
         $usuario   = Auth::user();
         $rol       = $usuario->rol;
         $empresaId = $usuario->empresa_id;
         $esAdmin   = in_array($rol, ['Superadmin', 'Aux_QHSE']);
         $esGestor  = in_array($rol, ['Admin', 'Gerente']);
- 
+
         $data = [
             'ts'  => now()->timestamp,
-            'uid' => $usuario->id,   // para que el JS genere una key única por usuario
+            'uid' => $usuario->id,
         ];
- 
-        // ── Solicitudes de subida pendientes ──────────────────────
+
         if ($esAdmin || $esGestor) {
-            $data['subidas_pendientes'] = \App\Models\SolicitudSubida::where('status', 'Pendiente')
+            $data['subidas_pendientes'] = SolicitudSubida::where('status', 'Pendiente')
                 ->when(
                     !$esAdmin,
                     fn($q) => $q->whereHas('carpeta', fn($c) => $c->where('empresa_id', $empresaId))
@@ -172,22 +198,16 @@ class DashboardController extends Controller
         } else {
             $data['subidas_pendientes'] = 0;
         }
- 
-        // ── Solicitudes de acceso pendientes ──────────────────────
+
         if ($esAdmin || $esGestor) {
-            $data['accesos_pendientes'] = \App\Models\SolicitudAcceso::where('status', 'Pendiente')
+            $data['accesos_pendientes'] = SolicitudAcceso::where('status', 'Pendiente')
                 ->when(!$esAdmin, fn($q) => $q->where('empresa_objetivo_id', $empresaId))
                 ->count();
         } else {
             $data['accesos_pendientes'] = 0;
         }
- 
-        // ── Timestamp del archivo más reciente ────────────────────
-        // FIX: En vez de contar archivos en los últimos N minutos
-        // (que tiene problemas con ventana deslizante y localStorage
-        // compartido), devolvemos el created_at del archivo más nuevo.
-        // Así la comparación es absoluta: si el timestamp subió → hay algo nuevo.
-        $ultimoArchivoTs = \App\Models\Archivo::where('esta_eliminado', false)
+
+        $ultimoArchivoTs = Archivo::where('esta_eliminado', false)
             ->when(
                 !$esAdmin,
                 fn($q) => $q->whereHas('carpeta', function ($c) use ($empresaId) {
@@ -198,26 +218,32 @@ class DashboardController extends Controller
                 })
             )
             ->max('created_at');
- 
-        // Convertir a unix timestamp (int) para comparar fácilmente en JS
+
         $data['ultimo_archivo_ts'] = $ultimoArchivoTs
             ? \Carbon\Carbon::parse($ultimoArchivoTs)->timestamp
             : 0;
- 
-        // ── Mis subidas revisadas — Auxiliar / Empleado ───────────
-        // Timestamp de la revisión más reciente de mis propias subidas
+
         if (in_array($rol, ['Auxiliar', 'Empleado'])) {
-            $ultimaRevision = \App\Models\SolicitudSubida::where('solicitante_id', $usuario->id)
+            $ultimaRevision = SolicitudSubida::where('solicitante_id', $usuario->id)
                 ->whereIn('status', ['Aprobado', 'Rechazado'])
                 ->max('revisado_en');
- 
+
             $data['ultima_revision_ts'] = $ultimaRevision
                 ? \Carbon\Carbon::parse($ultimaRevision)->timestamp
                 : 0;
         } else {
             $data['ultima_revision_ts'] = 0;
         }
- 
+
+        // Usuarios en línea (solo Superadmin)
+        if ($rol === 'Superadmin') {
+            $data['usuarios_en_linea'] = DB::table('sessions')
+                ->whereNotNull('user_id')
+                ->where('last_activity', '>=', now()->subMinutes(15)->timestamp)
+                ->distinct('user_id')
+                ->count();
+        }
+
         return response()->json($data);
     }
 }

@@ -114,7 +114,10 @@
 
                             {{-- Nombre --}}
                             <div class="fc-field">
-                                <label for="nombre">Nombre de la carpeta *</label>
+                                <label for="nombre">
+                                    Nombre de la carpeta *
+                                    <span class="fc-help" data-tip="Nombre visible para todos los usuarios con acceso. Evita caracteres especiales como / \ : * ? &quot; &lt; &gt;">?</span>
+                                </label>
                                 <input type="text" id="nombre" name="nombre"
                                     value="{{ old('nombre') }}"
                                     placeholder="Ej: Contratos 2026"
@@ -126,7 +129,10 @@
 
                             {{-- ══ MODO DE ACCESO ══ --}}
                             <div class="fc-field">
-                                <label>Modo de acceso *</label>
+                                <label>
+                                    Modo de acceso *
+                                    <span class="fc-help" data-tip="Controla cómo se accede a los archivos de esta carpeta. Los permisos individuales de cada usuario siempre tienen la última palabra.">?</span>
+                                </label>
                                 <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
 
                                     {{-- Solo lectura --}}
@@ -203,7 +209,10 @@
 
                             {{-- ══ VISIBILIDAD ══ --}}
                             <div class="fc-field">
-                                <label>Visibilidad</label>
+                                <label>
+                                    Visibilidad
+                                    <span class="fc-help" data-tip="Carpeta pública: visible para TODOS los usuarios de la empresa sin necesidad de asignarles permiso individual.&#10;&#10;Sin esta opción: solo la ven quienes tengan un permiso explícito asignado.">?</span>
+                                </label>
                                 <label class="fc-checkbox-wrap">
                                     <input type="hidden" name="es_publico" value="0">
                                     <input type="checkbox" name="es_publico" value="1"

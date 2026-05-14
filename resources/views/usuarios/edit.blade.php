@@ -86,7 +86,10 @@
                                 {{-- Rol y Departamento --}}
                                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
                                     <div class="fc-field">
-                                        <label for="rol">Rol *</label>
+                                        <label for="rol">
+                                            Rol *
+                                            <span class="fc-help" data-tip="Define los permisos generales:&#10;• Admin → gestiona su empresa&#10;• Gerente → aprueba subidas/accesos&#10;• Auxiliar → sube y descarga&#10;• Empleado → solo lectura/descarga">?</span>
+                                        </label>
                                         <select id="rol" name="rol" required {{ $usuario->rol === 'Superadmin' && Auth::user()->rol !== 'Superadmin' ? 'disabled' : '' }}>
                                             @foreach($roles as $r)
                                             <option value="{{ $r }}" {{ old('rol', $usuario->rol) == $r ? 'selected' : '' }}>{{ $r }}</option>
