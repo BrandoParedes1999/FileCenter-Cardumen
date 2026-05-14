@@ -36,6 +36,7 @@ class RegistroActividad extends Model
         'eliminar',
         'editar',
         'crear_carpeta',
+        'crear_usuario',
         'mover',
         'ver',
         // Solicitudes de acceso cross-empresa
