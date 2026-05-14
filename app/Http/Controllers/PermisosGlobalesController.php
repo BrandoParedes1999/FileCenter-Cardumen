@@ -117,7 +117,7 @@ class PermisosGlobalesController extends Controller
             'carpetas_con_permisos' => $permisos->pluck('carpeta_id')->unique()->count(),
         ];
 
-        RegistroActividad::registrar('ver', 'carpeta', 0, 'Vista global de permisos');
+        RegistroActividad::registrar('ver', 'sistema', null, 'Vista global de permisos');
 
         return view('permisos.global', compact(
             'permisosPorCarpeta',

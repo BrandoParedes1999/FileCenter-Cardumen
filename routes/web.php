@@ -12,6 +12,7 @@ use App\Http\Controllers\SolicitudSubidaController;
 use App\Http\Controllers\PermisoCarpetaController;
 use App\Http\Controllers\PermisosGlobalesController;
 use App\Http\Controllers\BuscadorController;
+use App\Http\Controllers\ReporteActividadController;
 use Illuminate\Support\Facades\Route;
 
 // ─────────────────────────────────────────────
@@ -165,6 +166,16 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
 
     Route::get('buscador-index', [BuscadorController::class, 'index'])
         ->name('buscar');
+
+    // ─────────────────────────────────────────
+    // REPORTES DE ACTIVIDAD (Solo Superadmin / Aux_QHSE)
+    // ─────────────────────────────────────────
+
+    Route::get('reportes/actividad', [ReporteActividadController::class, 'index'])
+        ->name('reportes.actividad');
+
+    Route::get('reportes/actividad/exportar', [ReporteActividadController::class, 'exportar'])
+        ->name('reportes.actividad.exportar');
 });
 
 require __DIR__.'/auth.php';
