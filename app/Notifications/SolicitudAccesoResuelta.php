@@ -15,7 +15,7 @@ class SolicitudAccesoResuelta extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -46,5 +46,20 @@ class SolicitudAccesoResuelta extends Notification
         }
 
         return $message->salutation('— FileCenter');
+    }
+
+    public function toArray(object $notifiable): array
+    {
+        $aprobada = $this->solicitud->fueAprobada();
+        $carpeta  = $this->solicitud->carpeta;
+
+        return [
+            'tipo'    => 'solicitud_acceso_resuelta',
+            'titulo'  => $aprobada ? 'Acceso aprobado' : 'Acceso denegado',
+            'mensaje' => $aprobada
+                ? "Tu acceso a \"{$carpeta->nombre}\" fue aprobado."
+                : "Tu solicitud de acceso a \"{$carpeta->nombre}\" fue rechazada.",
+            'url'     => $aprobada ? route('carpetas.show', $carpeta) : route('solicitudes.index'),
+        ];
     }
 }

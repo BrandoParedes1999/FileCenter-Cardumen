@@ -105,6 +105,15 @@ class LoginController extends Controller
         }
 
         // 7. Login exitoso ✓
+
+        // 2FA: si el usuario lo tiene habilitado, redirigir al challenge
+        if ($usuario->tieneDosFactores()) {
+            Auth::logout();
+            session(['2fa.user_id' => $usuario->id, '2fa.remember' => $request->boolean('remember')]);
+
+            return redirect()->route('two-factor.challenge');
+        }
+
         $request->session()->regenerate();
 
         // Limpiar rate limiter

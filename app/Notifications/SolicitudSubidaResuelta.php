@@ -15,7 +15,7 @@ class SolicitudSubidaResuelta extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -40,5 +40,21 @@ class SolicitudSubidaResuelta extends Notification
         }
 
         return $message->salutation('— FileCenter');
+    }
+
+    public function toArray(object $notifiable): array
+    {
+        $aprobada = $this->solicitud->fueAprobada();
+
+        return [
+            'tipo'    => 'solicitud_subida_resuelta',
+            'titulo'  => $aprobada ? 'Archivo publicado' : 'Subida rechazada',
+            'mensaje' => $aprobada
+                ? "Tu archivo \"{$this->solicitud->nombre_original}\" fue aprobado."
+                : "Tu archivo \"{$this->solicitud->nombre_original}\" fue rechazado.",
+            'url'     => $aprobada
+                ? route('carpetas.show', $this->solicitud->carpeta)
+                : route('solicitudes.index'),
+        ];
     }
 }

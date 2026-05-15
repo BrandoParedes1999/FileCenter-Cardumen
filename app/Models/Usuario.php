@@ -28,20 +28,24 @@ class Usuario extends Authenticatable
         'intentos_login',
         'bloqueado_hasta',
         'last_login',
+        'two_factor_secret',
+        'two_factor_confirmed_at',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
     ];
 
     protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password'          => 'hashed',
-        'es_activo'         => 'boolean',
-        'bloqueado_hasta'   => 'datetime',
-        'last_login'        => 'datetime',
-        'deleted_at'        => 'datetime',
+        'email_verified_at'       => 'datetime',
+        'password'                => 'hashed',
+        'es_activo'               => 'boolean',
+        'bloqueado_hasta'         => 'datetime',
+        'last_login'              => 'datetime',
+        'deleted_at'              => 'datetime',
+        'two_factor_confirmed_at' => 'datetime',
     ];
 
     // RELACIONES
@@ -145,6 +149,18 @@ class Usuario extends Authenticatable
             'bloqueado_hasta' => null,
             'last_login'      => now(),
         ]);
+    }
+
+    // 2FA HELPERS
+
+    public function tieneDosFactores(): bool
+    {
+        return !is_null($this->two_factor_secret) && !is_null($this->two_factor_confirmed_at);
+    }
+
+    public function tiene2faConfigurado(): bool
+    {
+        return !is_null($this->two_factor_secret);
     }
 
     // SCOPES

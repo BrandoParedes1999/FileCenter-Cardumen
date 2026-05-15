@@ -15,7 +15,7 @@ class SolicitudSubidaRecibida extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -31,5 +31,17 @@ class SolicitudSubidaRecibida extends Notification
             ->action('Revisar subida', route('solicitudes-subida.show', $this->solicitud))
             ->line('Debes aprobar o rechazar el archivo desde el panel de administración.')
             ->salutation('— FileCenter');
+    }
+
+    public function toArray(object $notifiable): array
+    {
+        $carpeta = $this->solicitud->carpeta;
+
+        return [
+            'tipo'    => 'solicitud_subida_recibida',
+            'titulo'  => 'Archivo pendiente de aprobación',
+            'mensaje' => "\"{$this->solicitud->nombre_original}\" espera aprobación en \"{$carpeta->nombre}\".",
+            'url'     => route('solicitudes-subida.show', $this->solicitud),
+        ];
     }
 }

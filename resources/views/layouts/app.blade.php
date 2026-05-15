@@ -26,6 +26,9 @@
         {{-- Scripts Vite --}}
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+        {{-- Chart.js (CDN) --}}
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+
         {{-- Stack para CSS adicional específico de vista (ej: vistas con <style> inline) --}}
         @stack('styles')
     </head>
