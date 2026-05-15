@@ -19,6 +19,7 @@ class CarpetaController extends Controller
 
         if (in_array($usuario->rol, ['Superadmin', 'Aux_QHSE'])) {
             $carpetas = Carpeta::with(['empresa', 'hijos', 'creadoPor'])
+                ->withCount(['archivos' => fn($q) => $q->where('esta_eliminado', false)])
                 ->whereNull('padre_id')
                 ->orderByRaw('(SELECT es_corporativo FROM empresas WHERE empresas.id = carpetas.empresa_id) DESC')
                 ->orderBy('empresa_id')
@@ -26,11 +27,10 @@ class CarpetaController extends Controller
                 ->get();
         } else {
             $carpetas = Carpeta::with(['empresa', 'hijos', 'creadoPor'])
+                ->withCount(['archivos' => fn($q) => $q->where('esta_eliminado', false)])
                 ->whereNull('padre_id')
                 ->where(function ($q) use ($usuario) {
-                    // Su propia empresa
                     $q->where('empresa_id', $usuario->empresa_id)
-                    // O empresa corporativa (sin restricción de es_publico)
                     ->orWhereHas('empresa', fn($e) => $e->where('es_corporativo', true));
                 })
                 ->orderByRaw('(SELECT es_corporativo FROM empresas WHERE empresas.id = carpetas.empresa_id) DESC')
