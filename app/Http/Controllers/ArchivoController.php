@@ -237,7 +237,11 @@ class ArchivoController extends Controller
         $rutaTemporal         = "empresa_{$carpeta->empresa_id}/temp/{$nombreAlmacenamiento}";
 
         // Guardar temporalmente
-        Storage::disk('filecenter')->put($rutaTemporal, file_get_contents($file->getRealPath()));
+        try {
+            Storage::disk('filecenter')->put($rutaTemporal, file_get_contents($file->getRealPath()));
+        } catch (\Exception $e) {
+            return back()->withErrors(['archivo' => 'No se pudo guardar el archivo en el servidor. Inténtalo de nuevo.']);
+        }
 
         // Crear solicitud de subida
         $solicitudSubida = \App\Models\SolicitudSubida::create([
@@ -294,7 +298,11 @@ class ArchivoController extends Controller
         $rutaDisco            = "empresa_{$carpeta->empresa_id}/carpeta_{$carpeta->id}/{$nombreAlmacenamiento}";
         $hash                 = hash_file('sha256', $file->getRealPath());
 
-        Storage::disk('filecenter')->put($rutaDisco, file_get_contents($file->getRealPath()));
+        try {
+            Storage::disk('filecenter')->put($rutaDisco, file_get_contents($file->getRealPath()));
+        } catch (\Exception $e) {
+            return back()->withErrors(['archivo' => 'No se pudo guardar el archivo en el servidor. Inténtalo de nuevo.']);
+        }
 
         $archivo = Archivo::create([
             'carpeta_id'            => $carpeta->id,
@@ -338,7 +346,11 @@ class ArchivoController extends Controller
         $rutaDisco            = "empresa_{$carpeta->empresa_id}/carpeta_{$carpeta->id}/{$nombreAlmacenamiento}";
         $hash                 = hash_file('sha256', $file->getRealPath());
 
-        Storage::disk('filecenter')->put($rutaDisco, file_get_contents($file->getRealPath()));
+        try {
+            Storage::disk('filecenter')->put($rutaDisco, file_get_contents($file->getRealPath()));
+        } catch (\Exception $e) {
+            return back()->withErrors(['archivo' => 'No se pudo guardar el archivo en el servidor. Inténtalo de nuevo.']);
+        }
 
         VersionArchivo::where('archivo_id', $archivo->id)->update(['activo' => false]);
 

@@ -21,11 +21,14 @@ class NotificacionController extends Controller
         $notif = Auth::user()->notifications()->findOrFail($id);
         $notif->markAsRead();
 
-        if ($notif->data['url'] ?? false) {
-            return redirect($notif->data['url']);
+        $url = $notif->data['url'] ?? null;
+
+        // Solo redirigir a URLs internas (evitar open redirect)
+        if ($url && str_starts_with($url, url('/'))) {
+            return redirect($url);
         }
 
-        return back();
+        return redirect()->route('notificaciones.index');
     }
 
     public function marcarTodasLeidas(): RedirectResponse

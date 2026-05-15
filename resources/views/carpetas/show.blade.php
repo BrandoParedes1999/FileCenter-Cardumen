@@ -308,6 +308,27 @@
 }
 .fc-modal-confirm:hover { background: #b91c1c; }
 
+/* ── Cards de subcarpetas (reutiliza estilos del index) ── */
+.fc-folder-card2 {
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 14px;
+    overflow: hidden; text-decoration: none; display: block;
+    transition: transform .18s, box-shadow .18s, border-color .18s;
+    box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+.fc-folder-card2:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(0,0,0,.1); border-color: var(--fc-empresa, #6366f1); }
+.fc-card2-stripe { height: 4px; background: var(--fc-empresa, #6366f1); transition: height .18s; }
+.fc-folder-card2:hover .fc-card2-stripe { height: 5px; }
+.fc-card2-body { padding: 14px 14px 12px; }
+.fc-card2-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; transition: transform .18s; }
+.fc-folder-card2:hover .fc-card2-icon { transform: scale(1.08); }
+.fc-card2-name { font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fc-card2-counts { display: flex; gap: 5px; flex-wrap: wrap; }
+.fc-card2-pill { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; }
+.fc-card2-status { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 6px; border-radius: 99px; }
+.fc-card2-status.green { background: rgba(5,150,105,.1); color: #059669; }
+.fc-card2-status.amber { background: rgba(217,119,6,.1); color: #d97706; }
+.fc-card2-status.red   { background: rgba(220,38,38,.1); color: #dc2626; }
+
 /* ══ MODO OSCURO — mis carpetas ══ */
 .dark .fc-wrapper  { background: #0d0c1d; }
 .dark .fc-main     { background: #0d0c1d; }
@@ -448,9 +469,10 @@
             </div>
 
             {{-- Header carpeta --}}
-            <div class="fc-folder-header">
-                <div class="fc-folder-header-icon">
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="#4f46e5">
+            @php $empColor = $carpeta->empresa?->color_primario ?? '#4f46e5'; @endphp
+            <div class="fc-folder-header" style="border-left: 4px solid {{ $empColor }}">
+                <div class="fc-folder-header-icon" style="background:{{ $empColor }}15">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="{{ $empColor }}">
                         <path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/>
                     </svg>
                 </div>
@@ -480,23 +502,43 @@
             </div>
 
             {{-- ── SUBCARPETAS ── --}}
-            @if($carpeta->hijos->count() > 0)
+            @if($hijos->count() > 0)
             <div class="fc-section-title">
                 Subcarpetas
-                <span class="fc-section-count">{{ $carpeta->hijos->count() }}</span>
+                <span class="fc-section-count">{{ $hijos->count() }}</span>
             </div>
 
-            <div class="fc-folders-grid" id="subGrid">
-                @foreach($carpeta->hijos as $hijo)
-                <a href="{{ route('carpetas.show', $hijo) }}" class="fc-folder-card" data-nombre="{{ $hijo->nombre }}">
-                    @if($hijo->es_publico)<span class="fc-folder-public">Pública</span>@endif
-                    <div class="fc-folder-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#4f46e5">
-                            <path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/>
-                        </svg>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:28px" id="subGrid">
+                @foreach($hijos as $hijo)
+                @php
+                    $hColor = $hijo->empresa?->color_primario ?? $carpeta->empresa?->color_primario ?? '#4f46e5';
+                    $nArch  = $hijo->archivos_count ?? 0;
+                    $nHijos = $hijo->hijos_count    ?? 0;
+                @endphp
+                <a href="{{ route('carpetas.show', $hijo) }}"
+                   class="fc-folder-card2"
+                   data-nombre="{{ strtolower($hijo->nombre) }}"
+                   style="--fc-empresa: {{ $hColor }};">
+                    <div class="fc-card2-stripe"></div>
+                    <div class="fc-card2-body">
+                        <div class="fc-card2-icon" style="background:{{ $hColor }}15">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="{{ $hColor }}">
+                                <path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/>
+                            </svg>
+                        </div>
+                        <div class="fc-card2-name" title="{{ $hijo->nombre }}">{{ $hijo->nombre }}</div>
+                        <div class="fc-card2-counts">
+                            <span class="fc-card2-pill" style="background:{{ $hColor }}12;color:{{ $hColor }}">
+                                {{ $nArch }} archivo{{ $nArch != 1 ? 's' : '' }}
+                            </span>
+                            @if($hijo->es_publico)
+                            <span class="fc-card2-status green">Pública</span>
+                            @endif
+                            @if($hijo->requiere_aprobacion_subida)
+                            <span class="fc-card2-status amber">Aprobación</span>
+                            @endif
+                        </div>
                     </div>
-                    <div class="fc-folder-name">{{ $hijo->nombre }}</div>
-                    <div class="fc-folder-meta">{{ $hijo->archivos()->where('esta_eliminado', false)->count() }} archivos</div>
                 </a>
                 @endforeach
             </div>

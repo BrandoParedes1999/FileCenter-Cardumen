@@ -52,14 +52,24 @@ class DashboardController extends Controller
         $maxArchivos = 1;
 
         if (!$esEmpleado) {
+            // Conteos en una sola query agrupada (evita N+1)
+            $archivosPorEmpresa = Archivo::where('esta_eliminado', false)
+                ->join('carpetas', 'archivos.carpeta_id', '=', 'carpetas.id')
+                ->selectRaw('carpetas.empresa_id, COUNT(*) as total')
+                ->groupBy('carpetas.empresa_id')
+                ->pluck('total', 'carpetas.empresa_id');
+
+            $miembrosPorEmpresa = Usuario::where('es_activo', true)
+                ->selectRaw('empresa_id, COUNT(*) as total')
+                ->groupBy('empresa_id')
+                ->pluck('total', 'empresa_id');
+
             $empresas = Empresa::where('activo', true)
                 ->when(!$esAdmin, fn($q) => $q->where('id', $empresaId))
                 ->ordenadas()->get()
-                ->map(function ($emp) {
-                    $emp->total_archivos = Archivo::where('esta_eliminado', false)
-                        ->whereHas('carpeta', fn($q) => $q->where('empresa_id', $emp->id))->count();
-                    $emp->total_miembros = Usuario::where('empresa_id', $emp->id)
-                        ->where('es_activo', true)->count();
+                ->map(function ($emp) use ($archivosPorEmpresa, $miembrosPorEmpresa) {
+                    $emp->total_archivos = $archivosPorEmpresa[$emp->id] ?? 0;
+                    $emp->total_miembros = $miembrosPorEmpresa[$emp->id] ?? 0;
                     return $emp;
                 });
             $maxArchivos = $empresas->max('total_archivos') ?: 1;
