@@ -15,7 +15,7 @@ class SolicitudAccesoRecibida extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -31,5 +31,19 @@ class SolicitudAccesoRecibida extends Notification
             ->action('Revisar solicitud', route('solicitudes.show', $this->solicitud))
             ->line('Puedes aprobar o rechazar la solicitud desde el panel de administración.')
             ->salutation('— FileCenter');
+    }
+
+    public function toArray(object $notifiable): array
+    {
+        $solicitante = $this->solicitud->solicitante;
+        $carpeta     = $this->solicitud->carpeta;
+
+        return [
+            'tipo'         => 'solicitud_acceso_recibida',
+            'titulo'       => 'Nueva solicitud de acceso',
+            'mensaje'      => "{$solicitante->nombre_completo} solicita acceso a \"{$carpeta->nombre}\".",
+            'url'          => route('solicitudes.show', $this->solicitud),
+            'solicitud_id' => $this->solicitud->id,
+        ];
     }
 }

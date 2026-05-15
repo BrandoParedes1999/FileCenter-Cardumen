@@ -158,6 +158,41 @@ class DashboardController extends Controller
             ->get();
         }
 
+        // ── 9. DATOS PARA GRÁFICAS ────────────────────────────────
+        // Archivos subidos por mes (últimos 6 meses)
+        $chartMeses   = [];
+        $chartUploads = [];
+
+        for ($i = 5; $i >= 0; $i--) {
+            $mes   = now()->subMonths($i);
+            $label = $mes->translatedFormat('M Y');
+            $count = Archivo::where('esta_eliminado', false)
+                ->when($esEmpleado, fn($q) => $q->where('subido_por', $usuario->id))
+                ->when($esGestor, fn($q) => $q->whereHas('carpeta', fn($c) => $c->where('empresa_id', $empresaId)))
+                ->whereYear('created_at', $mes->year)
+                ->whereMonth('created_at', $mes->month)
+                ->count();
+
+            $chartMeses[]   = $label;
+            $chartUploads[] = $count;
+        }
+
+        // Actividad por tipo (top 5)
+        $chartActTypes  = [];
+        $chartActCounts = [];
+        $actPorTipo = RegistroActividad::selectRaw('accion, COUNT(*) as total')
+            ->when($esEmpleado, fn($q) => $q->where('usuario_id', $usuario->id))
+            ->when($esGestor, fn($q) => $q->whereHas('usuario', fn($u) => $u->where('empresa_id', $empresaId)))
+            ->groupBy('accion')
+            ->orderByDesc('total')
+            ->limit(5)
+            ->get();
+
+        foreach ($actPorTipo as $a) {
+            $chartActTypes[]  = $a->accion;
+            $chartActCounts[] = $a->total;
+        }
+
         return view('dashboard', compact(
             'usuario', 'rol', 'esAdmin', 'esGestor', 'esEmpleado',
             'totalUsuarios', 'totalEmpresas', 'totalArchivos', 'totalCarpetas',
@@ -167,6 +202,8 @@ class DashboardController extends Controller
             'solicitudesPendientes',
             'solicitudesSubidaPendientes',
             'usuariosEnLinea',
+            'chartMeses', 'chartUploads',
+            'chartActTypes', 'chartActCounts',
         ));
     }
 

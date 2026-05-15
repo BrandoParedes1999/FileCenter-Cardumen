@@ -20,6 +20,30 @@
             $solSubidaPendientes = 0;
         }
     }
+
+    // Notificaciones no leídas
+    try {
+        $notifNoLeidas = Auth::user()->unreadNotifications()->count();
+    } catch (\Exception $e) {
+        $notifNoLeidas = 0;
+    }
+
+    // Elementos en papelera (solo gestores)
+    $papeleraCount = 0;
+    if (in_array(Auth::user()->rol, ['Superadmin','Aux_QHSE','Admin','Gerente'])) {
+        try {
+            $papeleraCount = \App\Models\Archivo::onlyTrashed()
+                ->when(!in_array(Auth::user()->rol, ['Superadmin','Aux_QHSE']),
+                    fn($q) => $q->whereHas('carpeta', fn($c) => $c->where('empresa_id', Auth::user()->empresa_id)))
+                ->count()
+                + \App\Models\Carpeta::onlyTrashed()
+                ->when(!in_array(Auth::user()->rol, ['Superadmin','Aux_QHSE']),
+                    fn($q) => $q->where('empresa_id', Auth::user()->empresa_id))
+                ->count();
+        } catch (\Exception $e) {
+            $papeleraCount = 0;
+        }
+    }
 @endphp
 
 <style>
@@ -138,6 +162,17 @@
             Mis Áreas
         </a>
 
+        <a href="{{ route('notificaciones.index') }}"
+           class="fc-nav-item {{ request()->routeIs('notificaciones.*') ? 'active' : '' }}">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+            </svg>
+            Notificaciones
+            @if($notifNoLeidas > 0)
+                <span class="fc-nav-badge">{{ $notifNoLeidas }}</span>
+            @endif
+        </a>
+
         {{-- NAV PRINCIPAL: después del item "Mis Áreas" --}}
             @if(in_array(Auth::user()->rol, ['Superadmin', 'Aux_QHSE', 'Admin', 'Gerente']))
             <a href="{{ route('permisos.global') }}"
@@ -150,7 +185,7 @@
             @endif
     </div>
 
-    {{-- Solicitudes de subida (solo para gestores) --}}
+    {{-- Solicitudes de subida + Papelera (solo para gestores) --}}
     @if(in_array(Auth::user()->rol, ['Superadmin', 'Aux_QHSE', 'Admin', 'Gerente']))
     <div class="fc-nav-section">
         <div class="fc-nav-label">Gestión de archivos</div>
@@ -162,6 +197,16 @@
             Subidas pendientes
             @if($solSubidaPendientes > 0)
                 <span class="fc-nav-badge">{{ $solSubidaPendientes }}</span>
+            @endif
+        </a>
+        <a href="{{ route('papelera.index') }}"
+           class="fc-nav-item {{ request()->routeIs('papelera.*') ? 'active' : '' }}">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+            </svg>
+            Papelera
+            @if($papeleraCount > 0)
+                <span class="fc-nav-badge" style="background:rgba(100,116,139,.7)">{{ $papeleraCount }}</span>
             @endif
         </a>
     </div>

@@ -13,6 +13,9 @@ use App\Http\Controllers\PermisoCarpetaController;
 use App\Http\Controllers\PermisosGlobalesController;
 use App\Http\Controllers\BuscadorController;
 use App\Http\Controllers\ReporteActividadController;
+use App\Http\Controllers\NotificacionController;
+use App\Http\Controllers\PapeleraController;
+use App\Http\Controllers\TwoFactorController;
 use Illuminate\Support\Facades\Route;
 
 // ─────────────────────────────────────────────
@@ -181,6 +184,50 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
 
     Route::get('reportes/actividad/exportar', [ReporteActividadController::class, 'exportar'])
         ->name('reportes.actividad.exportar');
+
+    // ─────────────────────────────────────────
+    // NOTIFICACIONES IN-APP
+    // ─────────────────────────────────────────
+
+    Route::get('notificaciones', [NotificacionController::class, 'index'])
+        ->name('notificaciones.index');
+    Route::post('notificaciones/{id}/leer', [NotificacionController::class, 'marcarLeida'])
+        ->name('notificaciones.leer');
+    Route::post('notificaciones/leer-todas', [NotificacionController::class, 'marcarTodasLeidas'])
+        ->name('notificaciones.leer-todas');
+    Route::delete('notificaciones/{id}', [NotificacionController::class, 'destroy'])
+        ->name('notificaciones.destroy');
+    Route::delete('notificaciones', [NotificacionController::class, 'vaciar'])
+        ->name('notificaciones.vaciar');
+
+    // ─────────────────────────────────────────
+    // PAPELERA DE RECICLAJE
+    // ─────────────────────────────────────────
+
+    Route::get('papelera', [PapeleraController::class, 'index'])
+        ->name('papelera.index');
+    Route::post('papelera/archivos/{id}/restaurar', [PapeleraController::class, 'restaurarArchivo'])
+        ->name('papelera.archivos.restaurar');
+    Route::post('papelera/carpetas/{id}/restaurar', [PapeleraController::class, 'restaurarCarpeta'])
+        ->name('papelera.carpetas.restaurar');
+    Route::delete('papelera/archivos/{id}', [PapeleraController::class, 'eliminarArchivo'])
+        ->name('papelera.archivos.destroy');
+    Route::delete('papelera/carpetas/{id}', [PapeleraController::class, 'eliminarCarpeta'])
+        ->name('papelera.carpetas.destroy');
+    Route::delete('papelera', [PapeleraController::class, 'vaciar'])
+        ->name('papelera.vaciar');
+
+    // ─────────────────────────────────────────
+    // 2FA
+    // ─────────────────────────────────────────
+
+    Route::get('two-factor/setup',   [TwoFactorController::class, 'showSetup'])->name('two-factor.setup');
+    Route::post('two-factor/enable', [TwoFactorController::class, 'enable'])->name('two-factor.enable');
+    Route::delete('two-factor',      [TwoFactorController::class, 'disable'])->name('two-factor.disable');
 });
+
+// 2FA challenge (fuera del grupo auth para usuarios no logueados aún)
+Route::get('two-factor/challenge',  [TwoFactorController::class, 'showChallenge'])->name('two-factor.challenge');
+Route::post('two-factor/challenge', [TwoFactorController::class, 'challenge'])->name('two-factor.verify');
 
 require __DIR__.'/auth.php';
