@@ -144,6 +144,16 @@
         </svg>
         Editar descripción
     </button>
+
+    {{-- MOVER --}}
+    <a href="{{ route('archivos.mover.form', $archivo) }}"
+       class="fc-action-btn"
+       style="background:rgba(245,158,11,.08);color:#d97706;border-color:rgba(245,158,11,.25)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/>
+        </svg>
+        Mover
+    </a>
     @endcan
  
     {{-- ELIMINAR --}}

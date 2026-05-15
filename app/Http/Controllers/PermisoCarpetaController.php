@@ -76,6 +76,8 @@ class PermisoCarpetaController extends Controller
         RegistroActividad::registrar('editar', 'carpeta', $carpeta->id,
             "Permiso otorgado en carpeta: {$carpeta->nombre}");
 
+        Carpeta::invalidarCachePermisos($carpeta->id);
+
         return redirect()->route('permisos.index', $carpeta)->with('success', 'Permiso otorgado correctamente.');
     }
 
@@ -98,6 +100,8 @@ class PermisoCarpetaController extends Controller
         RegistroActividad::registrar('editar', 'carpeta', $carpeta->id,
             "Permiso actualizado (id={$permiso->id}) en: {$carpeta->nombre}");
 
+        Carpeta::invalidarCachePermisos($carpeta->id);
+
         return redirect()->route('permisos.index', $carpeta)->with('success', 'Permiso actualizado.');
     }
 
@@ -110,6 +114,8 @@ class PermisoCarpetaController extends Controller
 
         RegistroActividad::registrar('editar', 'carpeta', $carpeta->id,
             "Permiso revocado (id={$permiso->id}) en: {$carpeta->nombre}");
+
+        Carpeta::invalidarCachePermisos($carpeta->id);
 
         return redirect()->route('permisos.index', $carpeta)->with('success', 'Permiso revocado.');
     }

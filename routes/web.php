@@ -77,10 +77,15 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
     Route::post('archivos/{archivo}/restaurar-version', [ArchivoController::class, 'restaurarVersion'])
         ->name('archivos.restaurar-version');
 
-    Route::get('archivos/{archivo}/ver',      [ArchivoController::class, 'ver'])      
+    Route::get('archivos/{archivo}/ver',      [ArchivoController::class, 'ver'])
         ->name('archivos.ver');
     Route::get('archivos/{archivo}/contenido',[ArchivoController::class, 'contenido'])
         ->name('archivos.contenido');
+
+    Route::get('archivos/{archivo}/mover',  [ArchivoController::class, 'moverForm'])
+        ->name('archivos.mover.form');
+    Route::post('archivos/{archivo}/mover', [ArchivoController::class, 'mover'])
+        ->name('archivos.mover');
 
     // ─────────────────────────────────────────
     // SOLICITUDES DE ACCESO (cross-empresa)

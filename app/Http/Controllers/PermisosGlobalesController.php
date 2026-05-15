@@ -158,6 +158,8 @@ class PermisosGlobalesController extends Controller
             "Permiso actualizado (id={$permiso->id}) en carpeta: {$permiso->carpeta?->nombre}"
         );
 
+        Carpeta::invalidarCachePermisos($permiso->carpeta_id);
+
         return back()->with('success', 'Permiso actualizado correctamente.');
     }
 
@@ -169,12 +171,15 @@ class PermisosGlobalesController extends Controller
         $this->autorizarEditar($permiso);
 
         $nombreCarpeta = $permiso->carpeta?->nombre ?? '—';
+        $carpetaId     = $permiso->carpeta_id;
         $permiso->delete();
 
         RegistroActividad::registrar(
-            'editar', 'carpeta', $permiso->carpeta_id,
+            'editar', 'carpeta', $carpetaId,
             "Permiso revocado (id={$permiso->id}) en: {$nombreCarpeta}"
         );
+
+        Carpeta::invalidarCachePermisos($carpetaId);
 
         return back()->with('success', 'Permiso revocado.');
     }
