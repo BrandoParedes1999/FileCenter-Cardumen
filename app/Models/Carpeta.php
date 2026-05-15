@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
 
 class Carpeta extends Model
 {
@@ -117,37 +118,52 @@ class Carpeta extends Model
      */
     public function permisoEfectivo(Usuario $usuario): ?PermisoCarpeta
     {
-        // 1. Permiso directo individual
-        $permiso = $this->permisos()
-            ->where('usuario_id', $usuario->id)
-            ->first();
-        if ($permiso) return $permiso;
+        $version  = Cache::get("perm_v.{$this->id}", 0);
+        $cacheKey = "perm_ef.{$this->id}.{$usuario->id}.{$version}";
 
-        // 2. Permiso por empresa + rol del usuario
-        $permiso = $this->permisos()
-            ->where('empresa_id', $usuario->empresa_id)
-            ->where('rol', $usuario->rol)
-            ->whereNull('usuario_id')
-            ->first();
-        if ($permiso) return $permiso;
+        return Cache::remember($cacheKey, 300, function () use ($usuario) {
+            // 1. Permiso directo individual
+            $permiso = $this->permisos()
+                ->where('usuario_id', $usuario->id)
+                ->first();
+            if ($permiso) return $permiso;
 
-        // 3. Permiso global (empresa_id = null) por rol — para corporativo
-        $permiso = $this->permisos()
-            ->whereNull('empresa_id')
-            ->whereNull('usuario_id')
-            ->where('rol', $usuario->rol)
-            ->first();
-        if ($permiso) return $permiso;
+            // 2. Permiso por empresa + rol del usuario
+            $permiso = $this->permisos()
+                ->where('empresa_id', $usuario->empresa_id)
+                ->where('rol', $usuario->rol)
+                ->whereNull('usuario_id')
+                ->first();
+            if ($permiso) return $permiso;
 
-        // 4. Heredar del padre
-        if ($this->padre_id) {
-            $padrePermiso = $this->padre->permisoEfectivo($usuario);
-            if ($padrePermiso && $padrePermiso->heredar) {
-                return $padrePermiso;
+            // 3. Permiso global (empresa_id = null) por rol — para corporativo
+            $permiso = $this->permisos()
+                ->whereNull('empresa_id')
+                ->whereNull('usuario_id')
+                ->where('rol', $usuario->rol)
+                ->first();
+            if ($permiso) return $permiso;
+
+            // 4. Heredar del padre
+            if ($this->padre_id) {
+                $padrePermiso = $this->padre->permisoEfectivo($usuario);
+                if ($padrePermiso && $padrePermiso->heredar) {
+                    return $padrePermiso;
+                }
             }
-        }
 
-        return null;
+            return null;
+        });
+    }
+
+    /**
+     * Invalida el caché de permisos de esta carpeta para todos los usuarios.
+     * Incrementar la versión hace que las claves antiguas queden huérfanas
+     * y expiren naturalmente, sin necesidad de tags de caché.
+     */
+    public static function invalidarCachePermisos(int $carpetaId): void
+    {
+        Cache::increment("perm_v.{$carpetaId}");
     }
 
     public function usuarioPuedeLeer(Usuario $usuario): bool

@@ -373,7 +373,70 @@ class ArchivoController extends Controller
             ->with('success', "Nueva versión (v{$nuevaVersion}) de \"{$archivo->nombre_original}\" subida.");
     }
 
-     public function ver(Archivo $archivo): View
+    public function moverForm(Archivo $archivo): View
+    {
+        $this->authorize('update', $archivo);
+
+        $usuario  = Auth::user();
+        $carpetas = Carpeta::query()
+            ->when(
+                !in_array($usuario->rol, ['Superadmin', 'Aux_QHSE']),
+                fn($q) => $q->where('empresa_id', $usuario->empresa_id)
+            )
+            ->where('id', '!=', $archivo->carpeta_id)
+            ->orderBy('nombre')
+            ->get(['id', 'nombre', 'path', 'empresa_id']);
+
+        return view('archivos.mover', compact('archivo', 'carpetas'));
+    }
+
+    public function mover(Request $request, Archivo $archivo): RedirectResponse
+    {
+        $this->authorize('update', $archivo);
+
+        $validated = $request->validate([
+            'carpeta_destino_id' => [
+                'required',
+                'exists:carpetas,id',
+                'different:carpeta_id',
+            ],
+        ], [
+            'carpeta_destino_id.required'  => 'Debes seleccionar una carpeta de destino.',
+            'carpeta_destino_id.different' => 'La carpeta de destino debe ser distinta a la actual.',
+        ]);
+
+        if ((int) $validated['carpeta_destino_id'] === $archivo->carpeta_id) {
+            return back()->withErrors(['carpeta_destino_id' => 'La carpeta de destino debe ser distinta a la actual.']);
+        }
+
+        $carpetaOrigen  = $archivo->carpeta;
+        $carpetaDestino = Carpeta::findOrFail($validated['carpeta_destino_id']);
+
+        // Construir nueva ruta y mover físicamente el archivo
+        $extension            = strtolower($archivo->extension);
+        $nuevoNombre          = Str::uuid() . '.' . $extension;
+        $nuevaRuta            = "empresa_{$carpetaDestino->empresa_id}/carpeta_{$carpetaDestino->id}/{$nuevoNombre}";
+
+        Storage::disk('filecenter')->copy($archivo->ruta_disco, $nuevaRuta);
+        Storage::disk('filecenter')->delete($archivo->ruta_disco);
+
+        $archivo->update([
+            'carpeta_id'            => $carpetaDestino->id,
+            'ruta_disco'            => $nuevaRuta,
+            'nombre_almacenamiento' => $nuevoNombre,
+        ]);
+
+        RegistroActividad::registrar(
+            'mover', 'archivo', $archivo->id,
+            "Movió \"{$archivo->nombre_original}\" de \"{$carpetaOrigen->nombre}\" a \"{$carpetaDestino->nombre}\""
+        );
+
+        return redirect()
+            ->route('carpetas.show', $carpetaDestino)
+            ->with('success', "Archivo \"{$archivo->nombre_original}\" movido a \"{$carpetaDestino->nombre}\".");
+    }
+
+    public function ver(Archivo $archivo): View
     {
         $this->authorize('view', $archivo);
  
