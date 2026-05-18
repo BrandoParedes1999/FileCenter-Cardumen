@@ -49,7 +49,15 @@ class CarpetaController extends Controller
             abort(403, 'No tienes permiso para ver esta carpeta.');
         }
 
-        $carpeta->load(['hijos', 'creadoPor', 'empresa']);
+        $carpeta->load(['creadoPor', 'empresa']);
+        $carpeta->loadCount(['hijos']);
+
+        // Carga hijos con su empresa y conteo de archivos (evita N+1)
+        $hijos = $carpeta->hijos()
+            ->with('empresa')
+            ->withCount(['archivos' => fn($q) => $q->where('esta_eliminado', false)])
+            ->orderBy('nombre')
+            ->get();
 
         $archivos = $carpeta->archivos()
             ->where('esta_eliminado', false)
@@ -70,7 +78,7 @@ class CarpetaController extends Controller
         RegistroActividad::registrar('ver', 'carpeta', $carpeta->id, "Vista: {$carpeta->nombre}");
 
         return view('carpetas.show', compact(
-            'carpeta', 'archivos', 'migas', 'solicitudesSubidaPendientes'
+            'carpeta', 'hijos', 'archivos', 'migas', 'solicitudesSubidaPendientes'
         ));
     }
 
