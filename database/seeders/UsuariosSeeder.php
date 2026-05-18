@@ -10,14 +10,19 @@ class UsuariosSeeder extends Seeder
 {
     public function run(): void
     {
-        // ⚠ Cambia la contraseña antes de desplegar en producción
+        $password = env('SUPERADMIN_PASSWORD');
+
+        if (empty($password)) {
+            throw new \RuntimeException('La variable de entorno SUPERADMIN_PASSWORD es obligatoria antes de ejecutar el seeder.');
+        }
+
         DB::table('usuarios')->insert([
-            'empresa_id'  => 1,          // Corporativo
+            'empresa_id'  => 1,
             'nombre'      => 'Super',
             'paterno'     => 'Admin',
             'materno'     => 'Sistema',
             'email'       => 'superadmin@filecenter.com',
-            'password'    => Hash::make('Superadmin2026!'),
+            'password'    => Hash::make($password),
             'rol'         => 'Superadmin',
             'es_activo'   => 1,
             'created_at'  => now(),

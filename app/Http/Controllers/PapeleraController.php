@@ -63,8 +63,8 @@ class PapeleraController extends Controller
         $this->autorizarArchivo($archivo);
 
         // Borrar físico del disco
-        if ($archivo->ruta_disco && Storage::exists($archivo->ruta_disco)) {
-            Storage::delete($archivo->ruta_disco);
+        if ($archivo->ruta_disco && Storage::disk('filecenter')->exists($archivo->ruta_disco)) {
+            Storage::disk('filecenter')->delete($archivo->ruta_disco);
         }
 
         $archivo->forceDelete();
@@ -96,8 +96,8 @@ class PapeleraController extends Controller
             ->get();
 
         foreach ($archivos as $archivo) {
-            if ($archivo->ruta_disco && Storage::exists($archivo->ruta_disco)) {
-                Storage::delete($archivo->ruta_disco);
+            if ($archivo->ruta_disco && Storage::disk('filecenter')->exists($archivo->ruta_disco)) {
+                Storage::disk('filecenter')->delete($archivo->ruta_disco);
             }
             $archivo->forceDelete();
         }

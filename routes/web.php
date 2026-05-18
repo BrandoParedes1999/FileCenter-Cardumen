@@ -227,7 +227,7 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
 });
 
 // 2FA challenge (fuera del grupo auth para usuarios no logueados aún)
-Route::get('two-factor/challenge',  [TwoFactorController::class, 'showChallenge'])->name('two-factor.challenge');
-Route::post('two-factor/challenge', [TwoFactorController::class, 'challenge'])->name('two-factor.verify');
+Route::get('two-factor/challenge',  [TwoFactorController::class, 'showChallenge'])->name('two-factor.challenge')->middleware('throttle:10,1');
+Route::post('two-factor/challenge', [TwoFactorController::class, 'challenge'])->name('two-factor.verify')->middleware('throttle:5,1');
 
 require __DIR__.'/auth.php';

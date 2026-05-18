@@ -12,6 +12,7 @@ use App\Notifications\SolicitudSubidaResuelta;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 use Illuminate\View\View;
@@ -93,78 +94,88 @@ class SolicitudSubidaController extends Controller
         }
 
         // ¿Ya existe archivo con ese nombre? → nueva versión
-        $archivoExistente = Archivo::where('carpeta_id', $carpeta->id)
-            ->where('nombre_original', $solicitudSubida->nombre_original)
-            ->where('esta_eliminado', false)
-            ->first();
+        try {
+            $archivoId = DB::transaction(function () use ($carpeta, $solicitudSubida, $rutaDefinitiva, $usuario, $revisor, $request) {
+                $archivoExistente = Archivo::where('carpeta_id', $carpeta->id)
+                    ->where('nombre_original', $solicitudSubida->nombre_original)
+                    ->where('esta_eliminado', false)
+                    ->first();
 
-        if ($archivoExistente) {
-            $nuevaVersion = $archivoExistente->version + 1;
+                if ($archivoExistente) {
+                    $nuevaVersion = $archivoExistente->version + 1;
 
-            VersionArchivo::where('archivo_id', $archivoExistente->id)->update(['activo' => false]);
+                    VersionArchivo::where('archivo_id', $archivoExistente->id)->update(['activo' => false]);
 
-            VersionArchivo::create([
-                'archivo_id'            => $archivoExistente->id,
-                'version'               => $nuevaVersion,
-                'nombre_original'       => $solicitudSubida->nombre_original,
-                'nombre_almacenamiento' => $solicitudSubida->nombre_almacenamiento,
-                'ruta_disco'            => $rutaDefinitiva,
-                'hash_sha256'           => $solicitudSubida->hash_sha256,
-                'tamanio_bytes'         => $solicitudSubida->tamanio_bytes,
-                'subido_por'            => $usuario->id,
-                'nota_version'          => "Aprobado por {$revisor->nombre_completo}",
-                'activo'                => true,
-            ]);
+                    VersionArchivo::create([
+                        'archivo_id'            => $archivoExistente->id,
+                        'version'               => $nuevaVersion,
+                        'nombre_original'       => $solicitudSubida->nombre_original,
+                        'nombre_almacenamiento' => $solicitudSubida->nombre_almacenamiento,
+                        'ruta_disco'            => $rutaDefinitiva,
+                        'hash_sha256'           => $solicitudSubida->hash_sha256,
+                        'tamanio_bytes'         => $solicitudSubida->tamanio_bytes,
+                        'subido_por'            => $usuario->id,
+                        'nota_version'          => "Aprobado por {$revisor->nombre_completo}",
+                        'activo'                => true,
+                    ]);
 
-            $archivoExistente->update([
-                'nombre_almacenamiento' => $solicitudSubida->nombre_almacenamiento,
-                'ruta_disco'            => $rutaDefinitiva,
-                'hash_sha256'           => $solicitudSubida->hash_sha256,
-                'tamanio_bytes'         => $solicitudSubida->tamanio_bytes,
-                'version'               => $nuevaVersion,
-            ]);
+                    $archivoExistente->update([
+                        'nombre_almacenamiento' => $solicitudSubida->nombre_almacenamiento,
+                        'ruta_disco'            => $rutaDefinitiva,
+                        'hash_sha256'           => $solicitudSubida->hash_sha256,
+                        'tamanio_bytes'         => $solicitudSubida->tamanio_bytes,
+                        'version'               => $nuevaVersion,
+                    ]);
 
-            $archivoId = $archivoExistente->id;
-        } else {
-            // Archivo nuevo
-            $archivo = Archivo::create([
-                'carpeta_id'            => $carpeta->id,
-                'subido_por'            => $usuario->id,
-                'nombre_original'       => $solicitudSubida->nombre_original,
-                'nombre_almacenamiento' => $solicitudSubida->nombre_almacenamiento,
-                'ruta_disco'            => $rutaDefinitiva,
-                'hash_sha256'           => $solicitudSubida->hash_sha256,
-                'tipo_mime'             => $solicitudSubida->tipo_mime,
-                'extension'             => $solicitudSubida->extension,
-                'tamanio_bytes'         => $solicitudSubida->tamanio_bytes,
-                'descripcion'           => $solicitudSubida->descripcion,
-                'version'               => 1,
-            ]);
+                    $archivoId = $archivoExistente->id;
+                } else {
+                    $archivo = Archivo::create([
+                        'carpeta_id'            => $carpeta->id,
+                        'subido_por'            => $usuario->id,
+                        'nombre_original'       => $solicitudSubida->nombre_original,
+                        'nombre_almacenamiento' => $solicitudSubida->nombre_almacenamiento,
+                        'ruta_disco'            => $rutaDefinitiva,
+                        'hash_sha256'           => $solicitudSubida->hash_sha256,
+                        'tipo_mime'             => $solicitudSubida->tipo_mime,
+                        'extension'             => $solicitudSubida->extension,
+                        'tamanio_bytes'         => $solicitudSubida->tamanio_bytes,
+                        'descripcion'           => $solicitudSubida->descripcion,
+                        'version'               => 1,
+                    ]);
 
-            VersionArchivo::create([
-                'archivo_id'            => $archivo->id,
-                'version'               => 1,
-                'nombre_original'       => $archivo->nombre_original,
-                'nombre_almacenamiento' => $solicitudSubida->nombre_almacenamiento,
-                'ruta_disco'            => $rutaDefinitiva,
-                'hash_sha256'           => $solicitudSubida->hash_sha256,
-                'tamanio_bytes'         => $solicitudSubida->tamanio_bytes,
-                'subido_por'            => $usuario->id,
-                'nota_version'          => "Versión inicial — aprobada por {$revisor->nombre_completo}",
-                'activo'                => true,
-            ]);
+                    VersionArchivo::create([
+                        'archivo_id'            => $archivo->id,
+                        'version'               => 1,
+                        'nombre_original'       => $archivo->nombre_original,
+                        'nombre_almacenamiento' => $solicitudSubida->nombre_almacenamiento,
+                        'ruta_disco'            => $rutaDefinitiva,
+                        'hash_sha256'           => $solicitudSubida->hash_sha256,
+                        'tamanio_bytes'         => $solicitudSubida->tamanio_bytes,
+                        'subido_por'            => $usuario->id,
+                        'nota_version'          => "Versión inicial — aprobada por {$revisor->nombre_completo}",
+                        'activo'                => true,
+                    ]);
 
-            $archivoId = $archivo->id;
+                    $archivoId = $archivo->id;
+                }
+
+                $solicitudSubida->update([
+                    'status'             => 'Aprobado',
+                    'revisado_por'       => $revisor->id,
+                    'revisado_en'        => now(),
+                    'comentario_revisor' => $request->comentario_revisor,
+                    'archivo_id'         => $archivoId,
+                ]);
+
+                return $archivoId;
+            });
+        } catch (\Exception $e) {
+            // Revertir el archivo movido en disco
+            if (Storage::disk('filecenter')->exists($rutaDefinitiva)) {
+                Storage::disk('filecenter')->move($rutaDefinitiva, $solicitudSubida->ruta_temporal);
+            }
+            return back()->withErrors(['error' => 'Error al procesar la aprobación. Inténtalo de nuevo.']);
         }
-
-        // Actualizar solicitud
-        $solicitudSubida->update([
-            'status'             => 'Aprobado',
-            'revisado_por'       => $revisor->id,
-            'revisado_en'        => now(),
-            'comentario_revisor' => $request->comentario_revisor,
-            'archivo_id'         => $archivoId,
-        ]);
 
         RegistroActividad::registrar(
             'aprobar_subida', 'archivo', $archivoId,

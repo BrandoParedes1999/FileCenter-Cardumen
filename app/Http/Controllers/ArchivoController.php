@@ -10,6 +10,7 @@ use App\Models\VersionArchivo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -79,20 +80,19 @@ class ArchivoController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        // Sin límite de tamaño en la validación de Laravel.
-        // El límite real lo impone php.ini / nginx en el servidor.
         $request->validate([
             'carpeta_id'  => ['required', 'exists:carpetas,id'],
             'archivo'     => [
                 'required',
                 'file',
-                // Solo PDF, Word y Excel
                 'mimes:pdf,doc,docx,xls,xlsx',
+                'max:51200', // 50 MB
             ],
             'descripcion' => ['nullable', 'string', 'max:500'],
         ], [
             'archivo.required' => 'Debes seleccionar un archivo.',
             'archivo.mimes'    => 'Solo se permiten archivos PDF, Word (.doc/.docx) y Excel (.xls/.xlsx).',
+            'archivo.max'      => 'El archivo no puede superar los 50 MB.',
         ]);
 
         $usuario = Auth::user();
@@ -304,32 +304,41 @@ class ArchivoController extends Controller
             return back()->withErrors(['archivo' => 'No se pudo guardar el archivo en el servidor. Inténtalo de nuevo.']);
         }
 
-        $archivo = Archivo::create([
-            'carpeta_id'            => $carpeta->id,
-            'subido_por'            => $usuario->id,
-            'nombre_original'       => $file->getClientOriginalName(),
-            'nombre_almacenamiento' => $nombreAlmacenamiento,
-            'ruta_disco'            => $rutaDisco,
-            'hash_sha256'           => $hash,
-            'tipo_mime'             => $file->getMimeType(),
-            'extension'             => $extension,
-            'tamanio_bytes'         => $file->getSize(),
-            'descripcion'           => $request->descripcion,
-            'version'               => 1,
-        ]);
+        try {
+            $archivo = DB::transaction(function () use ($carpeta, $usuario, $file, $extension, $nombreAlmacenamiento, $rutaDisco, $hash, $request) {
+                $archivo = Archivo::create([
+                    'carpeta_id'            => $carpeta->id,
+                    'subido_por'            => $usuario->id,
+                    'nombre_original'       => $file->getClientOriginalName(),
+                    'nombre_almacenamiento' => $nombreAlmacenamiento,
+                    'ruta_disco'            => $rutaDisco,
+                    'hash_sha256'           => $hash,
+                    'tipo_mime'             => $file->getMimeType(),
+                    'extension'             => $extension,
+                    'tamanio_bytes'         => $file->getSize(),
+                    'descripcion'           => $request->descripcion,
+                    'version'               => 1,
+                ]);
 
-        VersionArchivo::create([
-            'archivo_id'            => $archivo->id,
-            'version'               => 1,
-            'nombre_original'       => $archivo->nombre_original,
-            'nombre_almacenamiento' => $nombreAlmacenamiento,
-            'ruta_disco'            => $rutaDisco,
-            'hash_sha256'           => $hash,
-            'tamanio_bytes'         => $archivo->tamanio_bytes,
-            'subido_por'            => $usuario->id,
-            'nota_version'          => 'Versión inicial',
-            'activo'                => true,
-        ]);
+                VersionArchivo::create([
+                    'archivo_id'            => $archivo->id,
+                    'version'               => 1,
+                    'nombre_original'       => $archivo->nombre_original,
+                    'nombre_almacenamiento' => $nombreAlmacenamiento,
+                    'ruta_disco'            => $rutaDisco,
+                    'hash_sha256'           => $hash,
+                    'tamanio_bytes'         => $archivo->tamanio_bytes,
+                    'subido_por'            => $usuario->id,
+                    'nota_version'          => 'Versión inicial',
+                    'activo'                => true,
+                ]);
+
+                return $archivo;
+            });
+        } catch (\Exception $e) {
+            Storage::disk('filecenter')->delete($rutaDisco);
+            return back()->withErrors(['archivo' => 'Error al registrar el archivo. Inténtalo de nuevo.']);
+        }
 
         RegistroActividad::registrar('subir', 'archivo', $archivo->id, "Subió: {$archivo->nombre_original}");
 
@@ -352,28 +361,35 @@ class ArchivoController extends Controller
             return back()->withErrors(['archivo' => 'No se pudo guardar el archivo en el servidor. Inténtalo de nuevo.']);
         }
 
-        VersionArchivo::where('archivo_id', $archivo->id)->update(['activo' => false]);
+        try {
+            DB::transaction(function () use ($archivo, $file, $nombreAlmacenamiento, $rutaDisco, $hash, $nuevaVersion, $usuario) {
+                VersionArchivo::where('archivo_id', $archivo->id)->update(['activo' => false]);
 
-        VersionArchivo::create([
-            'archivo_id'            => $archivo->id,
-            'version'               => $nuevaVersion,
-            'nombre_original'       => $file->getClientOriginalName(),
-            'nombre_almacenamiento' => $nombreAlmacenamiento,
-            'ruta_disco'            => $rutaDisco,
-            'hash_sha256'           => $hash,
-            'tamanio_bytes'         => $file->getSize(),
-            'subido_por'            => $usuario->id,
-            'nota_version'          => "Resubida v{$nuevaVersion}",
-            'activo'                => true,
-        ]);
+                VersionArchivo::create([
+                    'archivo_id'            => $archivo->id,
+                    'version'               => $nuevaVersion,
+                    'nombre_original'       => $file->getClientOriginalName(),
+                    'nombre_almacenamiento' => $nombreAlmacenamiento,
+                    'ruta_disco'            => $rutaDisco,
+                    'hash_sha256'           => $hash,
+                    'tamanio_bytes'         => $file->getSize(),
+                    'subido_por'            => $usuario->id,
+                    'nota_version'          => "Resubida v{$nuevaVersion}",
+                    'activo'                => true,
+                ]);
 
-        $archivo->update([
-            'nombre_almacenamiento' => $nombreAlmacenamiento,
-            'ruta_disco'            => $rutaDisco,
-            'hash_sha256'           => $hash,
-            'tamanio_bytes'         => $file->getSize(),
-            'version'               => $nuevaVersion,
-        ]);
+                $archivo->update([
+                    'nombre_almacenamiento' => $nombreAlmacenamiento,
+                    'ruta_disco'            => $rutaDisco,
+                    'hash_sha256'           => $hash,
+                    'tamanio_bytes'         => $file->getSize(),
+                    'version'               => $nuevaVersion,
+                ]);
+            });
+        } catch (\Exception $e) {
+            Storage::disk('filecenter')->delete($rutaDisco);
+            return back()->withErrors(['archivo' => 'Error al registrar la versión. Inténtalo de nuevo.']);
+        }
 
         RegistroActividad::registrar(
             'subir', 'archivo', $archivo->id,
