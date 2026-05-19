@@ -57,7 +57,7 @@ class GenerarReporteMensual extends Command
         $contenido = $bom . implode("\n", $rows);
         $path      = "reportes/actividad_{$etiq}.csv";
 
-        Storage::put($path, $contenido);
+        Storage::disk('local')->put($path, $contenido);
 
         $this->info("Reporte guardado en storage/app/{$path} ({$registros->count()} registros).");
 

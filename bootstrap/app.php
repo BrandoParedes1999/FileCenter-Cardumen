@@ -13,7 +13,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
 
         $middleware->alias([
-            'company.scope' => \App\Http\Middleware\CompanyScope::class,  // ← agrega esto
+            'company.scope' => \App\Http\Middleware\CompanyScope::class,
+        ]);
+
+        $middleware->web(append: [
+            \App\Http\Middleware\SecureHeaders::class,
         ]);
 
     })

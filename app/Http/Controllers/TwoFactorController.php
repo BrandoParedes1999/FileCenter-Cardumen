@@ -7,6 +7,7 @@ use App\Models\Usuario;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 use PragmaRX\Google2FA\Google2FA;
 use BaconQrCode\Renderer\ImageRenderer;
@@ -60,11 +61,14 @@ class TwoFactorController extends Controller
             return back()->withErrors(['code' => 'Primero genera el código QR.']);
         }
 
-        $valido = $this->g2fa->verifyKey($usuario->two_factor_secret, $request->code);
+        $lastTimestamp = Cache::get("2fa_setup_ts_{$usuario->id}", 0);
+        $newTimestamp  = $this->g2fa->verifyKeyNewer($usuario->two_factor_secret, $request->code, $lastTimestamp);
 
-        if (!$valido) {
+        if ($newTimestamp === false) {
             return back()->withErrors(['code' => 'Código incorrecto. Verifica tu app y vuelve a intentar.']);
         }
+
+        Cache::put("2fa_setup_ts_{$usuario->id}", $newTimestamp, now()->addMinutes(5));
 
         $usuario->update(['two_factor_confirmed_at' => now()]);
 
@@ -116,12 +120,16 @@ class TwoFactorController extends Controller
             return redirect()->route('login');
         }
 
-        $codigo = preg_replace('/\s+/', '', $request->code);
-        $valido = $this->g2fa->verifyKey($usuario->two_factor_secret, $codigo);
+        $codigo        = preg_replace('/\s+/', '', $request->code);
+        $userId        = $usuario->id;
+        $lastTimestamp = Cache::get("2fa_ts_{$userId}", 0);
+        $newTimestamp  = $this->g2fa->verifyKeyNewer($usuario->two_factor_secret, $codigo, $lastTimestamp);
 
-        if (!$valido) {
+        if ($newTimestamp === false) {
             return back()->withErrors(['code' => 'Código incorrecto o expirado.']);
         }
+
+        Cache::put("2fa_ts_{$userId}", $newTimestamp, now()->addMinutes(5));
 
         // Login exitoso: completar autenticación
         session()->forget('2fa.user_id');

@@ -132,9 +132,9 @@
                         $colores = $archivo->colorExtension();
                         $ext     = strtolower($archivo->extension);
                         // Resaltar coincidencia en el nombre
-                        $nombreHl = preg_replace(
+                        $nombreHl = preg_replace_callback(
                             '/(' . preg_quote($q, '/') . ')/i',
-                            '<mark style="background:#ede9fe;color:#4f46e5;border-radius:3px;padding:0 2px">$1</mark>',
+                            fn($m) => '<mark style="background:#ede9fe;color:#4f46e5;border-radius:3px;padding:0 2px">' . e($m[1]) . '</mark>',
                             e($archivo->nombre_original)
                         );
                     @endphp
@@ -214,9 +214,9 @@
                     @foreach($carpetas as $carpeta)
                     @php
                         $accentCarpeta = $carpeta->empresa->color_secundario ?? '#4f46e5';
-                        $nombreHlC = preg_replace(
+                        $nombreHlC = preg_replace_callback(
                             '/(' . preg_quote($q, '/') . ')/i',
-                            '<mark style="background:#ede9fe;color:#4f46e5;border-radius:3px;padding:0 2px">$1</mark>',
+                            fn($m) => '<mark style="background:#ede9fe;color:#4f46e5;border-radius:3px;padding:0 2px">' . e($m[1]) . '</mark>',
                             e($carpeta->nombre)
                         );
                     @endphp

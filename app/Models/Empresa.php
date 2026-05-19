@@ -50,16 +50,26 @@ class Empresa extends Model
         return asset('images/empresas/' . ($this->logo ?? 'logo_default.png'));
     }
 
+    public function getColorPrimarioAttribute($value): string
+    {
+        return preg_match('/^#[0-9A-Fa-f]{6}$/', $value ?? '') ? $value : '#1B3A6B';
+    }
+
+    public function getColorSecundarioAttribute($value): string
+    {
+        return preg_match('/^#[0-9A-Fa-f]{6}$/', $value ?? '') ? $value : '#2E5FA3';
+    }
+
     /** Color primario con fallback */
     public function getColorBgAttribute(): string
     {
-        return $this->color_primario ?? '#1B3A6B';
+        return $this->color_primario;
     }
 
     /** Color secundario (acento/badge) con fallback */
     public function getColorAccentAttribute(): string
     {
-        return $this->color_secundario ?? '#2E5FA3';
+        return $this->color_secundario;
     }
 
     /**
