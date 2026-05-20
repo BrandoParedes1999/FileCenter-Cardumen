@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manual de Usuario – Empleado | FileCenter</title>
+  <style>
+    :root {
+      --primary: #1e40af;
+      --primary-light: #3b82f6;
+      --primary-dark: #1e3a8a;
+      --accent: #0ea5e9;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-400: #94a3b8;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1e293b;
+      --gray-900: #0f172a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--gray-800);
+      background: var(--gray-50);
+    }
+
+    /* ── Cover page ── */
+    .cover {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--accent) 100%);
+      color: #fff;
+      padding: 80px 60px;
+      min-height: 340px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .cover .badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 20px;
+      padding: 4px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .cover h1 { font-size: 42px; font-weight: 800; line-height: 1.15; }
+    .cover h1 span { color: #bfdbfe; }
+    .cover .subtitle { font-size: 18px; opacity: 0.85; margin-top: 12px; }
+    .cover .meta { margin-top: 40px; font-size: 13px; opacity: 0.7; }
+
+    /* ── Layout ── */
+    .container { max-width: 900px; margin: 0 auto; padding: 0 24px 80px; }
+
+    /* ── TOC ── */
+    .toc {
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: 12px;
+      padding: 32px 36px;
+      margin: 48px 0 40px;
+    }
+    .toc h2 { font-size: 18px; color: var(--primary); margin-bottom: 20px; font-weight: 700; }
+    .toc ol { list-style: none; counter-reset: toc; }
+    .toc ol li {
+      counter-increment: toc;
+      padding: 6px 0;
+      border-bottom: 1px dashed var(--gray-200);
+    }
+    .toc ol li:last-child { border-bottom: none; }
+    .toc ol li::before {
+      content: counter(toc) ".";
+      font-weight: 700;
+      color: var(--primary-light);
+      margin-right: 10px;
+      min-width: 24px;
+      display: inline-block;
+    }
+    .toc ol li a { color: var(--gray-700); text-decoration: none; }
+    .toc ol li a:hover { color: var(--primary); }
+
+    /* ── Sections ── */
+    section { margin-bottom: 56px; }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--primary-light);
+    }
+    .section-number {
+      background: var(--primary);
+      color: #fff;
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 16px;
+      flex-shrink: 0;
+    }
+    .section-header h2 { font-size: 22px; font-weight: 700; color: var(--primary-dark); }
+
+    h3 { font-size: 17px; font-weight: 700; color: var(--gray-800); margin: 28px 0 10px; }
+    p { margin-bottom: 12px; color: var(--gray-700); }
+
+    /* ── Steps ── */
+    .steps { list-style: none; counter-reset: step; margin: 16px 0; }
+    .steps li {
+      counter-increment: step;
+      display: flex;
+      gap: 14px;
+      margin-bottom: 14px;
+      align-items: flex-start;
+    }
+    .steps li::before {
+      content: counter(step);
+      background: var(--accent);
+      color: #fff;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* ── Callout boxes ── */
+    .callout {
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin: 20px 0;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .callout-icon { font-size: 20px; flex-shrink: 0; line-height: 1.4; }
+    .callout.info    { background: #eff6ff; border-left: 4px solid #3b82f6; }
+    .callout.warning { background: #fffbeb; border-left: 4px solid #f59e0b; }
+    .callout.success { background: #f0fdf4; border-left: 4px solid #22c55e; }
+    .callout.danger  { background: #fef2f2; border-left: 4px solid #ef4444; }
+    .callout p { margin: 0; }
+
+    /* ── Tag / pill ── */
+    .tag {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .tag-blue   { background: #dbeafe; color: #1d4ed8; }
+    .tag-green  { background: #dcfce7; color: #15803d; }
+    .tag-orange { background: #ffedd5; color: #c2410c; }
+    .tag-gray   { background: #f1f5f9; color: #475569; }
+
+    /* ── Permission table ── */
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+    th { background: var(--primary); color: #fff; padding: 10px 14px; text-align: left; }
+    td { padding: 9px 14px; border-bottom: 1px solid var(--gray-200); }
+    tr:nth-child(even) td { background: var(--gray-50); }
+    .check { color: var(--success); font-weight: 700; }
+    .cross { color: var(--danger); font-weight: 700; }
+
+    /* ── Screen mockup ── */
+    .screen-box {
+      background: var(--gray-900);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 20px 0;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    }
+    .screen-bar {
+      background: var(--gray-800);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .screen-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .screen-dot.red   { background: #ef4444; }
+    .screen-dot.yel   { background: #f59e0b; }
+    .screen-dot.grn   { background: #22c55e; }
+    .screen-url {
+      flex: 1;
+      background: var(--gray-700);
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 12px;
+      color: var(--gray-400);
+      margin-left: 8px;
+    }
+    .screen-content {
+      padding: 28px 32px;
+      background: #fff;
+      font-size: 14px;
+    }
+
+    /* ── Card grid ── */
+    .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+    .card {
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+    .card .card-icon { font-size: 28px; margin-bottom: 8px; }
+    .card h4 { font-size: 14px; font-weight: 700; color: var(--gray-800); margin-bottom: 6px; }
+    .card p { font-size: 13px; color: var(--gray-600); margin: 0; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      color: var(--gray-400);
+      font-size: 13px;
+      padding: 32px 24px;
+      border-top: 1px solid var(--gray-200);
+      margin-top: 40px;
+    }
+
+    @media print {
+      body { background: #fff; }
+      .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .screen-box { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════ COVER ══════════════════ -->
+<div class="cover">
+  <div class="badge">Manual de Usuario</div>
+  <h1>FileCenter<br/><span>Guía del Empleado</span></h1>
+  <div class="subtitle">Todo lo que necesitas saber para gestionar tus archivos y carpetas</div>
+  <div class="meta">Versión 1.0 &nbsp;·&nbsp; Mayo 2026 &nbsp;·&nbsp; Rol: Empleado</div>
+</div>
+
+<div class="container">
+
+  <!-- ══════════════════ TOC ══════════════════ -->
+  <div class="toc">
+    <h2>📋 Contenido</h2>
+    <ol>
+      <li><a href="#s1">¿Qué es FileCenter?</a></li>
+      <li><a href="#s2">Inicio de sesión y autenticación de dos factores (2FA)</a></li>
+      <li><a href="#s3">Panel principal (Dashboard)</a></li>
+      <li><a href="#s4">Explorar carpetas y archivos</a></li>
+      <li><a href="#s5">Solicitar acceso a una carpeta o archivo</a></li>
+      <li><a href="#s6">Subir archivos</a></li>
+      <li><a href="#s7">Descargar archivos</a></li>
+      <li><a href="#s8">Buscar archivos y carpetas</a></li>
+      <li><a href="#s9">Notificaciones</a></li>
+      <li><a href="#s10">Mi perfil y configuración de 2FA</a></li>
+      <li><a href="#s11">Papelera de reciclaje</a></li>
+      <li><a href="#s12">Preguntas frecuentes</a></li>
+    </ol>
+  </div>
+
+  <!-- ══════════════════ S1 ══════════════════ -->
+  <section id="s1">
+    <div class="section-header">
+      <div class="section-number">1</div>
+      <h2>¿Qué es FileCenter?</h2>
+    </div>
+
+    <p>
+      <strong>FileCenter</strong> es la plataforma corporativa para la gestión centralizada de documentos.
+      Permite a los empleados almacenar, organizar, buscar y compartir archivos de manera segura,
+      todo bajo un esquema de permisos por carpeta que garantiza que cada persona solo accede
+      a la información que le corresponde.
+    </p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">📁</div>
+        <h4>Gestión de archivos</h4>
+        <p>Sube, descarga y organiza documentos en carpetas jerárquicas.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔐</div>
+        <h4>Acceso seguro</h4>
+        <p>Doble factor de autenticación y control de permisos por carpeta.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔔</div>
+        <h4>Notificaciones</h4>
+        <p>Recibe alertas cuando se aprueban o rechazan tus solicitudes.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔎</div>
+        <h4>Búsqueda global</h4>
+        <p>Encuentra cualquier archivo o carpeta en segundos.</p>
+      </div>
+    </div>
+
+    <h3>Permisos del rol Empleado</h3>
+    <p>Como empleado, tu acceso está limitado a las carpetas y archivos que un administrador te haya asignado explícitamente. Esta tabla resume lo que puedes hacer:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Acción</th>
+          <th>¿Disponible?</th>
+          <th>Condición</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Ver carpetas asignadas</td><td class="check">✔</td><td>Permiso de lectura activo</td></tr>
+        <tr><td>Ver archivos en carpetas asignadas</td><td class="check">✔</td><td>Permiso de lectura activo</td></tr>
+        <tr><td>Descargar archivos</td><td class="check">✔</td><td>Permiso de descarga activo</td></tr>
+        <tr><td>Subir archivos</td><td class="check">✔</td><td>Permiso de subida activo o mediante solicitud</td></tr>
+        <tr><td>Solicitar acceso a carpetas</td><td class="check">✔</td><td>Siempre disponible</td></tr>
+        <tr><td>Editar archivos propios</td><td class="check">✔</td><td>Permiso de edición activo</td></tr>
+        <tr><td>Eliminar archivos</td><td class="cross">✘</td><td>Solo si se concede permiso explícito</td></tr>
+        <tr><td>Crear carpetas</td><td class="cross">✘</td><td>No disponible para este rol</td></tr>
+        <tr><td>Gestionar permisos</td><td class="cross">✘</td><td>Exclusivo de Admin/Superadmin</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ══════════════════ S2 ══════════════════ -->
+  <section id="s2">
+    <div class="section-header">
+      <div class="section-number">2</div>
+      <h2>Inicio de sesión y autenticación de dos factores (2FA)</h2>
+    </div>
+
+    <h3>Ingresar al sistema</h3>
+    <ol class="steps">
+      <li>Abre tu navegador y ve a la URL de FileCenter que te proporcionó tu empresa.</li>
+      <li>Ingresa tu <strong>correo electrónico</strong> y <strong>contraseña</strong> en el formulario de inicio de sesión.</li>
+      <li>Haz clic en el botón <strong>"Iniciar sesión"</strong>.</li>
+      <li>Si tienes 2FA activado (recomendado), el sistema te pedirá el código de 6 dígitos de tu aplicación autenticadora (Google Authenticator, Authy, etc.).</li>
+      <li>Ingresa el código y confirma. Serás redirigido al Dashboard.</li>
+    </ol>
+
+    <div class="screen-box">
+      <div class="screen-bar">
+        <div class="screen-dot red"></div>
+        <div class="screen-dot yel"></div>
+        <div class="screen-dot grn"></div>
+        <div class="screen-url">filecenter.tuempresa.com/login</div>
+      </div>
+      <div class="screen-content">
+        <div style="max-width:380px;margin:0 auto;text-align:center">
+          <div style="font-size:32px;font-weight:800;color:#1e40af;margin-bottom:4px">FileCenter</div>
+          <div style="color:#64748b;margin-bottom:28px;font-size:13px">Gestión documental corporativa</div>
+          <div style="text-align:left">
+            <label style="font-size:13px;font-weight:600;color:#334155;display:block;margin-bottom:4px">Correo electrónico</label>
+            <div style="border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;color:#94a3b8;margin-bottom:14px;font-size:13px">tu.nombre@empresa.com</div>
+            <label style="font-size:13px;font-weight:600;color:#334155;display:block;margin-bottom:4px">Contraseña</label>
+            <div style="border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;color:#94a3b8;margin-bottom:20px;font-size:13px">••••••••</div>
+            <div style="background:#1e40af;color:#fff;border-radius:8px;padding:11px;text-align:center;font-weight:600;font-size:14px">Iniciar sesión</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout warning">
+      <div class="callout-icon">⚠️</div>
+      <p><strong>Bloqueo por intentos fallidos:</strong> Después de <strong>5 intentos incorrectos</strong> consecutivos, tu cuenta se bloqueará automáticamente durante <strong>15 minutos</strong>. Si esto ocurre, espera el tiempo indicado o contacta a tu administrador.</p>
+    </div>
+
+    <h3>Configurar la autenticación de dos factores (2FA)</h3>
+    <p>La 2FA añade una capa extra de seguridad. Si aún no la tienes activada:</p>
+    <ol class="steps">
+      <li>Descarga la app <strong>Google Authenticator</strong> o <strong>Authy</strong> en tu smartphone.</li>
+      <li>En FileCenter, ve a <strong>Mi perfil → Seguridad → Activar 2FA</strong>.</li>
+      <li>Escanea el código QR que aparece en pantalla con la app.</li>
+      <li>Ingresa el código de 6 dígitos que genera la app para confirmar la activación.</li>
+      <li>Guarda los códigos de respaldo que se te muestran en un lugar seguro.</li>
+    </ol>
+
+    <div class="callout success">
+      <div class="callout-icon">✅</div>
+      <p>Una vez activada la 2FA, cada vez que inicies sesión desde un dispositivo nuevo necesitarás ingresar el código de tu app. Esto protege tu cuenta aunque alguien conozca tu contraseña.</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ S3 ══════════════════ -->
+  <section id="s3">
+    <div class="section-header">
+      <div class="section-number">3</div>
+      <h2>Panel principal (Dashboard)</h2>
+    </div>
+
+    <p>Al iniciar sesión, llegas al <strong>Dashboard</strong>. Desde aquí puedes tener una vista rápida de la actividad reciente y acceder a cualquier sección del sistema.</p>
+
+    <div class="screen-box">
+      <div class="screen-bar">
+        <div class="screen-dot red"></div>
+        <div class="screen-dot yel"></div>
+        <div class="screen-dot grn"></div>
+        <div class="screen-url">filecenter.tuempresa.com/dashboard</div>
+      </div>
+      <div class="screen-content">
+        <div style="display:flex;gap:16px">
+          <!-- Sidebar -->
+          <div style="width:180px;background:#f8fafc;border-radius:8px;padding:16px 12px;font-size:13px;flex-shrink:0">
+            <div style="font-weight:700;color:#1e40af;margin-bottom:16px;font-size:14px">📂 FileCenter</div>
+            <div style="color:#334155;padding:6px 8px;border-radius:6px;background:#dbeafe;margin-bottom:4px">🏠 Dashboard</div>
+            <div style="color:#64748b;padding:6px 8px;margin-bottom:4px">📁 Carpetas</div>
+            <div style="color:#64748b;padding:6px 8px;margin-bottom:4px">📄 Archivos</div>
+            <div style="color:#64748b;padding:6px 8px;margin-bottom:4px">📨 Solicitudes</div>
+            <div style="color:#64748b;padding:6px 8px;margin-bottom:4px">🔔 Notificaciones</div>
+            <div style="color:#64748b;padding:6px 8px">🔎 Buscar</div>
+          </div>
+          <!-- Content -->
+          <div style="flex:1">
+            <div style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:16px">Bienvenido, Juan García</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+              <div style="background:#eff6ff;border-radius:8px;padding:14px;text-align:center">
+                <div style="font-size:22px;font-weight:800;color:#1e40af">12</div>
+                <div style="font-size:12px;color:#64748b">Carpetas accesibles</div>
+              </div>
+              <div style="background:#f0fdf4;border-radius:8px;padding:14px;text-align:center">
+                <div style="font-size:22px;font-weight:800;color:#16a34a">48</div>
+                <div style="font-size:12px;color:#64748b">Archivos disponibles</div>
+              </div>
+              <div style="background:#fffbeb;border-radius:8px;padding:14px;text-align:center">
+                <div style="font-size:22px;font-weight:800;color:#d97706">2</div>
+                <div style="font-size:12px;color:#64748b">Solicitudes pendientes</div>
+              </div>
+            </div>
+            <div style="font-size:13px;font-weight:600;color:#334155;margin-bottom:8px">Actividad reciente</div>
+            <div style="font-size:12px;color:#64748b;border-left:3px solid #3b82f6;padding-left:10px;margin-bottom:6px">Descargaste <strong>Contrato_2026.pdf</strong> · hace 2 horas</div>
+            <div style="font-size:12px;color:#64748b;border-left:3px solid #22c55e;padding-left:10px;margin-bottom:6px">Subiste <strong>Reporte_Mayo.xlsx</strong> · ayer</div>
+            <div style="font-size:12px;color:#64748b;border-left:3px solid #f59e0b;padding-left:10px">Solicitud de acceso <strong>aprobada</strong> · hace 3 días</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Elementos del Dashboard</h3>
+    <ul style="margin-left:24px;color:var(--gray-700)">
+      <li style="margin-bottom:8px"><strong>Barra lateral izquierda:</strong> Menú de navegación principal. Accede a Carpetas, Archivos, Solicitudes, Notificaciones y Buscador.</li>
+      <li style="margin-bottom:8px"><strong>Tarjetas de resumen:</strong> Muestran la cantidad de carpetas accesibles, archivos disponibles y solicitudes pendientes.</li>
+      <li style="margin-bottom:8px"><strong>Actividad reciente:</strong> Historial de las últimas acciones que realizaste (descargas, subidas, solicitudes).</li>
+      <li style="margin-bottom:8px"><strong>Barra superior (topbar):</strong> Botón de búsqueda global, campana de notificaciones y acceso a tu perfil.</li>
+    </ul>
+  </section>
+
+  <!-- ══════════════════ S4 ══════════════════ -->
+  <section id="s4">
+    <div class="section-header">
+      <div class="section-number">4</div>
+      <h2>Explorar carpetas y archivos</h2>
+    </div>
+
+    <p>La sección <strong>Carpetas</strong> te muestra la estructura de directorios a los que tienes acceso. Puedes navegar por la jerarquía de carpetas usando el menú de árbol o los paneles de contenido.</p>
+
+    <h3>Navegar por carpetas</h3>
+    <ol class="steps">
+      <li>Haz clic en <strong>"Carpetas"</strong> en el menú lateral izquierdo.</li>
+      <li>Verás las carpetas a las que tienes acceso. Las carpetas con candado <span class="tag tag-orange">🔒 Privada</span> requieren permiso explícito.</li>
+      <li>Haz clic en el nombre o ícono de una carpeta para abrirla y ver su contenido.</li>
+      <li>Usa las <strong>migas de pan</strong> (breadcrumbs) en la parte superior para saber dónde estás y volver atrás fácilmente.</li>
+      <li>Las subcarpetas se muestran anidadas dentro de la carpeta padre.</li>
+    </ol>
+
+    <div class="callout info">
+      <div class="callout-icon">ℹ️</div>
+      <p>Solo verás las carpetas para las cuales un administrador te haya otorgado permiso. Si una carpeta no aparece, puede que no tengas acceso aún. Consulta la sección <strong>5 – Solicitar acceso</strong>.</p>
+    </div>
+
+    <h3>Tipos de carpeta</h3>
+    <table>
+      <thead>
+        <tr><th>Tipo</th><th>Descripción</th><th>Qué puedes hacer</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="tag tag-green">Pública</span></td>
+          <td>Visible para todos los empleados de la empresa</td>
+          <td>Ver y descargar (si el permiso lo permite)</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-blue">Normal</span></td>
+          <td>Acceso restringido a usuarios con permiso</td>
+          <td>Según los permisos asignados por el administrador</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-gray">Solo lectura</span></td>
+          <td>No permite subir ni modificar archivos</td>
+          <td>Solo ver, sin descargar ni subir</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-orange">Con descarga</span></td>
+          <td>Permite descargar los archivos explícitamente</td>
+          <td>Ver y descargar</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Ver archivos dentro de una carpeta</h3>
+    <ol class="steps">
+      <li>Abre la carpeta deseada haciendo clic en ella.</li>
+      <li>Los archivos se muestran con su nombre, tipo, tamaño y fecha de modificación.</li>
+      <li>Cada archivo tiene un ícono de color según su tipo: 📄 PDF, 📊 Excel, 📝 Word.</li>
+      <li>Haz clic en el nombre del archivo para ver sus detalles (descripción, versiones, fecha de subida).</li>
+    </ol>
+
+    <div class="callout info">
+      <div class="callout-icon">ℹ️</div>
+      <p><strong>Formatos soportados:</strong> FileCenter acepta archivos PDF, DOCX, DOC, XLSX y XLS con un tamaño máximo de <strong>50 MB</strong> por archivo.</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ S5 ══════════════════ -->
+  <section id="s5">
+    <div class="section-header">
+      <div class="section-number">5</div>
+      <h2>Solicitar acceso a una carpeta o archivo</h2>
+    </div>
+
+    <p>Si necesitas acceder a una carpeta o archivo al que no tienes permiso, puedes enviar una <strong>solicitud de acceso</strong>. Un administrador o gerente revisará tu petición y la aprobará o rechazará.</p>
+
+    <h3>Crear una solicitud de acceso</h3>
+    <ol class="steps">
+      <li>Ve a <strong>Solicitudes</strong> en el menú lateral y selecciona <strong>"Nueva solicitud de acceso"</strong>.</li>
+      <li>Selecciona si tu solicitud es para una <strong>carpeta</strong> o un <strong>archivo</strong> específico.</li>
+      <li>Elige el tipo de acceso que necesitas:
+        <ul style="margin-left:20px;margin-top:6px">
+          <li><strong>Solo lectura:</strong> Para ver los documentos sin descargarlos.</li>
+          <li><strong>Con descarga:</strong> Para poder descargar los archivos.</li>
+        </ul>
+      </li>
+      <li>Escribe un <strong>motivo</strong> claro y conciso que justifique tu solicitud.</li>
+      <li>Opcionalmente, indica una <strong>fecha de expiración</strong> si el acceso es temporal.</li>
+      <li>Haz clic en <strong>"Enviar solicitud"</strong>.</li>
+    </ol>
+
+    <div class="callout success">
+      <div class="callout-icon">📧</div>
+      <p>Recibirás una <strong>notificación por correo y dentro del sistema</strong> cuando tu solicitud sea aprobada o rechazada. Puedes hacer seguimiento en la sección <strong>Solicitudes → Mis solicitudes</strong>.</p>
+    </div>
+
+    <h3>Estados de una solicitud</h3>
+    <table>
+      <thead>
+        <tr><th>Estado</th><th>Significado</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="tag tag-orange">Pendiente</span></td><td>La solicitud fue enviada y está esperando revisión del administrador.</td></tr>
+        <tr><td><span class="tag tag-green">Aprobada</span></td><td>Tu solicitud fue aprobada. Ya puedes acceder a la carpeta o archivo.</td></tr>
+        <tr><td><span class="tag" style="background:#fef2f2;color:#dc2626;">Rechazada</span></td><td>El administrador rechazó la solicitud. Revisa el motivo en el detalle.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ══════════════════ S6 ══════════════════ -->
+  <section id="s6">
+    <div class="section-header">
+      <div class="section-number">6</div>
+      <h2>Subir archivos</h2>
+    </div>
+
+    <p>Puedes subir archivos a las carpetas donde tengas permiso de subida. Dependiendo de la configuración de la carpeta, el archivo se publicará de inmediato o quedará en espera de aprobación.</p>
+
+    <h3>Subir un archivo directamente</h3>
+    <p>Si la carpeta <strong>no requiere aprobación</strong> y tienes permiso de subida:</p>
+    <ol class="steps">
+      <li>Navega hasta la carpeta destino.</li>
+      <li>Haz clic en el botón <strong>"Subir archivo"</strong> (ícono de flecha hacia arriba).</li>
+      <li>Selecciona el archivo desde tu computadora. Formatos aceptados: <strong>PDF, DOCX, DOC, XLSX, XLS</strong>. Máximo: <strong>50 MB</strong>.</li>
+      <li>Opcionalmente, añade una <strong>descripción</strong> para identificar el archivo fácilmente.</li>
+      <li>Haz clic en <strong>"Confirmar subida"</strong>.</li>
+      <li>El archivo aparecerá en la lista de la carpeta de inmediato.</li>
+    </ol>
+
+    <h3>Subir un archivo con aprobación requerida</h3>
+    <p>Si la carpeta tiene activada la opción <strong>"Requiere aprobación de subida"</strong>:</p>
+    <ol class="steps">
+      <li>Sigue los mismos pasos anteriores para seleccionar el archivo.</li>
+      <li>Verás un aviso indicando que el archivo pasará por revisión antes de publicarse.</li>
+      <li>Completa el formulario con una descripción y el motivo de la subida.</li>
+      <li>Haz clic en <strong>"Enviar para aprobación"</strong>.</li>
+      <li>El archivo queda en estado <span class="tag tag-orange">Pendiente</span> hasta que el administrador lo revise.</li>
+      <li>Recibirás una notificación cuando sea aprobado o rechazado.</li>
+    </ol>
+
+    <div class="callout warning">
+      <div class="callout-icon">⚠️</div>
+      <p><strong>Límite de tamaño:</strong> El sistema rechaza automáticamente archivos mayores a 50 MB. Si necesitas subir un archivo más grande, contacta a tu administrador. Solo se permiten los formatos PDF, DOCX, DOC, XLSX y XLS.</p>
+    </div>
+
+    <h3>Verificar el estado de una subida pendiente</h3>
+    <ol class="steps">
+      <li>Ve a <strong>Solicitudes → Mis solicitudes de subida</strong>.</li>
+      <li>Verás el listado de todos los archivos enviados para aprobación.</li>
+      <li>El estado puede ser: <span class="tag tag-orange">Pendiente</span>, <span class="tag tag-green">Aprobado</span> o <span class="tag" style="background:#fef2f2;color:#dc2626;">Rechazado</span>.</li>
+    </ol>
+  </section>
+
+  <!-- ══════════════════ S7 ══════════════════ -->
+  <section id="s7">
+    <div class="section-header">
+      <div class="section-number">7</div>
+      <h2>Descargar archivos</h2>
+    </div>
+
+    <p>Puedes descargar archivos de las carpetas donde tengas permiso de descarga habilitado.</p>
+
+    <ol class="steps">
+      <li>Navega hasta la carpeta que contiene el archivo.</li>
+      <li>Localiza el archivo en la lista.</li>
+      <li>Haz clic en el ícono de descarga <strong>⬇</strong> junto al nombre del archivo.</li>
+      <li>El navegador descargará el archivo automáticamente.</li>
+    </ol>
+
+    <div class="callout info">
+      <div class="callout-icon">ℹ️</div>
+      <p>Cada descarga queda registrada en el <strong>historial de actividad</strong> del sistema por razones de auditoría. Si una carpeta no muestra el botón de descarga, significa que no tienes ese permiso activado. Puedes solicitarlo a tu administrador.</p>
+    </div>
+
+    <h3>Versiones de un archivo</h3>
+    <p>FileCenter mantiene un <strong>historial de versiones</strong> de cada archivo. Para acceder a versiones anteriores:</p>
+    <ol class="steps">
+      <li>Haz clic en el nombre del archivo para abrir su panel de detalles.</li>
+      <li>Localiza la sección <strong>"Versiones"</strong>.</li>
+      <li>Verás la lista de versiones con fecha y autor.</li>
+      <li>Haz clic en <strong>"Descargar"</strong> junto a la versión que necesitas.</li>
+    </ol>
+  </section>
+
+  <!-- ══════════════════ S8 ══════════════════ -->
+  <section id="s8">
+    <div class="section-header">
+      <div class="section-number">8</div>
+      <h2>Buscar archivos y carpetas</h2>
+    </div>
+
+    <p>El <strong>buscador global</strong> te permite encontrar rápidamente cualquier archivo o carpeta a la que tengas acceso.</p>
+
+    <ol class="steps">
+      <li>Haz clic en el ícono de lupa 🔎 en la barra superior, o ve a <strong>Buscar</strong> en el menú lateral.</li>
+      <li>Escribe el nombre del archivo o carpeta que buscas.</li>
+      <li>Los resultados aparecerán en tiempo real mostrando el nombre y la ruta de ubicación.</li>
+      <li>Haz clic en el resultado para ir directamente a la carpeta o abrir el archivo.</li>
+    </ol>
+
+    <div class="callout info">
+      <div class="callout-icon">ℹ️</div>
+      <p>El buscador solo muestra archivos y carpetas a las que tienes acceso. No verás resultados de carpetas sin permiso asignado.</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ S9 ══════════════════ -->
+  <section id="s9">
+    <div class="section-header">
+      <div class="section-number">9</div>
+      <h2>Notificaciones</h2>
+    </div>
+
+    <p>FileCenter te notifica sobre eventos importantes relacionados con tus solicitudes y archivos.</p>
+
+    <h3>Ver notificaciones</h3>
+    <ol class="steps">
+      <li>Haz clic en la <strong>campana 🔔</strong> en la barra superior. El número en rojo indica notificaciones sin leer.</li>
+      <li>Se desplegará un panel con las últimas notificaciones.</li>
+      <li>Para ver todas, haz clic en <strong>"Ver todas las notificaciones"</strong>.</li>
+      <li>Haz clic en una notificación para marcarla como leída y navegar al elemento relacionado.</li>
+    </ol>
+
+    <h3>Tipos de notificaciones que recibirás</h3>
+    <table>
+      <thead><tr><th>Evento</th><th>Canal</th></tr></thead>
+      <tbody>
+        <tr><td>Solicitud de acceso aprobada</td><td>App + correo</td></tr>
+        <tr><td>Solicitud de acceso rechazada</td><td>App + correo</td></tr>
+        <tr><td>Archivo subido aprobado</td><td>App + correo</td></tr>
+        <tr><td>Archivo subido rechazado</td><td>App + correo</td></tr>
+        <tr><td>Nuevo archivo en carpeta compartida</td><td>App</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ══════════════════ S10 ══════════════════ -->
+  <section id="s10">
+    <div class="section-header">
+      <div class="section-number">10</div>
+      <h2>Mi perfil y configuración de 2FA</h2>
+    </div>
+
+    <h3>Acceder a mi perfil</h3>
+    <ol class="steps">
+      <li>Haz clic en tu <strong>nombre o avatar</strong> en la esquina superior derecha.</li>
+      <li>Selecciona <strong>"Mi perfil"</strong> del menú desplegable.</li>
+    </ol>
+
+    <h3>Opciones disponibles en el perfil</h3>
+    <table>
+      <thead><tr><th>Opción</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td>Información personal</td><td>Ver tu nombre, correo y empresa asignada (no editable por ti).</td></tr>
+        <tr><td>Cambiar contraseña</td><td>Actualiza tu contraseña de acceso. Requiere ingresar la contraseña actual.</td></tr>
+        <tr><td>Activar / desactivar 2FA</td><td>Gestiona tu autenticación de dos factores (ver sección 2).</td></tr>
+        <tr><td>Historial de accesos</td><td>Ver fecha y hora de tus últimos inicios de sesión.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout warning">
+      <div class="callout-icon">⚠️</div>
+      <p>Nunca compartas tu contraseña ni los códigos de 2FA con nadie, incluyendo al equipo de soporte. FileCenter nunca te pedirá esta información por correo o teléfono.</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ S11 ══════════════════ -->
+  <section id="s11">
+    <div class="section-header">
+      <div class="section-number">11</div>
+      <h2>Papelera de reciclaje</h2>
+    </div>
+
+    <p>Los archivos eliminados no se borran permanentemente de inmediato; van a la <strong>Papelera</strong>. Desde allí puedes restaurarlos si fue un error.</p>
+
+    <ol class="steps">
+      <li>Ve a <strong>Papelera</strong> en el menú lateral.</li>
+      <li>Verás los archivos eliminados que te pertenecen.</li>
+      <li>Para restaurar un archivo, haz clic en el ícono de restaurar 🔄 junto al archivo.</li>
+      <li>El archivo volverá a su carpeta original.</li>
+    </ol>
+
+    <div class="callout danger">
+      <div class="callout-icon">🗑️</div>
+      <p>Si eliminas permanentemente un archivo desde la papelera, <strong>no podrá recuperarse</strong>. Esta acción es irreversible. Asegúrate de que realmente ya no necesitas el archivo antes de eliminarlo definitivamente.</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ S12 ══════════════════ -->
+  <section id="s12">
+    <div class="section-header">
+      <div class="section-number">12</div>
+      <h2>Preguntas frecuentes</h2>
+    </div>
+
+    <h3>¿Por qué no veo una carpeta que mi compañero sí puede ver?</h3>
+    <p>Los permisos son individuales. Tu compañero puede tener asignado un permiso de acceso que tú no tienes. Solicita acceso a esa carpeta siguiendo los pasos de la sección 5.</p>
+
+    <h3>¿Por qué no puedo descargar un archivo si lo veo?</h3>
+    <p>Ver y descargar son permisos separados. Es posible que tengas permiso de lectura pero no de descarga. Contacta a tu administrador para que ajuste tus permisos.</p>
+
+    <h3>Mi cuenta está bloqueada, ¿qué hago?</h3>
+    <p>Espera 15 minutos y vuelve a intentarlo. Si el problema persiste, contacta a tu administrador para que desbloquee tu cuenta manualmente.</p>
+
+    <h3>Subí un archivo hace días y no aparece en la carpeta, ¿qué pasó?</h3>
+    <p>Si la carpeta requería aprobación, el archivo está pendiente de revisión. Revisa el estado en <strong>Solicitudes → Mis solicitudes de subida</strong>.</p>
+
+    <h3>¿Cómo sé si un archivo que descargué es la versión más reciente?</h3>
+    <p>Haz clic en el nombre del archivo para ver el panel de detalles. Ahí verás la fecha de la última modificación y el historial completo de versiones.</p>
+
+    <h3>Perdí mi teléfono con la app de 2FA, ¿qué hago?</h3>
+    <p>Contacta inmediatamente a tu administrador para que desactive el 2FA de tu cuenta y puedas configurarlo nuevamente en un dispositivo nuevo.</p>
+  </section>
+
+</div>
+
+<footer>
+  Manual de Usuario – Empleado &nbsp;·&nbsp; FileCenter Cardumen &nbsp;·&nbsp; v1.0 – Mayo 2026<br/>
+  Para soporte, contacta al administrador de tu empresa.
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manual de Usuario – Superadmin | FileCenter</title>
+  <style>
+    :root {
+      --primary: #7c3aed;
+      --primary-light: #8b5cf6;
+      --primary-dark: #5b21b6;
+      --accent: #a78bfa;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-400: #94a3b8;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1e293b;
+      --gray-900: #0f172a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--gray-800);
+      background: var(--gray-50);
+    }
+
+    /* ── Cover ── */
+    .cover {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, #c026d3 100%);
+      color: #fff;
+      padding: 80px 60px;
+      min-height: 340px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .cover .badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 20px;
+      padding: 4px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .cover h1 { font-size: 42px; font-weight: 800; line-height: 1.15; }
+    .cover h1 span { color: #e9d5ff; }
+    .cover .subtitle { font-size: 18px; opacity: 0.85; margin-top: 12px; }
+    .cover .meta { margin-top: 40px; font-size: 13px; opacity: 0.7; }
+
+    /* ── Layout ── */
+    .container { max-width: 900px; margin: 0 auto; padding: 0 24px 80px; }
+
+    /* ── TOC ── */
+    .toc {
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: 12px;
+      padding: 32px 36px;
+      margin: 48px 0 40px;
+    }
+    .toc h2 { font-size: 18px; color: var(--primary); margin-bottom: 20px; font-weight: 700; }
+    .toc ol { list-style: none; counter-reset: toc; }
+    .toc ol li {
+      counter-increment: toc;
+      padding: 6px 0;
+      border-bottom: 1px dashed var(--gray-200);
+    }
+    .toc ol li:last-child { border-bottom: none; }
+    .toc ol li::before {
+      content: counter(toc) ".";
+      font-weight: 700;
+      color: var(--primary-light);
+      margin-right: 10px;
+      min-width: 24px;
+      display: inline-block;
+    }
+    .toc ol li a { color: var(--gray-700); text-decoration: none; }
+    .toc ol li a:hover { color: var(--primary); }
+
+    /* ── Sections ── */
+    section { margin-bottom: 56px; }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--primary-light);
+    }
+    .section-number {
+      background: var(--primary);
+      color: #fff;
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 16px;
+      flex-shrink: 0;
+    }
+    .section-header h2 { font-size: 22px; font-weight: 700; color: var(--primary-dark); }
+
+    h3 { font-size: 17px; font-weight: 700; color: var(--gray-800); margin: 28px 0 10px; }
+    p { margin-bottom: 12px; color: var(--gray-700); }
+
+    /* ── Steps ── */
+    .steps { list-style: none; counter-reset: step; margin: 16px 0; }
+    .steps li {
+      counter-increment: step;
+      display: flex;
+      gap: 14px;
+      margin-bottom: 14px;
+      align-items: flex-start;
+    }
+    .steps li::before {
+      content: counter(step);
+      background: var(--primary-light);
+      color: #fff;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* ── Callout boxes ── */
+    .callout {
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin: 20px 0;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .callout-icon { font-size: 20px; flex-shrink: 0; line-height: 1.4; }
+    .callout.info    { background: #f5f3ff; border-left: 4px solid #8b5cf6; }
+    .callout.warning { background: #fffbeb; border-left: 4px solid #f59e0b; }
+    .callout.success { background: #f0fdf4; border-left: 4px solid #22c55e; }
+    .callout.danger  { background: #fef2f2; border-left: 4px solid #ef4444; }
+    .callout p { margin: 0; }
+
+    /* ── Tags ── */
+    .tag {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .tag-purple { background: #ede9fe; color: #6d28d9; }
+    .tag-blue   { background: #dbeafe; color: #1d4ed8; }
+    .tag-green  { background: #dcfce7; color: #15803d; }
+    .tag-orange { background: #ffedd5; color: #c2410c; }
+    .tag-gray   { background: #f1f5f9; color: #475569; }
+    .tag-red    { background: #fef2f2; color: #dc2626; }
+
+    /* ── Tables ── */
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+    th { background: var(--primary); color: #fff; padding: 10px 14px; text-align: left; }
+    td { padding: 9px 14px; border-bottom: 1px solid var(--gray-200); }
+    tr:nth-child(even) td { background: var(--gray-50); }
+    .check { color: var(--success); font-weight: 700; }
+    .cross { color: var(--danger); font-weight: 700; }
+
+    /* ── Screen mockup ── */
+    .screen-box {
+      background: var(--gray-900);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 20px 0;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    }
+    .screen-bar {
+      background: var(--gray-800);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .screen-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .screen-dot.red   { background: #ef4444; }
+    .screen-dot.yel   { background: #f59e0b; }
+    .screen-dot.grn   { background: #22c55e; }
+    .screen-url {
+      flex: 1;
+      background: var(--gray-700);
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 12px;
+      color: var(--gray-400);
+      margin-left: 8px;
+    }
+    .screen-content {
+      padding: 28px 32px;
+      background: #fff;
+      font-size: 14px;
+    }
+
+    /* ── Cards ── */
+    .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+    .card-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 16px 0; }
+    .card {
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+    .card .card-icon { font-size: 28px; margin-bottom: 8px; }
+    .card h4 { font-size: 14px; font-weight: 700; color: var(--gray-800); margin-bottom: 6px; }
+    .card p { font-size: 13px; color: var(--gray-600); margin: 0; }
+
+    /* ── Role hierarchy ── */
+    .role-hierarchy {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin: 16px 0;
+    }
+    .role-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border-left: 4px solid;
+    }
+    .role-item .role-name { font-weight: 700; font-size: 14px; min-width: 130px; }
+    .role-item .role-desc { font-size: 13px; color: var(--gray-600); }
+
+    /* ── Permission matrix ── */
+    .perm-matrix th:not(:first-child) { text-align: center; width: 80px; }
+    .perm-matrix td:not(:first-child) { text-align: center; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      color: var(--gray-400);
+      font-size: 13px;
+      padding: 32px 24px;
+      border-top: 1px solid var(--gray-200);
+      margin-top: 40px;
+    }
+
+    @media print {
+      body { background: #fff; }
+      .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════ COVER ══════════════════ -->
+<div class="cover">
+  <div class="badge">Manual de Usuario</div>
+  <h1>FileCenter<br/><span>Guía del Superadmin</span></h1>
+  <div class="subtitle">Administración completa del sistema: empresas, usuarios, permisos, reportes y auditoría</div>
+  <div class="meta">Versión 1.0 &nbsp;·&nbsp; Mayo 2026 &nbsp;·&nbsp; Rol: Superadmin</div>
+</div>
+
+<div class="container">
+
+  <!-- ══════════════════ TOC ══════════════════ -->
+  <div class="toc">
+    <h2>📋 Contenido</h2>
+    <ol>
+      <li><a href="#s1">Visión general del rol Superadmin</a></li>
+      <li><a href="#s2">Inicio de sesión y autenticación de dos factores (2FA)</a></li>
+      <li><a href="#s3">Panel principal (Dashboard)</a></li>
+      <li><a href="#s4">Gestión de empresas</a></li>
+      <li><a href="#s5">Gestión de usuarios</a></li>
+      <li><a href="#s6">Gestión de carpetas</a></li>
+      <li><a href="#s7">Gestión de archivos</a></li>
+      <li><a href="#s8">Sistema de permisos</a></li>
+      <li><a href="#s9">Solicitudes de acceso</a></li>
+      <li><a href="#s10">Solicitudes de subida (aprobación de archivos)</a></li>
+      <li><a href="#s11">Reportes y auditoría</a></li>
+      <li><a href="#s12">Papelera de reciclaje</a></li>
+      <li><a href="#s13">Notificaciones</a></li>
+      <li><a href="#s14">Buenas prácticas y recomendaciones</a></li>
+    </ol>
+  </div>
+
+  <!-- ══════════════════ S1 ══════════════════ -->
+  <section id="s1">
+    <div class="section-header">
+      <div class="section-number">1</div>
+      <h2>Visión general del rol Superadmin</h2>
+    </div>
+
+    <p>
+      El <strong>Superadmin</strong> es el rol con mayor nivel de acceso en FileCenter. Tiene visibilidad y control total sobre
+      todas las empresas, usuarios, carpetas, archivos y configuraciones del sistema. Es el único rol que puede gestionar
+      múltiples empresas desde una sola cuenta y acceder a todos los reportes de auditoría.
+    </p>
+
+    <div class="callout danger">
+      <div class="callout-icon">🔴</div>
+      <p><strong>Responsabilidad máxima:</strong> Las acciones del Superadmin afectan a toda la organización. Actúa siempre con cautela, especialmente al eliminar usuarios, carpetas o empresas. Estas acciones pueden ser irreversibles.</p>
+    </div>
+
+    <h3>Jerarquía de roles del sistema</h3>
+    <div class="role-hierarchy">
+      <div class="role-item" style="background:#f5f3ff;border-color:#7c3aed">
+        <div class="role-name" style="color:#7c3aed">⭐ Superadmin</div>
+        <div class="role-desc">Acceso total al sistema. Gestiona todas las empresas, usuarios y configuraciones globales.</div>
+      </div>
+      <div class="role-item" style="background:#eff6ff;border-color:#3b82f6">
+        <div class="role-name" style="color:#1d4ed8">👁 Aux_QHSE</div>
+        <div class="role-desc">Lectura global de todos los datos y exportación de reportes. Sin capacidad de modificar permisos.</div>
+      </div>
+      <div class="role-item" style="background:#f0fdf4;border-color:#16a34a">
+        <div class="role-name" style="color:#15803d">🏢 Admin</div>
+        <div class="role-desc">Gestión completa a nivel de empresa: usuarios, carpetas, permisos, solicitudes.</div>
+      </div>
+      <div class="role-item" style="background:#fffbeb;border-color:#d97706">
+        <div class="role-name" style="color:#b45309">👔 Gerente</div>
+        <div class="role-desc">Aprueba solicitudes y gestiona permisos limitados en su empresa.</div>
+      </div>
+      <div class="role-item" style="background:#fff7ed;border-color:#ea580c">
+        <div class="role-name" style="color:#ea580c">🛠 Auxiliar</div>
+        <div class="role-desc">Puede crear carpetas y subir archivos con permisos explícitos asignados.</div>
+      </div>
+      <div class="role-item" style="background:#f8fafc;border-color:#94a3b8">
+        <div class="role-name" style="color:#475569">👤 Empleado</div>
+        <div class="role-desc">Acceso mínimo. Solo carpetas/archivos asignados. Puede solicitar acceso.</div>
+      </div>
+    </div>
+
+    <h3>Capacidades exclusivas del Superadmin</h3>
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">🏢</div>
+        <h4>Gestión de empresas</h4>
+        <p>Crear, editar y desactivar empresas en el sistema.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">👥</div>
+        <h4>Gestión global de usuarios</h4>
+        <p>Crear usuarios en cualquier empresa, asignar roles, activar/desactivar cuentas.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <h4>Reportes de auditoría</h4>
+        <p>Ver y exportar el historial completo de actividad de todos los usuarios.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔑</div>
+        <h4>Permisos globales</h4>
+        <p>Configurar permisos a nivel de rol para todas las empresas simultáneamente.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">✅</div>
+        <h4>Aprobación de solicitudes</h4>
+        <p>Revisar y resolver cualquier solicitud de acceso de cualquier empresa.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🌐</div>
+        <h4>Acceso multi-empresa</h4>
+        <p>Ver carpetas y archivos de todas las empresas sin restricción.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ S2 ══════════════════ -->
+  <section id="s2">
+    <div class="section-header">
+      <div class="section-number">2</div>
+      <h2>Inicio de sesión y autenticación de dos factores (2FA)</h2>
+    </div>
+
+    <h3>Ingresar al sistema</h3>
+    <ol class="steps">
+      <li>Abre el navegador y accede a la URL de FileCenter de tu organización.</li>
+      <li>Ingresa tu <strong>correo electrónico</strong> y <strong>contraseña</strong> de Superadmin.</li>
+      <li>Haz clic en <strong>"Iniciar sesión"</strong>.</li>
+      <li>El sistema solicitará el código de 6 dígitos de tu app de autenticación (Google Authenticator / Authy).</li>
+      <li>Ingresa el código y confirma. Accederás al Dashboard del Superadmin.</li>
+    </ol>
+
+    <div class="callout danger">
+      <div class="callout-icon">🛡️</div>
+      <p><strong>La 2FA es obligatoria para el Superadmin.</strong> Dado el nivel de acceso de esta cuenta, la autenticación de dos factores debe estar siempre activa. Nunca la desactives. Si pierdes acceso a tu autenticador, contacta al equipo técnico de infraestructura.</p>
+    </div>
+
+    <div class="callout warning">
+      <div class="callout-icon">⚠️</div>
+      <p><strong>Bloqueo de cuenta:</strong> Tras <strong>5 intentos fallidos</strong> de inicio de sesión, la cuenta se bloqueará 15 minutos automáticamente. Como Superadmin puedes desbloquear cuentas de otros usuarios; para desbloquear tu propia cuenta, contacta al equipo técnico.</p>
+    </div>
+
+    <h3>Configurar o regenerar 2FA</h3>
+    <ol class="steps">
+      <li>Ve a <strong>Mi perfil → Seguridad → Autenticación de dos factores</strong>.</li>
+      <li>Si necesitas regenerar (cambio de dispositivo), desactiva primero el 2FA actual y vuélvelo a activar.</li>
+      <li>Escanea el nuevo código QR con la app autenticadora.</li>
+      <li>Guarda los códigos de respaldo en un lugar seguro y cifrado.</li>
+    </ol>
+  </section>
+
+  <!-- ══════════════════ S3 ══════════════════ -->
+  <section id="s3">
+    <div class="section-header">
+      <div class="section-number">3</div>
+      <h2>Panel principal (Dashboard)</h2>
+    </div>
+
+    <p>El Dashboard del Superadmin ofrece una vista global de todo el sistema: estadísticas de empresas, usuarios, archivos y actividad reciente.</p>
+
+    <div class="screen-box">
+      <div class="screen-bar">
+        <div class="screen-dot red"></div>
+        <div class="screen-dot yel"></div>
+        <div class="screen-dot grn"></div>
+        <div class="screen-url">filecenter.tuempresa.com/dashboard</div>
+      </div>
+      <div class="screen-content">
+        <div style="display:flex;gap:16px">
+          <div style="width:190px;background:#f8fafc;border-radius:8px;padding:16px 12px;font-size:13px;flex-shrink:0">
+            <div style="font-weight:800;color:#7c3aed;margin-bottom:16px;font-size:14px">⭐ Superadmin</div>
+            <div style="color:#334155;padding:6px 8px;border-radius:6px;background:#ede9fe;margin-bottom:4px">🏠 Dashboard</div>
+            <div style="color:#64748b;padding:6px 8px;margin-bottom:4px">🏢 Empresas</div>
+            <div style="color:#64748b;padding:6px 8px;margin-bottom:4px">👥 Usuarios</div>
+            <div style="color:#64748b;padding:6px 8px;margin-bottom:4px">📁 Carpetas</div>
+            <div style="color:#64748b;padding:6px 8px;margin-bottom:4px">📄 Archivos</div>
+            <div style="color:#64748b;padding:6px 8px;margin-bottom:4px">🔑 Permisos globales</div>
+            <div style="color:#64748b;padding:6px 8px;margin-bottom:4px">📨 Solicitudes</div>
+            <div style="color:#64748b;padding:6px 8px;margin-bottom:4px">📊 Reportes</div>
+            <div style="color:#64748b;padding:6px 8px;margin-bottom:4px">🔔 Notificaciones</div>
+            <div style="color:#64748b;padding:6px 8px">🗑 Papelera</div>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:17px;font-weight:700;color:#1e293b;margin-bottom:16px">Panel Superadmin</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+              <div style="background:#f5f3ff;border-radius:8px;padding:12px;text-align:center">
+                <div style="font-size:20px;font-weight:800;color:#7c3aed">5</div>
+                <div style="font-size:11px;color:#64748b">Empresas activas</div>
+              </div>
+              <div style="background:#eff6ff;border-radius:8px;padding:12px;text-align:center">
+                <div style="font-size:20px;font-weight:800;color:#1d4ed8">148</div>
+                <div style="font-size:11px;color:#64748b">Usuarios totales</div>
+              </div>
+              <div style="background:#f0fdf4;border-radius:8px;padding:12px;text-align:center">
+                <div style="font-size:20px;font-weight:800;color:#16a34a">2,341</div>
+                <div style="font-size:11px;color:#64748b">Archivos en sistema</div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+              <div style="background:#fffbeb;border-radius:8px;padding:12px;text-align:center">
+                <div style="font-size:18px;font-weight:800;color:#d97706">7</div>
+                <div style="font-size:11px;color:#64748b">Solicitudes pendientes</div>
+              </div>
+              <div style="background:#fef2f2;border-radius:8px;padding:12px;text-align:center">
+                <div style="font-size:18px;font-weight:800;color:#dc2626">2</div>
+                <div style="font-size:11px;color:#64748b">Cuentas bloqueadas</div>
+              </div>
+            </div>
+            <div style="font-size:12px;font-weight:600;color:#334155;margin-bottom:6px">Actividad reciente (global)</div>
+            <div style="font-size:11px;color:#64748b;border-left:3px solid #8b5cf6;padding-left:8px;margin-bottom:5px">Admin empresa A creó usuario "María López" · hace 30 min</div>
+            <div style="font-size:11px;color:#64748b;border-left:3px solid #ef4444;padding-left:8px;margin-bottom:5px">Login fallido para "pedro@empresa.com" (3 intentos) · hace 1h</div>
+            <div style="font-size:11px;color:#64748b;border-left:3px solid #22c55e;padding-left:8px">Solicitud #42 aprobada por Gerente Torres · hace 2h</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Elementos del Dashboard</h3>
+    <ul style="margin-left:24px;color:var(--gray-700)">
+      <li style="margin-bottom:8px"><strong>Tarjetas de resumen global:</strong> Empresas activas, total de usuarios, archivos en sistema, solicitudes pendientes y cuentas bloqueadas.</li>
+      <li style="margin-bottom:8px"><strong>Feed de actividad global:</strong> Últimas acciones de todos los usuarios y empresas en tiempo real.</li>
+      <li style="margin-bottom:8px"><strong>Menú lateral extendido:</strong> Acceso a todas las secciones incluyendo Empresas, Permisos globales y Reportes (exclusivos del Superadmin).</li>
+      <li style="margin-bottom:8px"><strong>Alertas de cuentas bloqueadas:</strong> Acceso directo para desbloquear usuarios afectados por intentos de login.</li>
+    </ul>
+  </section>
+
+  <!-- ══════════════════ S4 ══════════════════ -->
+  <section id="s4">
+    <div class="section-header">
+      <div class="section-number">4</div>
+      <h2>Gestión de empresas</h2>
+    </div>
+
+    <p>La sección <strong>Empresas</strong> es exclusiva del Superadmin. Permite crear y administrar las organizaciones que usan FileCenter. Cada empresa tiene sus propias carpetas, usuarios y configuraciones.</p>
+
+    <div class="callout info">
+      <div class="callout-icon">ℹ️</div>
+      <p>Existe una empresa especial llamada <strong>"Corporativo"</strong> cuyas carpetas son visibles para todos los usuarios de todas las empresas. Úsala para documentos compartidos a nivel organizacional.</p>
+    </div>
+
+    <h3>Crear una nueva empresa</h3>
+    <ol class="steps">
+      <li>Ve a <strong>Empresas</strong> en el menú lateral y haz clic en <strong>"Nueva empresa"</strong>.</li>
+      <li>Completa los campos requeridos:
+        <ul style="margin-left:20px;margin-top:6px">
+          <li><strong>Nombre de la empresa:</strong> Nombre oficial de la organización.</li>
+          <li><strong>RFC / Identificador fiscal:</strong> Código único de la empresa.</li>
+          <li><strong>Estado:</strong> Activa (accesible) o Inactiva (bloqueada temporalmente).</li>
+        </ul>
+      </li>
+      <li>Haz clic en <strong>"Guardar"</strong>. La empresa se crea con estructura base vacía.</li>
+      <li>Asigna al menos un usuario con rol <strong>Admin</strong> a la nueva empresa.</li>
+    </ol>
+
+    <h3>Editar una empresa</h3>
+    <ol class="steps">
+      <li>En la lista de Empresas, localiza la empresa y haz clic en el ícono de edición ✏️.</li>
+      <li>Modifica los campos necesarios (nombre, estado, etc.).</li>
+      <li>Haz clic en <strong>"Actualizar"</strong> para guardar los cambios.</li>
+    </ol>
+
+    <h3>Desactivar una empresa</h3>
+    <ol class="steps">
+      <li>Edita la empresa y cambia su estado a <strong>"Inactiva"</strong>.</li>
+      <li>Todos los usuarios de esa empresa perderán acceso hasta que la reactives.</li>
+      <li>Los datos (carpetas, archivos) se conservan sin cambios.</li>
+    </ol>
+
+    <div class="callout warning">
+      <div class="callout-icon">⚠️</div>
+      <p>Desactivar una empresa bloquea el acceso de <strong>todos sus usuarios</strong> de forma inmediata. Úsalo con precaución y avisa a los afectados antes de realizarlo.</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ S5 ══════════════════ -->
+  <section id="s5">
+    <div class="section-header">
+      <div class="section-number">5</div>
+      <h2>Gestión de usuarios</h2>
+    </div>
+
+    <p>Desde la sección <strong>Usuarios</strong>, el Superadmin puede crear, editar, asignar roles y gestionar el estado de cualquier usuario en cualquier empresa del sistema.</p>
+
+    <h3>Crear un nuevo usuario</h3>
+    <ol class="steps">
+      <li>Ve a <strong>Usuarios → Nuevo usuario</strong>.</li>
+      <li>Completa el formulario:
+        <ul style="margin-left:20px;margin-top:6px">
+          <li><strong>Nombre completo</strong></li>
+          <li><strong>Correo electrónico</strong> (será el nombre de usuario para el login)</li>
+          <li><strong>Contraseña temporal</strong> (el usuario deberá cambiarla al primer login)</li>
+          <li><strong>Empresa</strong> a la que pertenece</li>
+          <li><strong>Rol</strong>: Superadmin, Aux_QHSE, Admin, Gerente, Auxiliar o Empleado</li>
+          <li><strong>Estado</strong>: Activo / Inactivo</li>
+        </ul>
+      </li>
+      <li>Haz clic en <strong>"Crear usuario"</strong>. El sistema enviará un correo de bienvenida con instrucciones.</li>
+    </ol>
+
+    <h3>Editar un usuario existente</h3>
+    <ol class="steps">
+      <li>En la lista de Usuarios, busca al usuario por nombre o correo.</li>
+      <li>Haz clic en el ícono de edición ✏️.</li>
+      <li>Modifica los campos necesarios (nombre, correo, rol, empresa, estado).</li>
+      <li>Haz clic en <strong>"Guardar cambios"</strong>.</li>
+    </ol>
+
+    <div class="callout warning">
+      <div class="callout-icon">⚠️</div>
+      <p>Cambiar el rol de un usuario tiene efecto inmediato. Si reduces sus privilegios (ej. de Admin a Empleado), perderá acceso a las funciones correspondientes en su próxima acción en el sistema.</p>
+    </div>
+
+    <h3>Desbloquear una cuenta bloqueada</h3>
+    <ol class="steps">
+      <li>Ve a <strong>Usuarios</strong> y filtra por estado <strong>"Bloqueados"</strong>.</li>
+      <li>Localiza al usuario afectado.</li>
+      <li>Haz clic en <strong>"Desbloquear"</strong> junto a su nombre.</li>
+      <li>El contador de intentos se resetea y el usuario puede iniciar sesión nuevamente.</li>
+    </ol>
+
+    <h3>Desactivar o eliminar un usuario</h3>
+    <table>
+      <thead><tr><th>Acción</th><th>Efecto</th><th>¿Reversible?</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Desactivar</strong></td>
+          <td>El usuario no puede iniciar sesión. Sus datos y archivos se conservan.</td>
+          <td class="check">✔ Sí</td>
+        </tr>
+        <tr>
+          <td><strong>Eliminar</strong></td>
+          <td>El usuario se elimina con soft-delete. Sus archivos quedan huérfanos asignados al admin.</td>
+          <td class="cross">✘ No recomendado</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout danger">
+      <div class="callout-icon">🗑️</div>
+      <p>Prefiere <strong>desactivar</strong> al usuario en lugar de eliminarlo. La eliminación puede generar inconsistencias en el historial de auditoría y los archivos que el usuario haya subido.</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ S6 ══════════════════ -->
+  <section id="s6">
+    <div class="section-header">
+      <div class="section-number">6</div>
+      <h2>Gestión de carpetas</h2>
+    </div>
+
+    <p>Las carpetas son la unidad organizativa principal de FileCenter. El Superadmin puede crear, configurar y gestionar carpetas en cualquier empresa.</p>
+
+    <h3>Crear una carpeta</h3>
+    <ol class="steps">
+      <li>Navega a <strong>Carpetas</strong> y selecciona la empresa donde deseas crear la carpeta.</li>
+      <li>Haz clic en <strong>"Nueva carpeta"</strong>.</li>
+      <li>Completa los campos:
+        <ul style="margin-left:20px;margin-top:6px">
+          <li><strong>Nombre:</strong> Descriptivo y claro.</li>
+          <li><strong>Carpeta padre:</strong> Si es subcarpeta, selecciona la carpeta padre. Si es raíz, déjalo vacío.</li>
+          <li><strong>Tipo de acceso:</strong> Normal, Solo lectura, Con descarga.</li>
+          <li><strong>¿Es pública?:</strong> Si está activo, todos los empleados de la empresa pueden verla.</li>
+          <li><strong>¿Requiere aprobación de subida?:</strong> Si está activo, los archivos que suban empleados/auxiliares necesitan aprobación antes de publicarse.</li>
+        </ul>
+      </li>
+      <li>Haz clic en <strong>"Crear carpeta"</strong>.</li>
+    </ol>
+
+    <h3>Configuraciones de una carpeta</h3>
+    <table>
+      <thead><tr><th>Configuración</th><th>Descripción</th><th>Impacto</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="tag tag-gray">Normal</span></td>
+          <td>Acceso estándar según permisos asignados</td>
+          <td>Lectura, subida y descarga según permisos individuales</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-blue">Solo lectura</span></td>
+          <td>Nadie puede subir ni modificar archivos</td>
+          <td>Protege carpetas de archivo histórico</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-green">Con descarga</span></td>
+          <td>Los usuarios con acceso pueden descargar</td>
+          <td>Habilita el botón de descarga para usuarios autorizados</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-purple">Pública</span></td>
+          <td>Visible para todos los empleados de la empresa</td>
+          <td>No requiere permiso explícito para ver su contenido</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-orange">Requiere aprobación</span></td>
+          <td>Los archivos subidos pasan por revisión</td>
+          <td>Admin/Gerente debe aprobar antes de publicar</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Editar o eliminar una carpeta</h3>
+    <ol class="steps">
+      <li>Ubica la carpeta en el explorador.</li>
+      <li>Haz clic en el menú de opciones (tres puntos ···) junto al nombre de la carpeta.</li>
+      <li>Selecciona <strong>"Editar"</strong> para cambiar nombre, tipo de acceso u otras propiedades.</li>
+      <li>Para eliminar, selecciona <strong>"Eliminar"</strong>. La carpeta irá a la papelera.</li>
+    </ol>
+
+    <div class="callout danger">
+      <div class="callout-icon">⚠️</div>
+      <p>Eliminar una carpeta moverá a la papelera <strong>todos los archivos y subcarpetas</strong> que contiene. Si hay archivos que otros usuarios necesitan, avísales antes de proceder.</p>
+    </div>
+
+    <h3>Herencia de permisos en subcarpetas</h3>
+    <p>Cuando creas una subcarpeta con la opción <strong>"Heredar permisos"</strong> activa, automáticamente adopta los mismos permisos que la carpeta padre. Esto simplifica la administración de estructuras jerárquicas grandes.</p>
+  </section>
+
+  <!-- ══════════════════ S7 ══════════════════ -->
+  <section id="s7">
+    <div class="section-header">
+      <div class="section-number">7</div>
+      <h2>Gestión de archivos</h2>
+    </div>
+
+    <p>El Superadmin puede realizar cualquier operación sobre cualquier archivo del sistema, independientemente de la empresa o los permisos de la carpeta.</p>
+
+    <h3>Subir un archivo</h3>
+    <ol class="steps">
+      <li>Navega hasta la carpeta destino.</li>
+      <li>Haz clic en <strong>"Subir archivo"</strong>.</li>
+      <li>Selecciona el archivo (PDF, DOCX, DOC, XLSX, XLS – máximo 50 MB).</li>
+      <li>Añade una descripción opcional.</li>
+      <li>Haz clic en <strong>"Confirmar subida"</strong>. El archivo se publica de inmediato.</li>
+    </ol>
+
+    <div class="callout info">
+      <div class="callout-icon">ℹ️</div>
+      <p>Como Superadmin, tus subidas <strong>nunca requieren aprobación</strong>, incluso en carpetas con "Requiere aprobación de subida" activado. Tu archivo se publica directamente.</p>
+    </div>
+
+    <h3>Editar metadatos de un archivo</h3>
+    <ol class="steps">
+      <li>Haz clic en el nombre del archivo para abrir su panel de detalles.</li>
+      <li>Haz clic en <strong>"Editar"</strong>.</li>
+      <li>Modifica el nombre o la descripción del archivo.</li>
+      <li>Guarda los cambios.</li>
+    </ol>
+
+    <h3>Mover un archivo a otra carpeta</h3>
+    <ol class="steps">
+      <li>En el panel de detalles del archivo, haz clic en <strong>"Mover"</strong>.</li>
+      <li>Se abrirá un selector de carpetas. Navega hasta el destino.</li>
+      <li>Confirma el movimiento. El archivo ya no estará en la carpeta original.</li>
+    </ol>
+
+    <h3>Historial de versiones</h3>
+    <p>FileCenter mantiene versiones anteriores de cada archivo. Para gestionar versiones:</p>
+    <ol class="steps">
+      <li>Abre el panel de detalles del archivo.</li>
+      <li>Ve a la pestaña <strong>"Versiones"</strong>.</li>
+      <li>Puedes descargar cualquier versión anterior o restaurarla como versión actual.</li>
+    </ol>
+
+    <h3>Eliminar un archivo</h3>
+    <ol class="steps">
+      <li>En el archivo, haz clic en el menú ··· y selecciona <strong>"Eliminar"</strong>.</li>
+      <li>El archivo irá a la <strong>papelera</strong> (soft delete). Puede recuperarse desde ahí.</li>
+      <li>Para eliminación permanente, ve a la <strong>Papelera</strong> y elimínalo definitivamente.</li>
+    </ol>
+  </section>
+
+  <!-- ══════════════════ S8 ══════════════════ -->
+  <section id="s8">
+    <div class="section-header">
+      <div class="section-number">8</div>
+      <h2>Sistema de permisos</h2>
+    </div>
+
+    <p>FileCenter usa un sistema de permisos granular de 5 dimensiones por carpeta. El Superadmin puede configurar permisos a nivel global (por rol) o a nivel específico (por usuario).</p>
+
+    <h3>Las 5 dimensiones de permiso por carpeta</h3>
+    <table class="perm-matrix">
+      <thead>
+        <tr>
+          <th>Permiso</th>
+          <th>Leer</th>
+          <th>Subir</th>
+          <th>Editar</th>
+          <th>Borrar</th>
+          <th>Descargar</th>
+          <th>Heredar</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Descripción</td>
+          <td>Ver carpeta y archivos</td>
+          <td>Subir nuevos archivos</td>
+          <td>Modificar archivos existentes</td>
+          <td>Enviar a papelera</td>
+          <td>Descargar archivos</td>
+          <td>Propagar a subcarpetas</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Jerarquía de resolución de permisos</h3>
+    <p>Cuando el sistema determina si un usuario puede hacer algo en una carpeta, evalúa en este orden de prioridad:</p>
+    <div class="role-hierarchy">
+      <div class="role-item" style="background:#f5f3ff;border-color:#7c3aed">
+        <div class="role-name" style="color:#7c3aed;font-size:13px">1° Permiso de usuario</div>
+        <div class="role-desc">Permiso asignado directamente a ese usuario específico para esa carpeta. <strong>Máxima prioridad.</strong></div>
+      </div>
+      <div class="role-item" style="background:#eff6ff;border-color:#3b82f6">
+        <div class="role-name" style="color:#1d4ed8;font-size:13px">2° Rol + Empresa</div>
+        <div class="role-desc">Permiso para ese rol dentro de esa empresa específica.</div>
+      </div>
+      <div class="role-item" style="background:#f0fdf4;border-color:#16a34a">
+        <div class="role-name" style="color:#15803d;font-size:13px">3° Rol global</div>
+        <div class="role-desc">Permiso asignado al rol en toda la plataforma (permisos globales).</div>
+      </div>
+      <div class="role-item" style="background:#f8fafc;border-color:#94a3b8">
+        <div class="role-name" style="color:#475569;font-size:13px">4° Herencia de padre</div>
+        <div class="role-desc">Si ninguno aplica y la carpeta padre tiene "Heredar" activo, se usan los permisos del padre.</div>
+      </div>
+    </div>
+
+    <h3>Configurar permisos globales (por rol)</h3>
+    <ol class="steps">
+      <li>Ve a <strong>Permisos globales</strong> en el menú lateral.</li>
+      <li>Selecciona el <strong>rol</strong> al que deseas configurar permisos.</li>
+      <li>Selecciona la <strong>carpeta</strong> (o aplica a todas).</li>
+      <li>Marca o desmarca los permisos: Leer, Subir, Editar, Borrar, Descargar.</li>
+      <li>Activa <strong>"Heredar"</strong> si deseas que los permisos se propaguen a subcarpetas.</li>
+      <li>Haz clic en <strong>"Guardar permisos"</strong>.</li>
+    </ol>
+
+    <h3>Configurar permisos específicos para un usuario</h3>
+    <ol class="steps">
+      <li>Navega hasta la <strong>carpeta</strong> en cuestión.</li>
+      <li>En el menú de la carpeta, haz clic en <strong>"Gestionar permisos"</strong>.</li>
+      <li>Busca el usuario por nombre o correo y haz clic en <strong>"Agregar usuario"</strong>.</li>
+      <li>Configura los 5 permisos para ese usuario en esa carpeta.</li>
+      <li>Haz clic en <strong>"Guardar"</strong>. El cambio aplica de inmediato.</li>
+    </ol>
+
+    <div class="callout info">
+      <div class="callout-icon">⚡</div>
+      <p>Los permisos se almacenan en caché por <strong>5 minutos</strong> para mejorar el rendimiento. Si cambias permisos y el usuario ya está navegando, puede que tarde hasta 5 minutos en notar el cambio.</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ S9 ══════════════════ -->
+  <section id="s9">
+    <div class="section-header">
+      <div class="section-number">9</div>
+      <h2>Solicitudes de acceso</h2>
+    </div>
+
+    <p>Los empleados y usuarios pueden solicitar acceso a carpetas o archivos a los que no tienen permiso. Como Superadmin, puedes ver y resolver <strong>todas las solicitudes</strong> del sistema.</p>
+
+    <h3>Ver solicitudes pendientes</h3>
+    <ol class="steps">
+      <li>Ve a <strong>Solicitudes → Solicitudes de acceso</strong>.</li>
+      <li>Verás el listado de todas las solicitudes activas filtradas por estado.</li>
+      <li>Usa los filtros para ver por empresa, tipo, fecha o estado.</li>
+    </ol>
+
+    <h3>Aprobar una solicitud</h3>
+    <ol class="steps">
+      <li>Haz clic en la solicitud para ver el detalle: quién la envía, qué carpeta/archivo solicita, tipo de acceso y motivo.</li>
+      <li>Revisa el motivo y evalúa si el acceso es apropiado.</li>
+      <li>Opcionalmente, define una <strong>fecha de expiración</strong> si el acceso debe ser temporal.</li>
+      <li>Haz clic en <strong>"Aprobar"</strong>. El sistema otorga el permiso y notifica al solicitante por correo y en la app.</li>
+    </ol>
+
+    <h3>Rechazar una solicitud</h3>
+    <ol class="steps">
+      <li>En el detalle de la solicitud, haz clic en <strong>"Rechazar"</strong>.</li>
+      <li>Ingresa el <strong>motivo del rechazo</strong> (visible para el solicitante).</li>
+      <li>Confirma. El solicitante recibirá una notificación con el motivo.</li>
+    </ol>
+
+    <div class="callout success">
+      <div class="callout-icon">✅</div>
+      <p>Cuando apruebas una solicitud de acceso, el permiso se crea automáticamente en el sistema. No necesitas ir manualmente a la sección de permisos a configurarlo.</p>
+    </div>
+
+    <h3>Solicitudes con acceso temporal</h3>
+    <p>Si apruebas con fecha de expiración, el acceso se revoca automáticamente al cumplirse la fecha. No necesitas recordarlo ni hacerlo manualmente.</p>
+  </section>
+
+  <!-- ══════════════════ S10 ══════════════════ -->
+  <section id="s10">
+    <div class="section-header">
+      <div class="section-number">10</div>
+      <h2>Solicitudes de subida (aprobación de archivos)</h2>
+    </div>
+
+    <p>Cuando una carpeta tiene activado <strong>"Requiere aprobación de subida"</strong>, los archivos enviados por empleados y auxiliares quedan en espera hasta que un Admin, Gerente o Superadmin los revise.</p>
+
+    <h3>Ver solicitudes de subida pendientes</h3>
+    <ol class="steps">
+      <li>Ve a <strong>Solicitudes → Solicitudes de subida</strong>.</li>
+      <li>Verás los archivos pendientes de revisión, con el nombre del archivo, quién lo subió, la carpeta destino y la fecha.</li>
+    </ol>
+
+    <h3>Aprobar una subida</h3>
+    <ol class="steps">
+      <li>Haz clic en la solicitud para ver el archivo adjunto y su descripción.</li>
+      <li>Revisa que el archivo cumpla con los requisitos (formato, contenido, carpeta correcta).</li>
+      <li>Haz clic en <strong>"Aprobar"</strong>. El archivo se publica en la carpeta destino y el usuario recibe notificación.</li>
+    </ol>
+
+    <h3>Rechazar una subida</h3>
+    <ol class="steps">
+      <li>En el detalle de la solicitud, haz clic en <strong>"Rechazar"</strong>.</li>
+      <li>Escribe el motivo del rechazo (se enviará al usuario que subió el archivo).</li>
+      <li>Confirma. El archivo temporal se elimina del sistema y el usuario es notificado.</li>
+    </ol>
+
+    <div class="callout warning">
+      <div class="callout-icon">⚠️</div>
+      <p>Al rechazar una subida, el archivo <strong>se elimina permanentemente</strong> del almacenamiento temporal. El usuario deberá volver a subir el archivo corregido si así lo desea.</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ S11 ══════════════════ -->
+  <section id="s11">
+    <div class="section-header">
+      <div class="section-number">11</div>
+      <h2>Reportes y auditoría</h2>
+    </div>
+
+    <p>La sección <strong>Reportes</strong> es exclusiva del Superadmin (y el rol Aux_QHSE en modo solo lectura). Ofrece un registro completo de todas las acciones realizadas en el sistema.</p>
+
+    <h3>Ver el registro de actividad</h3>
+    <ol class="steps">
+      <li>Ve a <strong>Reportes → Actividad</strong>.</li>
+      <li>El sistema muestra el historial con: fecha, usuario, acción, recurso afectado y dirección IP.</li>
+      <li>Usa los filtros para acotar por rango de fechas, empresa, usuario, tipo de acción o tipo de recurso.</li>
+    </ol>
+
+    <h3>Tipos de acciones registradas</h3>
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">🔐</div>
+        <h4>Seguridad</h4>
+        <p>Login exitoso, login fallido, cuenta bloqueada, 2FA activado/desactivado.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📁</div>
+        <h4>Carpetas</h4>
+        <p>Creación, edición, eliminación y restauración de carpetas.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📄</div>
+        <h4>Archivos</h4>
+        <p>Subida, descarga, edición, movimiento y eliminación de archivos.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📨</div>
+        <h4>Solicitudes</h4>
+        <p>Creación, aprobación y rechazo de solicitudes de acceso y subida.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">👥</div>
+        <h4>Usuarios</h4>
+        <p>Creación, edición, activación/desactivación de cuentas.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔑</div>
+        <h4>Permisos</h4>
+        <p>Cambios de permisos en carpetas (otorgar, revocar, modificar).</p>
+      </div>
+    </div>
+
+    <h3>Exportar reportes a CSV</h3>
+    <ol class="steps">
+      <li>Aplica los filtros deseados en la vista de Actividad.</li>
+      <li>Haz clic en el botón <strong>"Exportar CSV"</strong>.</li>
+      <li>Se descargará un archivo .csv con todos los registros filtrados, listo para abrir en Excel.</li>
+    </ol>
+
+    <div class="callout info">
+      <div class="callout-icon">ℹ️</div>
+      <p>El reporte CSV incluye: fecha, hora, usuario, empresa, acción, tipo de recurso, ID del recurso, descripción y dirección IP. Es útil para auditorías de seguridad y cumplimiento normativo.</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ S12 ══════════════════ -->
+  <section id="s12">
+    <div class="section-header">
+      <div class="section-number">12</div>
+      <h2>Papelera de reciclaje</h2>
+    </div>
+
+    <p>La <strong>Papelera</strong> contiene todos los archivos y carpetas eliminados (soft delete) del sistema. El Superadmin puede ver la papelera de todas las empresas.</p>
+
+    <h3>Restaurar un archivo o carpeta</h3>
+    <ol class="steps">
+      <li>Ve a <strong>Papelera</strong> en el menú lateral.</li>
+      <li>Filtra por empresa o tipo de elemento según necesites.</li>
+      <li>Localiza el elemento y haz clic en <strong>"Restaurar"</strong> 🔄.</li>
+      <li>El archivo/carpeta vuelve a su ubicación original.</li>
+    </ol>
+
+    <h3>Eliminar permanentemente</h3>
+    <ol class="steps">
+      <li>En la Papelera, selecciona el elemento.</li>
+      <li>Haz clic en <strong>"Eliminar definitivamente"</strong>.</li>
+      <li>Confirma la acción en el diálogo de advertencia.</li>
+    </ol>
+
+    <div class="callout danger">
+      <div class="callout-icon">🗑️</div>
+      <p>La eliminación permanente es <strong>irreversible</strong>. El archivo o carpeta no podrá recuperarse bajo ninguna circunstancia. Confirma siempre antes de proceder.</p>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-icon">⚙️</div>
+      <p>El sistema ejecuta automáticamente una tarea diaria a las 02:00 hrs para limpiar archivos temporales huérfanos (archivos subidos para aprobación que nunca fueron procesados). Esto mantiene el almacenamiento ordenado.</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ S13 ══════════════════ -->
+  <section id="s13">
+    <div class="section-header">
+      <div class="section-number">13</div>
+      <h2>Notificaciones</h2>
+    </div>
+
+    <p>Como Superadmin, recibes notificaciones sobre eventos críticos del sistema de todas las empresas.</p>
+
+    <h3>Ver notificaciones</h3>
+    <ol class="steps">
+      <li>Haz clic en la <strong>campana 🔔</strong> en la barra superior.</li>
+      <li>El panel muestra las últimas notificaciones sin leer.</li>
+      <li>Haz clic en <strong>"Ver todas"</strong> para acceder al centro de notificaciones completo.</li>
+    </ol>
+
+    <h3>Notificaciones que recibe el Superadmin</h3>
+    <table>
+      <thead><tr><th>Evento</th><th>Prioridad</th><th>Canal</th></tr></thead>
+      <tbody>
+        <tr><td>Nueva solicitud de acceso</td><td><span class="tag tag-orange">Alta</span></td><td>App + correo</td></tr>
+        <tr><td>Nueva solicitud de subida pendiente</td><td><span class="tag tag-orange">Alta</span></td><td>App + correo</td></tr>
+        <tr><td>Cuenta de usuario bloqueada</td><td><span class="tag tag-red">Crítica</span></td><td>App + correo</td></tr>
+        <tr><td>Usuario creado por Admin</td><td><span class="tag tag-blue">Normal</span></td><td>App</td></tr>
+        <tr><td>Empresa desactivada</td><td><span class="tag tag-orange">Alta</span></td><td>App + correo</td></tr>
+        <tr><td>Solicitud aprobada/rechazada por otro admin</td><td><span class="tag tag-gray">Baja</span></td><td>App</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ══════════════════ S14 ══════════════════ -->
+  <section id="s14">
+    <div class="section-header">
+      <div class="section-number">14</div>
+      <h2>Buenas prácticas y recomendaciones</h2>
+    </div>
+
+    <h3>Seguridad de la cuenta</h3>
+    <ul style="margin-left:24px;color:var(--gray-700)">
+      <li style="margin-bottom:8px">Nunca compartas tu contraseña de Superadmin con nadie, incluyendo otros administradores.</li>
+      <li style="margin-bottom:8px">Mantén siempre activa la autenticación de dos factores (2FA).</li>
+      <li style="margin-bottom:8px">Cierra sesión cuando no estés usando el sistema, especialmente en equipos compartidos.</li>
+      <li style="margin-bottom:8px">Cambia tu contraseña cada 90 días como mínimo.</li>
+    </ul>
+
+    <h3>Gestión de usuarios y roles</h3>
+    <ul style="margin-left:24px;color:var(--gray-700)">
+      <li style="margin-bottom:8px">Asigna el rol mínimo necesario para que cada usuario realice su trabajo (principio de mínimo privilegio).</li>
+      <li style="margin-bottom:8px">Cuando un empleado cambia de área o deja la empresa, desactiva su cuenta de inmediato.</li>
+      <li style="margin-bottom:8px">Revisa periódicamente la lista de usuarios activos para detectar cuentas inactivas u obsoletas.</li>
+      <li style="margin-bottom:8px">Prefiere desactivar en lugar de eliminar usuarios para preservar el historial de auditoría.</li>
+    </ul>
+
+    <h3>Gestión de permisos</h3>
+    <ul style="margin-left:24px;color:var(--gray-700)">
+      <li style="margin-bottom:8px">Usa permisos globales por rol para configuraciones masivas y permisos específicos por usuario solo cuando sea necesario.</li>
+      <li style="margin-bottom:8px">Activa "Requiere aprobación de subida" en carpetas con documentos críticos o sensibles.</li>
+      <li style="margin-bottom:8px">Usa accesos temporales (con fecha de expiración) para consultores externos o accesos puntuales.</li>
+      <li style="margin-bottom:8px">Revisa regularmente los permisos asignados, especialmente tras cambios de roles.</li>
+    </ul>
+
+    <h3>Auditoría</h3>
+    <ul style="margin-left:24px;color:var(--gray-700)">
+      <li style="margin-bottom:8px">Exporta y guarda los reportes de actividad mensualmente como respaldo histórico.</li>
+      <li style="margin-bottom:8px">Revisa el reporte de logins fallidos semanalmente para detectar intentos de acceso no autorizados.</li>
+      <li style="margin-bottom:8px">Investiga cualquier patrón inusual en el registro de actividad (descargas masivas, accesos a horas inusuales).</li>
+    </ul>
+
+    <h3>Uso de la carpeta Corporativo</h3>
+    <ul style="margin-left:24px;color:var(--gray-700)">
+      <li style="margin-bottom:8px">Usa la empresa "Corporativo" para documentos de política general, manuales y comunicados que deben ser accesibles por todos.</li>
+      <li style="margin-bottom:8px">Configura esas carpetas como "Solo lectura" para evitar modificaciones no autorizadas.</li>
+    </ul>
+
+    <div class="callout success">
+      <div class="callout-icon">🏆</div>
+      <p><strong>Regla de oro:</strong> Antes de realizar cualquier acción irreversible (eliminar empresa, borrar usuario, eliminar carpeta con contenido), tómate un momento para confirmar que es la acción correcta. El sistema registra todas tus acciones en el log de auditoría.</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  Manual de Usuario – Superadmin &nbsp;·&nbsp; FileCenter Cardumen &nbsp;·&nbsp; v1.0 – Mayo 2026<br/>
+  Este documento contiene información confidencial de administración del sistema.
+</footer>
+
+</body>
+</html>
