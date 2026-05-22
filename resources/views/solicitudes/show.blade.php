@@ -26,6 +26,7 @@
                 <a href="{{ route('solicitudes.index') }}" class="fc-bread-item">Solicitudes</a>
                 <span class="fc-bread-sep">›</span>
                 <span class="fc-bread-current">Solicitud #{{ $solicitud->id }}</span>
+                <span class="fc-badge" style="margin-left:8px;background:{{ $sc['bg'] }};color:{{ $sc['color'] }};font-size:11px;padding:2px 8px;border-radius:20px">{{ $solicitud->status }}</span>
             </div>
 
             @if(session('success'))
@@ -252,18 +253,47 @@
                         </div>
                         <div class="fc-info-body">
 
+                            {{-- Solicitante --}}
+                            @if($solicitud->solicitante)
+                            <div style="padding:12px;background:var(--fc-bg);border-radius:10px;margin-bottom:12px">
+                                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                                    <div style="width:36px;height:36px;border-radius:50%;background:rgba(99,102,241,.15);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#6366f1;flex-shrink:0">
+                                        {{ strtoupper(substr($solicitud->solicitante->nombre,0,1)) }}{{ strtoupper(substr($solicitud->solicitante->paterno,0,1)) }}
+                                    </div>
+                                    <div style="min-width:0">
+                                        <div style="font-size:13px;font-weight:600;color:var(--fc-text)">{{ $solicitud->solicitante->nombre_completo }}</div>
+                                        <div style="font-size:11px;color:var(--fc-text-muted);margin-top:1px">{{ $solicitud->solicitante->rol }}</div>
+                                    </div>
+                                </div>
+                                <div style="font-size:11px;color:var(--fc-text-muted);word-break:break-all">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;margin-right:4px"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                                    {{ $solicitud->solicitante->email }}
+                                </div>
+                                @if($solicitud->solicitante->departamento)
+                                <div style="font-size:11px;color:var(--fc-text-muted);margin-top:3px">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;margin-right:4px"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+                                    {{ $solicitud->solicitante->departamento }}
+                                </div>
+                                @endif
+                            </div>
+                            @else
                             <div class="fc-info-row">
                                 <span class="fc-info-label">Solicitante</span>
-                                <span class="fc-info-val">{{ $solicitud->solicitante->nombre_completo ?? '—' }}</span>
+                                <span class="fc-info-val" style="color:#94a3b8;font-style:italic">Usuario eliminado</span>
                             </div>
+                            @endif
+
                             <div class="fc-info-row">
-                                <span class="fc-info-label">Su empresa</span>
+                                <span class="fc-info-label">Empresa solicitante</span>
                                 <span class="fc-info-val">{{ $solicitud->solicitante->empresa->nombre ?? '—' }}</span>
                             </div>
                             <div class="fc-info-row">
                                 <span class="fc-info-label">Empresa objetivo</span>
                                 <span class="fc-info-val">{{ $solicitud->empresaObjetivo->nombre ?? '—' }}</span>
                             </div>
+
+                            <div style="height:1px;background:var(--fc-border,#e2e8f0);margin:10px 0"></div>
+
                             <div class="fc-info-row">
                                 <span class="fc-info-label">Tipo de acceso</span>
                                 <span class="fc-badge" style="background:rgba(99,102,241,.08);color:#4f46e5">
@@ -277,14 +307,15 @@
                                 </span>
                             </div>
                             <div class="fc-info-row">
-                                <span class="fc-info-label">Solicitado</span>
+                                <span class="fc-info-label">Solicitado el</span>
                                 <span class="fc-info-val">{{ $solicitud->created_at?->format('d/m/Y H:i') ?? '—' }}</span>
                             </div>
 
                             @if($solicitud->status !== 'Pendiente')
+                            <div style="height:1px;background:var(--fc-border,#e2e8f0);margin:10px 0"></div>
                             <div class="fc-info-row">
-                                <span class="fc-info-label">Revisado</span>
-                                <span class="fc-info-val">{{ $solicitud->updated_at?->format('d/m/Y H:i') ?? '—' }}</span>
+                                <span class="fc-info-label">Revisado el</span>
+                                <span class="fc-info-val">{{ $solicitud->revisado_en?->format('d/m/Y H:i') ?? $solicitud->updated_at?->format('d/m/Y H:i') ?? '—' }}</span>
                             </div>
                             @if($solicitud->revisor)
                             <div class="fc-info-row">
@@ -294,8 +325,8 @@
                             @endif
                             @if($solicitud->caduca_en)
                             <div class="fc-info-row">
-                                <span class="fc-info-label">Caduca</span>
-                                <span class="fc-info-val" style="color:#d97706">
+                                <span class="fc-info-label">Caduca el</span>
+                                <span class="fc-info-val" style="color:#d97706;font-weight:600">
                                     {{ \Carbon\Carbon::parse($solicitud->caduca_en)->format('d/m/Y') }}
                                 </span>
                             </div>
