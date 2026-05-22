@@ -30,10 +30,31 @@ class CarpetaController extends Controller
                 ->withCount(['archivos' => fn($q) => $q->where('esta_eliminado', false)])
                 ->whereNull('padre_id')
                 ->where(function ($q) use ($usuario) {
-                    $q->where('empresa_id', $usuario->empresa_id)
-                    ->orWhereHas('empresa', fn($e) => $e->where('es_corporativo', true));
+                    $q
+                    // Propia empresa
+                    ->where('empresa_id', $usuario->empresa_id)
+                    // Corporativo (accesible para todos)
+                    ->orWhereHas('empresa', fn($e) => $e->where('es_corporativo', true))
+                    // Solicitud aprobada para una carpeta raíz específica
+                    ->orWhereIn('id', function ($sub) use ($usuario) {
+                        $sub->select('carpeta_id')
+                            ->from('solicitudes_acceso')
+                            ->where('solicitante_id', $usuario->id)
+                            ->where('status', 'Aprobado')
+                            ->whereNotNull('carpeta_id')
+                            ->where(fn($sq) => $sq->whereNull('caduca_en')->orWhere('caduca_en', '>', now()));
+                    })
+                    // PermisoCarpeta directo al usuario
+                    // (cubre: archivo aprobado → padre de archivo, acceso general → raíces)
+                    ->orWhereIn('id', function ($sub) use ($usuario) {
+                        $sub->select('carpeta_id')
+                            ->from('permisos_de_carpeta')
+                            ->where('usuario_id', $usuario->id)
+                            ->where('puede_leer', true);
+                    });
                 })
                 ->orderByRaw('(SELECT es_corporativo FROM empresas WHERE empresas.id = carpetas.empresa_id) DESC')
+                ->orderBy('empresa_id')
                 ->orderBy('nombre')
                 ->get();
         }

@@ -123,11 +123,19 @@
                                         Carpeta: <strong>{{ $solicitud->archivo->carpeta->nombre ?? '—' }}</strong>
                                     </div>
                                 </div>
-                                @if($solicitud->status === 'Aprobado' && $solicitud->tipo_acceso === 'Descargar')
-                                <a href="{{ route('archivos.descargar', $solicitud->archivo) }}" class="fc-btn fc-btn-success fc-btn-sm">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                                    Descargar
-                                </a>
+                                @if($solicitud->status === 'Aprobado')
+                                <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+                                    @if($solicitud->tipo_acceso === 'Descargar')
+                                    <a href="{{ route('archivos.descargar', $solicitud->archivo) }}" class="fc-btn fc-btn-success fc-btn-sm">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                                        Descargar
+                                    </a>
+                                    @endif
+                                    <a href="{{ route('archivos.ver', $solicitud->archivo) }}" class="fc-btn fc-btn-outline fc-btn-sm">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                                        Ver archivo
+                                    </a>
+                                </div>
                                 @endif
                             </div>
 
@@ -142,6 +150,12 @@
                                         <code>{{ $solicitud->carpeta->path }}</code>
                                     </div>
                                 </div>
+                                @if($solicitud->status === 'Aprobado')
+                                <a href="{{ route('carpetas.show', $solicitud->carpeta) }}" class="fc-btn fc-btn-success fc-btn-sm">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/></svg>
+                                    Ir a la carpeta
+                                </a>
+                                @endif
                             </div>
 
                             @else
@@ -149,14 +163,20 @@
                                 <div style="width:44px;height:44px;border-radius:10px;background:rgba(100,116,139,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="#64748b"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
                                 </div>
-                                <div>
+                                <div style="flex:1">
                                     <div style="font-size:14px;font-weight:600;color:var(--fc-text)">
                                         Acceso general a {{ $solicitud->empresaObjetivo->nombre ?? 'la empresa' }}
                                     </div>
                                     <div style="font-size:12px;color:var(--fc-text-muted);margin-top:2px">
-                                        Sin recurso específico — el solicitante pide acceso a todos los recursos de la empresa
+                                        Sin recurso específico — acceso a todos los recursos de la empresa
                                     </div>
                                 </div>
+                                @if($solicitud->status === 'Aprobado')
+                                <a href="{{ route('carpetas.index') }}" class="fc-btn fc-btn-success fc-btn-sm">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                                    Ver mis carpetas
+                                </a>
+                                @endif
                             </div>
                             @endif
                         </div>
