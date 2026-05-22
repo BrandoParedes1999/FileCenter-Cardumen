@@ -315,11 +315,16 @@ window.FcPoll = (function () {
 
     function actualizarBadges(datos) {
         // Badge de notificaciones no leídas
+        var nn = datos.notif_no_leidas || 0;
         var notifBadge = document.getElementById('fc-notif-badge');
         if (notifBadge) {
-            var nn = datos.notif_no_leidas || 0;
             notifBadge.textContent   = nn > 99 ? '99+' : nn;
             notifBadge.style.display = nn > 0 ? '' : 'none';
+        }
+        var drawerCount = document.getElementById('fc-drawer-count');
+        if (drawerCount) {
+            drawerCount.textContent   = nn > 99 ? '99+' : nn;
+            drawerCount.style.display = nn > 0 ? '' : 'none';
         }
 
         // Badge de subidas pendientes
@@ -384,6 +389,284 @@ if (document.readyState === 'loading') {
 } else {
     FcPoll.iniciar();
 }
+</script>
+
+{{-- ═══════════════════════════════════════════════════════════
+     NOTIFICATION DRAWER
+     ═══════════════════════════════════════════════════════════ --}}
+<style>
+/* ── Drawer backdrop ───────────────────────────────────────── */
+#fc-notif-bd {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 8000;
+    cursor: pointer;
+}
+#fc-notif-bd.open { display: block; }
+
+/* ── Drawer panel ──────────────────────────────────────────── */
+#fc-notif-drawer {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: 380px; max-width: 100vw;
+    background: #0f172a;
+    border-left: 1px solid rgba(255,255,255,.08);
+    box-shadow: -8px 0 40px rgba(0,0,0,.5);
+    z-index: 8100;
+    display: flex; flex-direction: column;
+    transform: translateX(100%);
+    transition: transform .3s cubic-bezier(.4,0,.2,1);
+}
+#fc-notif-drawer.open { transform: translateX(0); }
+
+/* ── Header ────────────────────────────────────────────────── */
+.fc-nd-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 18px 16px 14px;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    flex-shrink: 0;
+}
+.fc-nd-title {
+    font-size: 15px; font-weight: 700; color: #f1f5f9;
+    flex: 1; margin: 0;
+}
+#fc-drawer-count {
+    font-size: 10px; font-weight: 700;
+    background: #ef4444; color: #fff;
+    border-radius: 999px; padding: 1px 7px;
+    display: none;
+}
+.fc-nd-mark-all {
+    background: none; border: 1px solid rgba(99,102,241,.5);
+    color: #a5b4fc; font-size: 11px; font-weight: 600;
+    border-radius: 6px; padding: 4px 10px; cursor: pointer;
+    transition: background .15s, color .15s;
+}
+.fc-nd-mark-all:hover { background: rgba(99,102,241,.2); color: #e0e7ff; }
+.fc-nd-close {
+    background: none; border: none;
+    color: rgba(241,245,249,.4); font-size: 20px; line-height: 1;
+    cursor: pointer; padding: 2px 6px;
+    transition: color .15s;
+}
+.fc-nd-close:hover { color: #f1f5f9; }
+
+/* ── Notification list ─────────────────────────────────────── */
+.fc-nd-list {
+    flex: 1; overflow-y: auto;
+    padding: 8px 0;
+}
+.fc-nd-empty {
+    padding: 40px 24px;
+    text-align: center;
+    color: rgba(241,245,249,.35);
+    font-size: 13px;
+}
+
+/* ── Notification item ─────────────────────────────────────── */
+.fc-nd-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+    transition: background .12s;
+}
+.fc-nd-item:hover { background: rgba(255,255,255,.04); }
+.fc-nd-item.unread { background: rgba(99,102,241,.07); }
+.fc-nd-item.unread:hover { background: rgba(99,102,241,.12); }
+
+.fc-nd-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #6366f1; flex-shrink: 0; margin-top: 5px;
+}
+.fc-nd-item.read .fc-nd-dot { background: transparent; }
+
+.fc-nd-body { flex: 1; min-width: 0; }
+.fc-nd-msg {
+    font-size: 12px; color: #e2e8f0; line-height: 1.45;
+    word-break: break-word;
+}
+.fc-nd-time {
+    font-size: 10px; color: rgba(241,245,249,.35);
+    margin-top: 3px;
+}
+
+.fc-nd-btn-read {
+    background: none; border: 1px solid rgba(255,255,255,.1);
+    color: rgba(241,245,249,.5); font-size: 10px; font-weight: 600;
+    border-radius: 5px; padding: 3px 8px; cursor: pointer;
+    white-space: nowrap; flex-shrink: 0; align-self: center;
+    transition: background .15s, color .15s, border-color .15s;
+}
+.fc-nd-btn-read:hover {
+    background: rgba(99,102,241,.2); color: #e0e7ff;
+    border-color: rgba(99,102,241,.5);
+}
+.fc-nd-item.read .fc-nd-btn-read { display: none; }
+
+/* ── Footer ────────────────────────────────────────────────── */
+.fc-nd-footer {
+    padding: 12px 16px;
+    border-top: 1px solid rgba(255,255,255,.07);
+    flex-shrink: 0;
+}
+.fc-nd-footer a {
+    display: block; text-align: center;
+    font-size: 12px; font-weight: 600; color: #a5b4fc;
+    text-decoration: none;
+    padding: 7px; border-radius: 7px;
+    transition: background .15s;
+}
+.fc-nd-footer a:hover { background: rgba(99,102,241,.15); }
+</style>
+
+{{-- Drawer backdrop --}}
+<div id="fc-notif-bd" onclick="fcNotifDrawer.close()"></div>
+
+{{-- Drawer panel --}}
+<div id="fc-notif-drawer" role="dialog" aria-label="Notificaciones">
+    <div class="fc-nd-header">
+        <span class="fc-nd-title">Notificaciones</span>
+        <span id="fc-drawer-count"></span>
+        <button class="fc-nd-mark-all" onclick="fcNotifDrawer.marcarTodas()">Marcar todas</button>
+        <button class="fc-nd-close" onclick="fcNotifDrawer.close()" aria-label="Cerrar">✕</button>
+    </div>
+
+    <div class="fc-nd-list" id="fc-nd-list">
+        @php
+            $ndItems = Auth::user()->notifications()->latest()->take(15)->get();
+        @endphp
+
+        @forelse($ndItems as $n)
+            @php
+                $nData  = $n->data ?? [];
+                $nMsg   = $nData['mensaje'] ?? ($nData['body'] ?? 'Notificación');
+                $nUrl   = $nData['url']     ?? null;
+                $nTime  = $n->created_at->diffForHumans();
+                $nRead  = ! is_null($n->read_at);
+            @endphp
+            <div class="fc-nd-item {{ $nRead ? 'read' : 'unread' }}" id="fc-nd-{{ $n->id }}">
+                <div class="fc-nd-dot"></div>
+                <div class="fc-nd-body">
+                    <div class="fc-nd-msg">
+                        @if($nUrl)
+                            <a href="{{ $nUrl }}" style="color:inherit;text-decoration:none"
+                               onclick="fcNotifDrawer.visitarUrl('{{ $n->id }}', '{{ $nUrl }}', event)">{{ $nMsg }}</a>
+                        @else
+                            {{ $nMsg }}
+                        @endif
+                    </div>
+                    <div class="fc-nd-time">{{ $nTime }}</div>
+                </div>
+                @if(! $nRead)
+                <button class="fc-nd-btn-read"
+                        onclick="fcNotifDrawer.marcarLeida('{{ $n->id }}', this)">✓ Leído</button>
+                @endif
+            </div>
+        @empty
+            <div class="fc-nd-empty">No tienes notificaciones.</div>
+        @endforelse
+    </div>
+
+    <div class="fc-nd-footer">
+        <a href="{{ route('notificaciones.index') }}">Ver todas las notificaciones →</a>
+    </div>
+</div>
+
+<script>
+window.fcNotifDrawer = (function () {
+    'use strict';
+
+    var CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+    function open() {
+        document.getElementById('fc-notif-bd').classList.add('open');
+        document.getElementById('fc-notif-drawer').classList.add('open');
+    }
+
+    function close() {
+        document.getElementById('fc-notif-bd').classList.remove('open');
+        document.getElementById('fc-notif-drawer').classList.remove('open');
+    }
+
+    function toggle() {
+        var drawer = document.getElementById('fc-notif-drawer');
+        if (drawer.classList.contains('open')) { close(); } else { open(); }
+    }
+
+    function _ajaxPost(url) {
+        return fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept':           'application/json',
+                'X-CSRF-TOKEN':     CSRF,
+            },
+            credentials: 'same-origin',
+        }).then(function (r) { return r.ok ? r.json() : Promise.reject(r); });
+    }
+
+    function _actualizarBadgeGlobal(count) {
+        var badge       = document.getElementById('fc-notif-badge');
+        var drawerCount = document.getElementById('fc-drawer-count');
+        var n = count || 0;
+
+        if (badge) {
+            badge.textContent   = n > 99 ? '99+' : n;
+            badge.style.display = n > 0 ? '' : 'none';
+        }
+        if (drawerCount) {
+            drawerCount.textContent   = n > 99 ? '99+' : n;
+            drawerCount.style.display = n > 0 ? '' : 'none';
+        }
+    }
+
+    function marcarLeida(id, btn) {
+        _ajaxPost('{{ url("notificaciones") }}/' + id + '/leer')
+            .then(function (data) {
+                var item = document.getElementById('fc-nd-' + id);
+                if (item) {
+                    item.classList.remove('unread');
+                    item.classList.add('read');
+                    var dot = item.querySelector('.fc-nd-dot');
+                    if (dot) dot.style.background = 'transparent';
+                    if (btn) btn.style.display = 'none';
+                }
+                _actualizarBadgeGlobal(data.notif_no_leidas);
+            })
+            .catch(function () {});
+    }
+
+    function marcarTodas() {
+        _ajaxPost('{{ route("notificaciones.leer-todas") }}')
+            .then(function (data) {
+                document.querySelectorAll('.fc-nd-item.unread').forEach(function (item) {
+                    item.classList.remove('unread');
+                    item.classList.add('read');
+                    var dot = item.querySelector('.fc-nd-dot');
+                    if (dot) dot.style.background = 'transparent';
+                    var btn = item.querySelector('.fc-nd-btn-read');
+                    if (btn) btn.style.display = 'none';
+                });
+                _actualizarBadgeGlobal(0);
+            })
+            .catch(function () {});
+    }
+
+    function visitarUrl(id, url, event) {
+        // Mark as read silently, then follow the link
+        _ajaxPost('{{ url("notificaciones") }}/' + id + '/leer').then(function (data) {
+            _actualizarBadgeGlobal(data.notif_no_leidas);
+        }).catch(function () {});
+        // navigation follows naturally
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') close();
+    });
+
+    return { open: open, close: close, toggle: toggle, marcarLeida: marcarLeida, marcarTodas: marcarTodas, visitarUrl: visitarUrl };
+})();
 </script>
 @endauth
     </body>

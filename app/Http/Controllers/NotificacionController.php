@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -10,20 +13,26 @@ class NotificacionController extends Controller
 {
     public function index(): View
     {
-        $usuario       = Auth::user();
+        $usuario        = Auth::user();
         $notificaciones = $usuario->notifications()->paginate(20);
 
         return view('notificaciones.index', compact('notificaciones'));
     }
 
-    public function marcarLeida(string $id): RedirectResponse
+    public function marcarLeida(Request $request, string $id): RedirectResponse|JsonResponse
     {
         $notif = Auth::user()->notifications()->findOrFail($id);
         $notif->markAsRead();
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'ok'              => true,
+                'notif_no_leidas' => Auth::user()->unreadNotifications()->count(),
+            ]);
+        }
+
         $url = $notif->data['url'] ?? null;
 
-        // Solo redirigir a URLs internas (evitar open redirect)
         if ($url && str_starts_with($url, url('/'))) {
             return redirect($url);
         }
@@ -31,9 +40,16 @@ class NotificacionController extends Controller
         return redirect()->route('notificaciones.index');
     }
 
-    public function marcarTodasLeidas(): RedirectResponse
+    public function marcarTodasLeidas(Request $request): RedirectResponse|JsonResponse
     {
         Auth::user()->unreadNotifications->markAsRead();
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'ok'              => true,
+                'notif_no_leidas' => 0,
+            ]);
+        }
 
         return back()->with('success', 'Todas las notificaciones marcadas como leídas.');
     }
