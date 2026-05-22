@@ -22,26 +22,6 @@
 
         <div class="fc-content">
 
-            <div class="fc-breadcrumb">
-                <a href="{{ route('solicitudes.index') }}" class="fc-bread-item">Solicitudes</a>
-                <span class="fc-bread-sep">›</span>
-                <span class="fc-bread-current">Solicitud #{{ $solicitud->id }}</span>
-                <span class="fc-badge" style="margin-left:8px;background:{{ $sc['bg'] }};color:{{ $sc['color'] }};font-size:11px;padding:2px 8px;border-radius:20px">{{ $solicitud->status }}</span>
-            </div>
-
-            @if(session('success'))
-            <div class="fc-flash success">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="#059669"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                {{ session('success') }}
-            </div>
-            @endif
-            @if(session('error') || $errors->any())
-            <div class="fc-flash error">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="#dc2626"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-                {{ session('error') ?? $errors->first() }}
-            </div>
-            @endif
-
             @php
                 $statusConfig = [
                     'Pendiente' => [
@@ -67,6 +47,26 @@
                 $puedeRevisar = $solicitud->status === 'Pendiente'
                     && in_array(Auth::user()->rol, ['Superadmin','Aux_QHSE','Admin','Gerente']);
             @endphp
+
+            <div class="fc-breadcrumb">
+                <a href="{{ route('solicitudes.index') }}" class="fc-bread-item">Solicitudes</a>
+                <span class="fc-bread-sep">›</span>
+                <span class="fc-bread-current">Solicitud #{{ $solicitud->id }}</span>
+                <span class="fc-badge" style="margin-left:8px;background:{{ $sc['bg'] }};color:{{ $sc['color'] }};font-size:11px;padding:2px 8px;border-radius:20px">{{ $solicitud->status }}</span>
+            </div>
+
+            @if(session('success'))
+            <div class="fc-flash success">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#059669"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                {{ session('success') }}
+            </div>
+            @endif
+            @if(session('error') || $errors->any())
+            <div class="fc-flash error">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#dc2626"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                {{ session('error') ?? $errors->first() }}
+            </div>
+            @endif
 
             <div class="fc-content-cols">
 
