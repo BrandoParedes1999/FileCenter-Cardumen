@@ -23,7 +23,7 @@
         <div class="fc-content">
 
             <div class="fc-breadcrumb">
-                <a href="{{ route('solicitudes.index') }}" class="fc-bread-item">📨 Solicitudes</a>
+                <a href="{{ route('solicitudes.index') }}" class="fc-bread-item">Solicitudes</a>
                 <span class="fc-bread-sep">›</span>
                 <span class="fc-bread-current">Solicitud #{{ $solicitud->id }}</span>
             </div>
@@ -42,26 +42,42 @@
             @endif
 
             @php
-                // Status real: 'Pendiente', 'Aprobado', 'Rechazado'
                 $statusConfig = [
-                    'Pendiente' => ['bg'=>'rgba(245,158,11,.1)', 'color'=>'#d97706', 'icon'=>'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z'],
-                    'Aprobado'  => ['bg'=>'rgba(5,150,105,.1)',  'color'=>'#059669', 'icon'=>'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'],
-                    'Rechazado' => ['bg'=>'rgba(220,38,38,.1)',  'color'=>'#dc2626', 'icon'=>'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'],
+                    'Pendiente' => [
+                        'bg'    => 'rgba(245,158,11,.08)',
+                        'border'=> 'rgba(217,119,6,.25)',
+                        'color' => '#d97706',
+                        'icon'  => 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z',
+                    ],
+                    'Aprobado' => [
+                        'bg'    => 'rgba(5,150,105,.08)',
+                        'border'=> 'rgba(5,150,105,.25)',
+                        'color' => '#059669',
+                        'icon'  => 'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z',
+                    ],
+                    'Rechazado' => [
+                        'bg'    => 'rgba(220,38,38,.08)',
+                        'border'=> 'rgba(220,38,38,.25)',
+                        'color' => '#dc2626',
+                        'icon'  => 'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z',
+                    ],
                 ];
-                $sc = $statusConfig[$solicitud->status] ?? $statusConfig['Pendiente'];
+                $sc        = $statusConfig[$solicitud->status] ?? $statusConfig['Pendiente'];
+                $puedeRevisar = $solicitud->status === 'Pendiente'
+                    && in_array(Auth::user()->rol, ['Superadmin','Aux_QHSE','Admin','Gerente']);
             @endphp
 
             <div class="fc-content-cols">
 
-                {{-- ── Panel principal ── --}}
+                {{-- ── Left column ───────────────────────────────────────── --}}
                 <div class="fc-col-main">
 
-                    {{-- Banner de status --}}
-                    <div style="background:{{ $sc['bg'] }};border:1px solid {{ $sc['color'] }}33;border-radius:14px;padding:20px 24px;display:flex;align-items:center;gap:16px;margin-bottom:20px">
+                    {{-- 1. Status banner (pure info — no action buttons) --}}
+                    <div style="background:{{ $sc['bg'] }};border:1px solid {{ $sc['border'] }};border-radius:14px;padding:20px 24px;display:flex;align-items:center;gap:16px;margin-bottom:20px">
                         <div style="width:44px;height:44px;border-radius:12px;background:{{ $sc['color'] }}18;display:flex;align-items:center;justify-content:center;flex-shrink:0">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="{{ $sc['color'] }}"><path d="{{ $sc['icon'] }}"/></svg>
                         </div>
-                        <div style="flex:1">
+                        <div style="flex:1;min-width:0">
                             <div style="font-size:16px;font-weight:700;color:var(--fc-text)">
                                 Solicitud {{ $solicitud->status }}
                             </div>
@@ -70,33 +86,19 @@
                                     Esperando revisión de un administrador
                                 @elseif($solicitud->status === 'Aprobado')
                                     Aprobada {{ $solicitud->updated_at?->diffForHumans() }}
-                                    @if($solicitud->revisor) por {{ $solicitud->revisor->nombre_completo }} @endif
+                                    @if($solicitud->revisor) · por {{ $solicitud->revisor->nombre_completo }} @endif
                                     @if($solicitud->caduca_en)
                                         · Caduca {{ \Carbon\Carbon::parse($solicitud->caduca_en)->format('d/m/Y') }}
                                     @endif
                                 @else
                                     Rechazada {{ $solicitud->updated_at?->diffForHumans() }}
-                                    @if($solicitud->revisor) por {{ $solicitud->revisor->nombre_completo }} @endif
+                                    @if($solicitud->revisor) · por {{ $solicitud->revisor->nombre_completo }} @endif
                                 @endif
                             </div>
                         </div>
-
-                        {{-- Acciones de revisión --}}
-                        @if($solicitud->status === 'Pendiente' && in_array(Auth::user()->rol, ['Superadmin','Aux_QHSE','Admin','Gerente']))
-                        <div style="display:flex;gap:8px">
-                            <button type="button" class="fc-btn fc-btn-success" onclick="document.getElementById('modalAprobarShow').classList.add('open')">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                                Aprobar
-                            </button>
-                            <button type="button" class="fc-btn fc-btn-danger-outline" onclick="document.getElementById('modalRechazarShow').classList.add('open')">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-                                Rechazar
-                            </button>
-                        </div>
-                        @endif
                     </div>
 
-                    {{-- Recurso solicitado --}}
+                    {{-- 2. Recurso solicitado --}}
                     <div class="fc-section-card">
                         <div class="fc-section-header">
                             <div class="fc-section-icon" style="background:rgba(99,102,241,.1)">
@@ -114,8 +116,8 @@
                                     <div style="font-size:14px;font-weight:600;color:var(--fc-text)">{{ $solicitud->archivo->nombre_original }}</div>
                                     <div style="font-size:12px;color:var(--fc-text-muted);margin-top:2px">
                                         {{ strtoupper($solicitud->archivo->extension) }}
-                                        · {{ $solicitud->archivo->tamanioFormateado() }}
-                                        · v{{ $solicitud->archivo->version }}
+                                        &middot; {{ $solicitud->archivo->tamanioFormateado() }}
+                                        &middot; v{{ $solicitud->archivo->version }}
                                     </div>
                                     <div style="font-size:12px;color:var(--fc-text-muted);margin-top:2px">
                                         Carpeta: <strong>{{ $solicitud->archivo->carpeta->nombre ?? '—' }}</strong>
@@ -128,6 +130,7 @@
                                 </a>
                                 @endif
                             </div>
+
                             @elseif($solicitud->carpeta)
                             <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--fc-bg);border-radius:10px">
                                 <div style="width:44px;height:44px;border-radius:10px;background:rgba(79,70,229,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
@@ -140,6 +143,7 @@
                                     </div>
                                 </div>
                             </div>
+
                             @else
                             <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--fc-bg);border-radius:10px">
                                 <div style="width:44px;height:44px;border-radius:10px;background:rgba(100,116,139,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
@@ -158,7 +162,7 @@
                         </div>
                     </div>
 
-                    {{-- Razón (campo correcto: ->razon) --}}
+                    {{-- 3. Justificación --}}
                     <div class="fc-section-card">
                         <div class="fc-section-header">
                             <div class="fc-section-icon" style="background:rgba(245,158,11,.1)">
@@ -171,7 +175,7 @@
                         </div>
                     </div>
 
-                    {{-- Comentario del revisor (campo correcto: ->comentario_revisor) --}}
+                    {{-- 4. Comentario del revisor (si existe) --}}
                     @if($solicitud->comentario_revisor)
                     <div class="fc-section-card">
                         <div class="fc-section-header">
@@ -186,9 +190,40 @@
                     </div>
                     @endif
 
+                    {{-- 5. [Admin + Pendiente only] Tomar decisión --}}
+                    @if($puedeRevisar)
+                    <div class="fc-section-card" style="border:1.5px solid rgba(99,102,241,.2)">
+                        <div class="fc-section-header">
+                            <div class="fc-section-icon" style="background:rgba(99,102,241,.1)">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="#6366f1"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                            </div>
+                            Tomar decisión
+                        </div>
+                        <div class="fc-section-body">
+                            <p style="font-size:13px;color:var(--fc-text-muted);margin:0 0 14px">
+                                Revisa la información del solicitante y del recurso, y toma una decisión.
+                            </p>
+                            <div style="display:flex;gap:10px">
+                                <button type="button"
+                                        class="fc-btn fc-btn-success"
+                                        onclick="document.getElementById('modalAprobarShow').classList.add('open')">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                    Aprobar solicitud
+                                </button>
+                                <button type="button"
+                                        class="fc-btn fc-btn-danger-outline"
+                                        onclick="document.getElementById('modalRechazarShow').classList.add('open')">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                                    Rechazar solicitud
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
                 </div>{{-- /fc-col-main --}}
 
-                {{-- ── Panel lateral ── --}}
+                {{-- ── Right column ──────────────────────────────────────── --}}
                 <div class="fc-col-side">
                     <div class="fc-info-card">
                         <div class="fc-info-header">
@@ -196,7 +231,7 @@
                             Información
                         </div>
                         <div class="fc-info-body">
-                            {{-- Relación correcta: ->solicitante --}}
+
                             <div class="fc-info-row">
                                 <span class="fc-info-label">Solicitante</span>
                                 <span class="fc-info-val">{{ $solicitud->solicitante->nombre_completo ?? '—' }}</span>
@@ -205,7 +240,6 @@
                                 <span class="fc-info-label">Su empresa</span>
                                 <span class="fc-info-val">{{ $solicitud->solicitante->empresa->nombre ?? '—' }}</span>
                             </div>
-                            {{-- Empresa objetivo --}}
                             <div class="fc-info-row">
                                 <span class="fc-info-label">Empresa objetivo</span>
                                 <span class="fc-info-val">{{ $solicitud->empresaObjetivo->nombre ?? '—' }}</span>
@@ -217,7 +251,7 @@
                                 </span>
                             </div>
                             <div class="fc-info-row">
-                                <span class="fc-info-label">Status</span>
+                                <span class="fc-info-label">Estado</span>
                                 <span class="fc-badge" style="background:{{ $sc['bg'] }};color:{{ $sc['color'] }}">
                                     {{ $solicitud->status }}
                                 </span>
@@ -226,6 +260,7 @@
                                 <span class="fc-info-label">Solicitado</span>
                                 <span class="fc-info-val">{{ $solicitud->created_at?->format('d/m/Y H:i') ?? '—' }}</span>
                             </div>
+
                             @if($solicitud->status !== 'Pendiente')
                             <div class="fc-info-row">
                                 <span class="fc-info-label">Revisado</span>
@@ -246,23 +281,27 @@
                             </div>
                             @endif
                             @endif
+
                         </div>
                     </div>
 
                     <div style="margin-top:16px">
-                        <a href="{{ route('solicitudes.index') }}" class="fc-btn fc-btn-outline" style="width:100%;justify-content:center">
+                        <a href="{{ route('solicitudes.index') }}"
+                           class="fc-btn fc-btn-outline"
+                           style="width:100%;justify-content:center">
                             ← Volver a solicitudes
                         </a>
                     </div>
-                </div>
+                </div>{{-- /fc-col-side --}}
 
             </div>{{-- /fc-content-cols --}}
         </div>{{-- /fc-content --}}
-    </div>
-</div>
+    </div>{{-- /fc-main --}}
+</div>{{-- /fc-wrapper --}}
 
-@if($solicitud->status === 'Pendiente' && in_array(Auth::user()->rol, ['Superadmin','Aux_QHSE','Admin','Gerente']))
-{{-- Modal Aprobar --}}
+{{-- ── Modals (only rendered when review is possible) ─────────────────── --}}
+@if($puedeRevisar)
+
 <div class="fc-modal-overlay" id="modalAprobarShow">
     <div class="fc-modal">
         <div class="fc-modal-title">Aprobar solicitud #{{ $solicitud->id }}</div>
@@ -271,23 +310,27 @@
             <div class="fc-modal-sub">
                 <div class="fc-field" style="margin-bottom:12px">
                     <label class="fc-label">Comentario (opcional)</label>
-                    <textarea name="comentario_revisor" rows="3" class="fc-input" placeholder="Instrucciones o condiciones de uso..."></textarea>
+                    <textarea name="comentario_revisor" rows="3" class="fc-input"
+                              placeholder="Instrucciones o condiciones de uso..."></textarea>
                 </div>
                 <div class="fc-field">
                     <label class="fc-label">Caduca el (opcional)</label>
-                    <input type="date" name="caduca_en" class="fc-input" min="{{ now()->addDay()->format('Y-m-d') }}">
+                    <input type="date" name="caduca_en" class="fc-input"
+                           min="{{ now()->addDay()->format('Y-m-d') }}">
                     <div class="fc-field-hint">Si no se especifica, el acceso no tiene fecha límite.</div>
                 </div>
             </div>
             <div class="fc-modal-btns">
-                <button type="button" class="fc-modal-cancel" onclick="document.getElementById('modalAprobarShow').classList.remove('open')">Cancelar</button>
+                <button type="button" class="fc-modal-cancel"
+                        onclick="document.getElementById('modalAprobarShow').classList.remove('open')">
+                    Cancelar
+                </button>
                 <button type="submit" class="fc-modal-confirm" style="background:#059669">Aprobar</button>
             </div>
         </form>
     </div>
 </div>
 
-{{-- Modal Rechazar --}}
 <div class="fc-modal-overlay" id="modalRechazarShow">
     <div class="fc-modal">
         <div class="fc-modal-title">Rechazar solicitud #{{ $solicitud->id }}</div>
@@ -296,17 +339,22 @@
             <div class="fc-modal-sub">
                 <div class="fc-field">
                     <label class="fc-label">Motivo del rechazo <span style="color:#dc2626">*</span></label>
-                    <textarea name="comentario_revisor" rows="3" class="fc-input" required placeholder="Indica por qué se rechaza la solicitud..."></textarea>
+                    <textarea name="comentario_revisor" rows="3" class="fc-input" required
+                              placeholder="Indica por qué se rechaza la solicitud..."></textarea>
                     <div class="fc-field-hint">El solicitante verá este mensaje.</div>
                 </div>
             </div>
             <div class="fc-modal-btns">
-                <button type="button" class="fc-modal-cancel" onclick="document.getElementById('modalRechazarShow').classList.remove('open')">Cancelar</button>
+                <button type="button" class="fc-modal-cancel"
+                        onclick="document.getElementById('modalRechazarShow').classList.remove('open')">
+                    Cancelar
+                </button>
                 <button type="submit" class="fc-modal-confirm danger">Rechazar</button>
             </div>
         </form>
     </div>
 </div>
+
 @endif
 
 <script>
