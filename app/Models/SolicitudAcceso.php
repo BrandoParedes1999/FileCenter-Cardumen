@@ -87,18 +87,20 @@ class SolicitudAcceso extends Model
     {
         // Crear permiso en la carpeta si aplica
         if ($this->carpeta_id) {
-            $datos = [
-                'puede_leer'      => true,
-                'puede_descargar' => $this->tipo_acceso === 'Descargar',
-                'puede_subir'     => false,
-                'puede_editar'    => false,
-                'puede_borrar'    => false,
-                'concedido_por'   => $revisorId,
-            ];
+            $carpeta   = $this->carpeta ?? Carpeta::find($this->carpeta_id);
+            $empresaId = $carpeta?->empresa_id;
 
             PermisoCarpeta::updateOrCreate(
                 ['carpeta_id' => $this->carpeta_id, 'usuario_id' => $this->solicitante_id],
-                $datos
+                [
+                    'empresa_id'      => $empresaId,
+                    'puede_leer'      => true,
+                    'puede_descargar' => $this->tipo_acceso === 'Descargar',
+                    'puede_subir'     => false,
+                    'puede_editar'    => false,
+                    'puede_borrar'    => false,
+                    'concedido_por'   => $revisorId,
+                ]
             );
         }
 

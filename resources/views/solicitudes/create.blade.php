@@ -78,6 +78,22 @@
                                 <span class="fc-field-error">{{ $message }}</span>
                                 @enderror
                             </div>
+
+                            {{-- Selector dinámico de carpeta (se muestra al elegir empresa) --}}
+                            <div class="fc-field" id="carpetaSelectorWrap" style="display:none">
+                                <label class="fc-label" for="carpeta_id">
+                                    Carpeta específica
+                                    <span style="font-weight:400;color:var(--fc-text-muted)">(opcional)</span>
+                                </label>
+                                <select id="carpeta_id" name="carpeta_id" class="fc-input">
+                                    <option value="">— Acceso general a toda la empresa —</option>
+                                </select>
+                                <div class="fc-field-hint">
+                                    Selecciona una carpeta si quieres acceso a un área específica, o deja en blanco para acceso general.
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="archivo_id" value="">
                             @endif
 
                             {{-- Recurso preseleccionado: Archivo --}}
@@ -117,11 +133,6 @@
                                     <div class="fc-info-chip-sub">{{ $carpeta->path }}</div>
                                 </div>
                             </div>
-
-                            {{-- Sin preselección: acceso general --}}
-                            @else
-                            <input type="hidden" name="archivo_id" value="">
-                            <input type="hidden" name="carpeta_id" value="">
                             @endif
 
                             {{-- Tipo de acceso --}}
@@ -218,6 +229,7 @@
 
 <script>
 (function () {
+    // ── Tipo de acceso: cards interactivos ────────────────────────────────
     const cards = document.querySelectorAll('.tipo-acceso-card');
 
     function activateCard(card) {
@@ -234,15 +246,61 @@
 
     cards.forEach(card => {
         const radio = card.querySelector('input[type="radio"]');
-
-        // Highlight the initially-checked card on page load
         if (radio && radio.checked) activateCard(card);
-
         card.addEventListener('click', () => activateCard(card));
-
-        // Keep in sync if radio changes via keyboard
         radio && radio.addEventListener('change', () => { if (radio.checked) activateCard(card); });
     });
+
+    // ── Selector dinámico de carpetas ─────────────────────────────────────
+    const empresaSelect  = document.getElementById('empresa_objetivo_id');
+    const carpetaWrap    = document.getElementById('carpetaSelectorWrap');
+    const carpetaSelect  = document.getElementById('carpeta_id');
+
+    if (empresaSelect && carpetaWrap && carpetaSelect) {
+        const oldEmpresaId = '{{ old('empresa_objetivo_id') }}';
+        const oldCarpetaId = '{{ old('carpeta_id') }}';
+
+        function cargarCarpetas(empresaId, preselect) {
+            carpetaSelect.innerHTML = '<option value="">Cargando carpetas…</option>';
+            carpetaSelect.disabled  = true;
+
+            fetch('/solicitudes/carpetas-empresa/' + empresaId, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                carpetaSelect.innerHTML = '<option value="">— Acceso general a toda la empresa —</option>';
+                data.forEach(c => {
+                    const opt    = document.createElement('option');
+                    opt.value    = c.id;
+                    opt.textContent = c.nombre + (c.path ? ' (' + c.path + ')' : '');
+                    if (preselect && String(c.id) === String(preselect)) opt.selected = true;
+                    carpetaSelect.appendChild(opt);
+                });
+                carpetaSelect.disabled = false;
+                carpetaWrap.style.display = '';
+            })
+            .catch(() => {
+                carpetaSelect.innerHTML = '<option value="">— No se pudieron cargar las carpetas —</option>';
+                carpetaSelect.disabled  = false;
+                carpetaWrap.style.display = '';
+            });
+        }
+
+        empresaSelect.addEventListener('change', function () {
+            if (this.value) {
+                cargarCarpetas(this.value, null);
+            } else {
+                carpetaWrap.style.display = 'none';
+                carpetaSelect.innerHTML   = '<option value="">— Acceso general a toda la empresa —</option>';
+            }
+        });
+
+        // Si hay un valor previo (validación fallida) recarga las carpetas
+        if (oldEmpresaId) {
+            cargarCarpetas(oldEmpresaId, oldCarpetaId);
+        }
+    }
 })();
 </script>
 </x-app-layout>

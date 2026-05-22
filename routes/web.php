@@ -94,6 +94,9 @@ Route::middleware(['auth', 'company.scope'])->group(function () {
     // SOLICITUDES DE ACCESO (cross-empresa)
     // ─────────────────────────────────────────
 
+    Route::get('solicitudes/carpetas-empresa/{empresa}', [SolicitudAccesoController::class, 'carpetasDeEmpresa'])
+        ->name('solicitudes.carpetas-empresa');
+
     Route::resource('solicitudes', SolicitudAccesoController::class)
         ->only(['index', 'show', 'create', 'store']);
 

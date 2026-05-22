@@ -10,6 +10,7 @@ use App\Models\SolicitudAcceso;
 use App\Models\Usuario;
 use App\Notifications\SolicitudAccesoRecibida;
 use App\Notifications\SolicitudAccesoResuelta;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -174,10 +175,12 @@ class SolicitudAccesoController extends Controller
 
         // Notificar a Admin y Gerente de la empresa objetivo
         $solicitud->load(['carpeta', 'archivo', 'solicitante']);
-        Usuario::where('empresa_id', $validated['empresa_objetivo_id'])
-            ->whereIn('rol', ['Admin', 'Gerente'])
-            ->where('es_activo', true)
-            ->each(fn($admin) => $admin->notify(new SolicitudAccesoRecibida($solicitud)));
+        try {
+            Usuario::where('empresa_id', $validated['empresa_objetivo_id'])
+                ->whereIn('rol', ['Admin', 'Gerente'])
+                ->where('es_activo', true)
+                ->each(fn($admin) => $admin->notify(new SolicitudAccesoRecibida($solicitud)));
+        } catch (\Throwable) {}
 
         return redirect()
             ->route('solicitudes.index')
@@ -217,7 +220,9 @@ class SolicitudAccesoController extends Controller
             "Aprobó solicitud de {$solicitud->solicitante->nombre_completo}"
         );
 
-        $solicitud->solicitante->notify(new SolicitudAccesoResuelta($solicitud));
+        try {
+            $solicitud->solicitante->notify(new SolicitudAccesoResuelta($solicitud));
+        } catch (\Throwable) {}
 
         return redirect()
             ->route('solicitudes.index')
@@ -256,11 +261,27 @@ class SolicitudAccesoController extends Controller
             "Rechazó solicitud de {$solicitud->solicitante->nombre_completo}"
         );
 
-        $solicitud->solicitante->notify(new SolicitudAccesoResuelta($solicitud));
+        try {
+            $solicitud->solicitante->notify(new SolicitudAccesoResuelta($solicitud));
+        } catch (\Throwable) {}
 
         return redirect()
             ->route('solicitudes.index')
             ->with('success', 'Solicitud rechazada.');
+    }
+
+    // ─────────────────────────────────────────────
+    // CARPETAS DE EMPRESA (AJAX)
+    // ─────────────────────────────────────────────
+
+    public function carpetasDeEmpresa(Empresa $empresa): JsonResponse
+    {
+        $carpetas = Carpeta::where('empresa_id', $empresa->id)
+            ->whereNull('deleted_at')
+            ->orderBy('nombre')
+            ->get(['id', 'nombre', 'path']);
+
+        return response()->json($carpetas);
     }
 
     // ─────────────────────────────────────────────
