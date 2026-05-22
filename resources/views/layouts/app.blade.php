@@ -539,23 +539,27 @@ if (document.readyState === 'loading') {
 
         @forelse($ndItems as $n)
             @php
-                $nData  = $n->data ?? [];
-                $nMsg   = $nData['mensaje'] ?? ($nData['body'] ?? 'Notificación');
-                $nUrl   = $nData['url']     ?? null;
-                $nTime  = $n->created_at->diffForHumans();
-                $nRead  = ! is_null($n->read_at);
+                $nData   = $n->data ?? [];
+                $nTitulo = $nData['titulo']  ?? 'Notificación';
+                $nMsg    = $nData['mensaje'] ?? ($nData['body'] ?? '');
+                $nUrl    = $nData['url']     ?? null;
+                $nTime   = $n->created_at->diffForHumans();
+                $nRead   = ! is_null($n->read_at);
             @endphp
             <div class="fc-nd-item {{ $nRead ? 'read' : 'unread' }}" id="fc-nd-{{ $n->id }}">
                 <div class="fc-nd-dot"></div>
                 <div class="fc-nd-body">
-                    <div class="fc-nd-msg">
+                    <div style="font-size:12px;font-weight:600;color:#e2e8f0;margin-bottom:2px">
                         @if($nUrl)
                             <a href="{{ $nUrl }}" style="color:inherit;text-decoration:none"
-                               onclick="fcNotifDrawer.visitarUrl('{{ $n->id }}', '{{ $nUrl }}', event)">{{ $nMsg }}</a>
+                               onclick="fcNotifDrawer.visitarUrl('{{ $n->id }}', event)">{{ $nTitulo }}</a>
                         @else
-                            {{ $nMsg }}
+                            {{ $nTitulo }}
                         @endif
                     </div>
+                    @if($nMsg)
+                    <div class="fc-nd-msg">{{ $nMsg }}</div>
+                    @endif
                     <div class="fc-nd-time">{{ $nTime }}</div>
                 </div>
                 @if(! $nRead)
@@ -653,12 +657,11 @@ window.fcNotifDrawer = (function () {
             .catch(function () {});
     }
 
-    function visitarUrl(id, url, event) {
-        // Mark as read silently, then follow the link
+    function visitarUrl(id, event) {
+        // Mark as read silently; navigation follows the anchor naturally
         _ajaxPost('{{ url("notificaciones") }}/' + id + '/leer').then(function (data) {
             _actualizarBadgeGlobal(data.notif_no_leidas);
         }).catch(function () {});
-        // navigation follows naturally
     }
 
     document.addEventListener('keydown', function (e) {

@@ -37,15 +37,19 @@ class SolicitudAccesoRecibida extends Notification
 
     public function toArray(object $notifiable): array
     {
-        $solicitante = $this->solicitud->solicitante;
-        $recurso     = $this->solicitud->carpeta?->nombre
-                    ?? $this->solicitud->archivo?->nombre_original
-                    ?? 'un recurso';
+        $solicitante  = $this->solicitud->solicitante;
+        $empresa      = $this->solicitud->empresaObjetivo?->nombre;
+        $recurso      = $this->solicitud->carpeta?->nombre
+                     ?? $this->solicitud->archivo?->nombre_original;
+
+        $mensaje = $recurso
+            ? "{$solicitante->nombre_completo} solicita acceso a \"{$recurso}\"."
+            : "{$solicitante->nombre_completo} solicita acceso general" . ($empresa ? " a {$empresa}" : '') . '.';
 
         return [
             'tipo'         => 'solicitud_acceso_recibida',
             'titulo'       => 'Nueva solicitud de acceso',
-            'mensaje'      => "{$solicitante->nombre_completo} solicita acceso a \"{$recurso}\".",
+            'mensaje'      => $mensaje,
             'url'          => route('solicitudes.show', $this->solicitud),
             'solicitud_id' => $this->solicitud->id,
         ];

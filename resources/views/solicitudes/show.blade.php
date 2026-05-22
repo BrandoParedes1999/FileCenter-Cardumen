@@ -141,7 +141,19 @@
                                 </div>
                             </div>
                             @else
-                            <p class="fc-desc-empty">El recurso ya no está disponible en el sistema.</p>
+                            <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--fc-bg);border-radius:10px">
+                                <div style="width:44px;height:44px;border-radius:10px;background:rgba(100,116,139,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#64748b"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+                                </div>
+                                <div>
+                                    <div style="font-size:14px;font-weight:600;color:var(--fc-text)">
+                                        Acceso general a {{ $solicitud->empresaObjetivo->nombre ?? 'la empresa' }}
+                                    </div>
+                                    <div style="font-size:12px;color:var(--fc-text-muted);margin-top:2px">
+                                        Sin recurso específico — el solicitante pide acceso a todos los recursos de la empresa
+                                    </div>
+                                </div>
+                            </div>
                             @endif
                         </div>
                     </div>

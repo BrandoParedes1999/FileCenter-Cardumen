@@ -56,19 +56,21 @@ class SolicitudAccesoResuelta extends Notification
     {
         $aprobada = $this->solicitud->fueAprobada();
         $carpeta  = $this->solicitud->carpeta;
+        $empresa  = $this->solicitud->empresaObjetivo?->nombre;
         $recurso  = $carpeta?->nombre
                  ?? $this->solicitud->archivo?->nombre_original
-                 ?? 'el recurso solicitado';
+                 ?? ($empresa ? "acceso a {$empresa}" : 'la solicitud');
 
         return [
-            'tipo'    => 'solicitud_acceso_resuelta',
-            'titulo'  => $aprobada ? 'Acceso aprobado' : 'Acceso denegado',
-            'mensaje' => $aprobada
-                ? "Tu acceso a \"{$recurso}\" fue aprobado."
-                : "Tu solicitud de acceso a \"{$recurso}\" fue rechazada.",
-            'url'     => $aprobada && $carpeta
+            'tipo'         => 'solicitud_acceso_resuelta',
+            'titulo'       => $aprobada ? 'Acceso aprobado' : 'Acceso denegado',
+            'mensaje'      => $aprobada
+                ? "Tu solicitud de \"{$recurso}\" fue aprobada."
+                : "Tu solicitud de \"{$recurso}\" fue rechazada.",
+            'url'          => $aprobada && $carpeta
                 ? route('carpetas.show', $carpeta)
                 : route('solicitudes.index'),
+            'solicitud_id' => $this->solicitud->id,
         ];
     }
 }
