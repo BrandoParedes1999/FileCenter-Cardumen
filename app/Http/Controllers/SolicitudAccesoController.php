@@ -20,73 +20,64 @@ class SolicitudAccesoController extends Controller
 {
     public function index(Request $request): View
     {
-        $usuario = Auth::user();
+        $usuario     = Auth::user();
         $filtroStatus = $request->query('status'); // null = todas
+        $statuses    = ['Pendiente', 'Aprobado', 'Rechazado'];
 
-        // ── Superadmin y Aux_QHSE — ven TODAS ──────────────────
-        if (in_array($usuario->rol, ['Superadmin', 'Aux_QHSE'])) {
-            $query = SolicitudAcceso::with([
-                'solicitante.empresa',
+        // ── Closure que construye la query base según el rol ──────────────
+        $baseQuery = function () use ($usuario) {
+            if (in_array($usuario->rol, ['Superadmin', 'Aux_QHSE'])) {
+                // Ven TODAS las solicitudes
+                return SolicitudAcceso::with([
+                    'solicitante.empresa',
+                    'empresaObjetivo',
+                    'carpeta',
+                    'archivo.carpeta',
+                    'revisor',
+                ]);
+            }
+
+            if (in_array($usuario->rol, ['Admin', 'Gerente'])) {
+                // Ven las solicitudes dirigidas a su empresa
+                return SolicitudAcceso::with([
+                    'solicitante.empresa',
+                    'empresaObjetivo',
+                    'carpeta',
+                    'archivo.carpeta',
+                    'revisor',
+                ])->where('empresa_objetivo_id', $usuario->empresa_id);
+            }
+
+            // Auxiliar / Empleado — solo sus propias solicitudes
+            return SolicitudAcceso::with([
                 'empresaObjetivo',
                 'carpeta',
                 'archivo.carpeta',
                 'revisor',
-            ]);
+            ])->where('solicitante_id', $usuario->id);
+        };
 
-            if ($filtroStatus && in_array($filtroStatus, ['Pendiente', 'Aprobado', 'Rechazado'])) {
-                $query->where('status', $filtroStatus);
-            }
+        // ── Conteos por status (sin filtro de status aplicado) ────────────
+        $conteos = array_combine(
+            $statuses,
+            array_map(fn($s) => (clone $baseQuery())->where('status', $s)->count(), $statuses)
+        );
 
-            $solicitudes = $query
-                ->orderByRaw("CASE status
-                    WHEN 'Pendiente' THEN 1
-                    WHEN 'Aprobado'  THEN 2
-                    WHEN 'Rechazado' THEN 3
-                    ELSE 4 END")
-                ->orderBy('created_at', 'desc')
-                ->paginate(25)
-                ->withQueryString();
+        // ── Query paginada con filtro opcional ───────────────────────────
+        $query = $baseQuery();
 
-            return view('solicitudes.index', compact('solicitudes', 'filtroStatus'));
-        }
-
-        // ── Admin y Gerente — ven solicitudes dirigidas a su empresa ──
-        if (in_array($usuario->rol, ['Admin', 'Gerente'])) {
-            $query = SolicitudAcceso::with([
-                'solicitante.empresa',
-                'empresaObjetivo',
-                'carpeta',
-                'archivo.carpeta',
-                'revisor',
-            ])->where('empresa_objetivo_id', $usuario->empresa_id);
-
-            if ($filtroStatus && in_array($filtroStatus, ['Pendiente', 'Aprobado', 'Rechazado'])) {
-                $query->where('status', $filtroStatus);
-            }
-
-            $solicitudes = $query
-                ->orderByRaw("CASE status
-                    WHEN 'Pendiente' THEN 1
-                    WHEN 'Aprobado'  THEN 2
-                    WHEN 'Rechazado' THEN 3
-                    ELSE 4 END")
-                ->orderBy('created_at', 'desc')
-                ->paginate(25)
-                ->withQueryString();
-
-            return view('solicitudes.index', compact('solicitudes', 'filtroStatus'));
-        }
-
-        // ── Auxiliar / Empleado — ven sus propias solicitudes ──
-        $query = SolicitudAcceso::with([
-            'empresaObjetivo',
-            'carpeta',
-            'archivo.carpeta',
-            'revisor',
-        ])->where('solicitante_id', $usuario->id);
-
-        if ($filtroStatus && in_array($filtroStatus, ['Pendiente', 'Aprobado', 'Rechazado'])) {
+        if ($filtroStatus && in_array($filtroStatus, $statuses)) {
             $query->where('status', $filtroStatus);
+        }
+
+        // Empleados ven sus solicitudes en orden cronológico inverso;
+        // admins ven pendientes primero para facilitar revisión.
+        if (in_array($usuario->rol, ['Superadmin', 'Aux_QHSE', 'Admin', 'Gerente'])) {
+            $query->orderByRaw("CASE status
+                WHEN 'Pendiente' THEN 1
+                WHEN 'Aprobado'  THEN 2
+                WHEN 'Rechazado' THEN 3
+                ELSE 4 END");
         }
 
         $solicitudes = $query
@@ -94,8 +85,7 @@ class SolicitudAccesoController extends Controller
             ->paginate(25)
             ->withQueryString();
 
-        // Usamos la MISMA vista — no "mis_solicitudes" que no existe
-        return view('solicitudes.index', compact('solicitudes', 'filtroStatus'));
+        return view('solicitudes.index', compact('solicitudes', 'filtroStatus', 'conteos'));
     }
 
     // ─────────────────────────────────────────────

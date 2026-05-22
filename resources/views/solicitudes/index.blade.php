@@ -42,7 +42,7 @@
                         @if(in_array(Auth::user()->rol, ['Superadmin','Aux_QHSE','Admin','Gerente']))
                             Gestiona las solicitudes de acceso a recursos de tu empresa
                         @else
-                            Historial de tus solicitudes de acceso
+                            Historial de tus solicitudes de acceso a otras empresas
                         @endif
                     </div>
                 </div>
@@ -52,25 +52,50 @@
                 </a>
             </div>
 
-            {{-- Filtros de status --}}
-            <div class="fc-filter-bar" style="margin-bottom:20px">
-                @php
-                    // Controller usa: status='Pendiente','Aprobado','Rechazado'
-                    $filtroActual = request('status', 'todas');
-                    $statusOpts = ['todas'=>'Todas','Pendiente'=>'Pendientes','Aprobado'=>'Aprobadas','Rechazado'=>'Rechazadas'];
-                    $statusColors = [
-                        'Pendiente' => ['bg'=>'rgba(245,158,11,.1)', 'color'=>'#d97706'],
-                        'Aprobado'  => ['bg'=>'rgba(5,150,105,.1)',  'color'=>'#059669'],
-                        'Rechazado' => ['bg'=>'rgba(220,38,38,.1)',  'color'=>'#dc2626'],
-                    ];
-                @endphp
-                @foreach($statusOpts as $val => $label)
+            {{-- Filtros de status con contadores --}}
+            @php
+                $filtroActual = request('status', 'todas');
+                $statusOpts = [
+                    'todas'     => 'Todas',
+                    'Pendiente' => 'Pendientes',
+                    'Aprobado'  => 'Aprobadas',
+                    'Rechazado' => 'Rechazadas',
+                ];
+                $badgeStyle = [
+                    'Pendiente' => 'background:#d97706;color:#fff',
+                    'Aprobado'  => 'background:#059669;color:#fff',
+                    'Rechazado' => 'background:#dc2626;color:#fff',
+                ];
+                $totalGeneral = array_sum($conteos);
+            @endphp
+            <div class="fc-filter-bar" style="margin-bottom:20px;gap:6px">
+                <a href="{{ route('solicitudes.index') }}"
+                   class="fc-btn fc-btn-sm {{ $filtroActual === 'todas' ? 'fc-btn-primary' : 'fc-btn-outline' }}"
+                   style="display:inline-flex;align-items:center;gap:6px">
+                    Todas
+                    @if($totalGeneral > 0)
+                    <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;background:{{ $filtroActual === 'todas' ? 'rgba(255,255,255,.25)' : 'rgba(99,102,241,.12)' }};color:{{ $filtroActual === 'todas' ? '#fff' : '#6366f1' }}">
+                        {{ $totalGeneral }}
+                    </span>
+                    @endif
+                </a>
+                @foreach(['Pendiente'=>'Pendientes','Aprobado'=>'Aprobadas','Rechazado'=>'Rechazadas'] as $val => $label)
                 <a href="{{ route('solicitudes.index', ['status' => $val]) }}"
-                   class="fc-btn fc-btn-sm {{ $filtroActual === $val ? 'fc-btn-primary' : 'fc-btn-outline' }}">
+                   class="fc-btn fc-btn-sm {{ $filtroActual === $val ? 'fc-btn-primary' : 'fc-btn-outline' }}"
+                   style="display:inline-flex;align-items:center;gap:6px">
                     {{ $label }}
+                    @if(($conteos[$val] ?? 0) > 0)
+                    <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;{{ $filtroActual === $val ? 'background:rgba(255,255,255,.25);color:#fff' : $badgeStyle[$val] }}">
+                        {{ $conteos[$val] }}
+                    </span>
+                    @endif
                 </a>
                 @endforeach
             </div>
+
+            @php
+                $esAdmin = in_array(Auth::user()->rol, ['Superadmin','Aux_QHSE','Admin','Gerente']);
+            @endphp
 
             @if($solicitudes->isEmpty())
             <div class="fc-empty">
@@ -79,17 +104,21 @@
                         <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
                     </svg>
                 </div>
-                <div class="fc-empty-title">No hay solicitudes</div>
-                <div class="fc-empty-sub">
-                    @if($filtroActual !== 'todas')
-                        No hay solicitudes con estado "{{ $statusOpts[$filtroActual] ?? $filtroActual }}".
-                    @else
-                        Aún no se han realizado solicitudes de acceso.
-                    @endif
-                </div>
-                <a href="{{ route('solicitudes.create') }}" class="fc-btn fc-btn-primary">
-                    Nueva solicitud
-                </a>
+                @if($filtroActual !== 'todas')
+                    <div class="fc-empty-title">Sin solicitudes {{ strtolower($statusOpts[$filtroActual] ?? $filtroActual) }}</div>
+                    <div class="fc-empty-sub">No hay solicitudes con estado "{{ $statusOpts[$filtroActual] ?? $filtroActual }}" en este momento.</div>
+                    <a href="{{ route('solicitudes.index') }}" class="fc-btn fc-btn-outline" style="margin-top:4px">Ver todas</a>
+                @elseif($esAdmin)
+                    <div class="fc-empty-title">No hay solicitudes</div>
+                    <div class="fc-empty-sub">Aún no se han enviado solicitudes de acceso a tu empresa.</div>
+                @else
+                    <div class="fc-empty-title">Aún no has realizado solicitudes</div>
+                    <div class="fc-empty-sub">Solicita acceso a archivos o carpetas de otras empresas del grupo.</div>
+                    <a href="{{ route('solicitudes.create') }}" class="fc-btn fc-btn-primary" style="margin-top:4px">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                        Solicitar acceso a otra empresa
+                    </a>
+                @endif
             </div>
 
             @else
@@ -97,54 +126,31 @@
                 <table class="fc-table">
                     <thead>
                         <tr>
-                            <th>Recurso solicitado</th>
+                            @if($esAdmin)
                             <th>Solicitante</th>
+                            @else
                             <th>Empresa objetivo</th>
-                            <th>Tipo acceso</th>
-                            <th>Status</th>
+                            @endif
+                            <th>Recurso solicitado</th>
+                            <th>Tipo</th>
+                            <th>Estado</th>
                             <th>Fecha</th>
-                            <th style="text-align:right">Acciones</th>
+                            <th style="text-align:right">{{ $esAdmin ? 'Acciones' : 'Ver' }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($solicitudes as $sol)
                         @php
-                            // Campo correcto: ->status con valores 'Pendiente','Aprobado','Rechazado'
-                            $sc = $statusColors[$sol->status] ?? ['bg'=>'#f1f5f9','color'=>'#64748b'];
+                            $sc = [
+                                'Pendiente' => ['bg'=>'rgba(245,158,11,.1)', 'color'=>'#d97706'],
+                                'Aprobado'  => ['bg'=>'rgba(5,150,105,.1)',  'color'=>'#059669'],
+                                'Rechazado' => ['bg'=>'rgba(220,38,38,.1)',  'color'=>'#dc2626'],
+                            ][$sol->status] ?? ['bg'=>'#f1f5f9','color'=>'#64748b'];
                         @endphp
                         <tr>
-                            {{-- Recurso (archivo o carpeta) --}}
-                            <td>
-                                <div style="display:flex;align-items:center;gap:10px">
-                                    @if($sol->archivo)
-                                    <div style="width:32px;height:32px;border-radius:8px;background:rgba(99,102,241,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="#6366f1"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg>
-                                    </div>
-                                    <div>
-                                        <div style="font-size:13px;font-weight:600;color:var(--fc-text)">
-                                            {{ Str::limit($sol->archivo->nombre_original ?? '(eliminado)', 35) }}
-                                        </div>
-                                        <div style="font-size:11px;color:var(--fc-text-muted)">
-                                            Carpeta: {{ $sol->archivo->carpeta->nombre ?? '—' }}
-                                        </div>
-                                    </div>
-                                    @elseif($sol->carpeta)
-                                    <div style="width:32px;height:32px;border-radius:8px;background:rgba(79,70,229,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="#4f46e5"><path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/></svg>
-                                    </div>
-                                    <div>
-                                        <div style="font-size:13px;font-weight:600;color:var(--fc-text)">
-                                            {{ Str::limit($sol->carpeta->nombre ?? '(eliminada)', 35) }}
-                                        </div>
-                                        <div style="font-size:11px;color:var(--fc-text-muted)">Carpeta</div>
-                                    </div>
-                                    @else
-                                    <span style="font-size:12px;color:var(--fc-text-muted)">— Recurso general —</span>
-                                    @endif
-                                </div>
-                            </td>
 
-                            {{-- Solicitante: relación correcta es ->solicitante --}}
+                            {{-- Col 1: Solicitante (admin) o Empresa objetivo (empleado) --}}
+                            @if($esAdmin)
                             <td>
                                 <div class="fc-user-cell">
                                     <div class="fc-user-avatar" style="width:30px;height:30px;font-size:10px">
@@ -152,67 +158,114 @@
                                     </div>
                                     <div>
                                         <div class="fc-user-nombre" style="font-size:12px">{{ $sol->solicitante->nombre_completo ?? '—' }}</div>
-                                        <div class="fc-user-email">{{ $sol->solicitante->email ?? '' }}</div>
+                                        <div class="fc-user-email" style="font-size:10px">
+                                            {{ $sol->solicitante->empresa->siglas ?? $sol->solicitante->empresa->nombre ?? '—' }}
+                                        </div>
                                     </div>
                                 </div>
                             </td>
-
-                            {{-- Empresa objetivo --}}
+                            @else
                             <td>
                                 @if($sol->empresaObjetivo)
-                                <span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:{{ $sol->empresaObjetivo->color_secundario ?? '#f1f5f9' }}22;color:{{ $sol->empresaObjetivo->color_primario ?? '#64748b' }}">
-                                    {{ $sol->empresaObjetivo->siglas ?? $sol->empresaObjetivo->nombre }}
-                                </span>
+                                <div style="display:flex;align-items:center;gap:8px">
+                                    <div style="width:28px;height:28px;border-radius:7px;background:rgba(99,102,241,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="#6366f1"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+                                    </div>
+                                    <div>
+                                        <div style="font-size:12px;font-weight:600;color:var(--fc-text)">{{ $sol->empresaObjetivo->nombre }}</div>
+                                        @if($sol->empresaObjetivo->siglas)
+                                        <div style="font-size:10px;color:var(--fc-text-muted)">{{ $sol->empresaObjetivo->siglas }}</div>
+                                        @endif
+                                    </div>
+                                </div>
                                 @else
                                 <span style="color:var(--fc-text-muted);font-size:12px">—</span>
                                 @endif
                             </td>
+                            @endif
 
-                            {{-- Tipo de acceso --}}
+                            {{-- Col 2: Recurso solicitado --}}
                             <td>
-                                <span class="fc-badge" style="background:rgba(99,102,241,.08);color:#4f46e5">
+                                @if($sol->archivo)
+                                <div style="display:flex;align-items:center;gap:9px">
+                                    <div style="width:30px;height:30px;border-radius:7px;background:rgba(99,102,241,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="#6366f1"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg>
+                                    </div>
+                                    <div>
+                                        <div style="font-size:12px;font-weight:600;color:var(--fc-text)">
+                                            {{ Str::limit($sol->archivo->nombre_original ?? '(eliminado)', 32) }}
+                                        </div>
+                                        <div style="font-size:10px;color:var(--fc-text-muted)">
+                                            En: {{ $sol->archivo->carpeta->nombre ?? '—' }}
+                                        </div>
+                                    </div>
+                                </div>
+                                @elseif($sol->carpeta)
+                                <div style="display:flex;align-items:center;gap:9px">
+                                    <div style="width:30px;height:30px;border-radius:7px;background:rgba(79,70,229,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="#4f46e5"><path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/></svg>
+                                    </div>
+                                    <div>
+                                        <div style="font-size:12px;font-weight:600;color:var(--fc-text)">
+                                            {{ Str::limit($sol->carpeta->nombre ?? '(eliminada)', 32) }}
+                                        </div>
+                                        <div style="font-size:10px;color:var(--fc-text-muted)">Carpeta</div>
+                                    </div>
+                                </div>
+                                @else
+                                <div style="display:flex;align-items:center;gap:9px">
+                                    <div style="width:30px;height:30px;border-radius:7px;background:rgba(100,116,139,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="#64748b"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+                                    </div>
+                                    <div>
+                                        <div style="font-size:12px;font-weight:600;color:var(--fc-text-muted)">Acceso general</div>
+                                        <div style="font-size:10px;color:var(--fc-text-muted)">Sin recurso específico</div>
+                                    </div>
+                                </div>
+                                @endif
+                            </td>
+
+                            {{-- Col 3: Tipo de acceso --}}
+                            <td>
+                                <span class="fc-badge" style="background:rgba(99,102,241,.08);color:#4f46e5;font-size:10px">
                                     {{ $sol->tipo_acceso ?? '—' }}
                                 </span>
                             </td>
 
-                            {{-- Status: campo correcto --}}
+                            {{-- Col 4: Estado --}}
                             <td>
-                                <span class="fc-badge" style="background:{{ $sc['bg'] }};color:{{ $sc['color'] }}">
+                                <span class="fc-badge" style="background:{{ $sc['bg'] }};color:{{ $sc['color'] }};font-size:10px">
                                     {{ $sol->status }}
                                 </span>
                             </td>
 
-                            {{-- Fecha --}}
-                            <td style="font-size:12px;color:var(--fc-text-muted);white-space:nowrap">
+                            {{-- Col 5: Fecha --}}
+                            <td style="font-size:11px;color:var(--fc-text-muted);white-space:nowrap">
                                 {{ $sol->created_at?->format('d/m/Y') ?? '—' }}
                             </td>
 
-                            {{-- Acciones --}}
+                            {{-- Col 6: Acciones --}}
                             <td>
                                 <div class="fc-table-actions" style="justify-content:flex-end">
                                     <a href="{{ route('solicitudes.show', $sol) }}" class="fc-action-ico" title="Ver detalle">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
                                     </a>
 
-                                    @if($sol->status === 'Pendiente' && in_array(Auth::user()->rol, ['Superadmin','Aux_QHSE','Admin','Gerente']))
-
-                                    {{-- Modal aprobar con comentario + caducidad opcional --}}
+                                    @if($sol->status === 'Pendiente' && $esAdmin)
                                     <button type="button" class="fc-action-ico toggle"
-                                            title="Aprobar"
-                                            style="color:#059669"
+                                            title="Aprobar solicitud"
                                             onclick="abrirModalAprobar({{ $sol->id }})">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                                     </button>
-
-                                    {{-- Modal rechazar (requiere comentario_revisor) --}}
                                     <button type="button" class="fc-action-ico danger"
-                                            title="Rechazar"
+                                            title="Rechazar solicitud"
                                             onclick="abrirModalRechazar({{ $sol->id }})">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
                                     </button>
                                     @endif
                                 </div>
                             </td>
+
                         </tr>
                         @endforeach
                     </tbody>
@@ -256,11 +309,12 @@
             <div class="fc-modal-sub">
                 <div class="fc-field" style="margin-bottom:12px">
                     <label class="fc-label">Comentario (opcional)</label>
-                    <textarea name="comentario_revisor" rows="3" class="fc-input" placeholder="Motivo de aprobación o instrucciones..."></textarea>
+                    <textarea name="comentario_revisor" rows="3" class="fc-input" placeholder="Instrucciones o condiciones de uso..."></textarea>
                 </div>
                 <div class="fc-field">
                     <label class="fc-label">Caduca el (opcional)</label>
                     <input type="date" name="caduca_en" class="fc-input" min="{{ now()->addDay()->format('Y-m-d') }}">
+                    <div class="fc-field-hint">Si no se especifica, el acceso no tiene fecha límite.</div>
                 </div>
             </div>
             <div class="fc-modal-btns">
@@ -281,6 +335,7 @@
                 <div class="fc-field">
                     <label class="fc-label">Motivo del rechazo <span style="color:#dc2626">*</span></label>
                     <textarea name="comentario_revisor" rows="3" class="fc-input" required placeholder="Indica por qué se rechaza la solicitud..."></textarea>
+                    <div class="fc-field-hint">El solicitante verá este mensaje.</div>
                 </div>
             </div>
             <div class="fc-modal-btns">
