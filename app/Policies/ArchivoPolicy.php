@@ -32,17 +32,33 @@ class ArchivoPolicy
         if ($this->esCarpetaCorporativa($carpeta)) return true;
 
         if ($carpeta->empresa_id !== $usuario->empresa_id) {
-            // Cross-empresa solo con solicitud aprobada
-            return \App\Models\SolicitudAcceso::where('solicitante_id', $usuario->id)
+            // 1. Solicitud aprobada para este archivo o su carpeta
+            $puede = \App\Models\SolicitudAcceso::where('solicitante_id', $usuario->id)
                 ->where(function ($q) use ($archivo, $carpeta) {
                     $q->where('archivo_id', $archivo->id)
                       ->orWhere('carpeta_id', $carpeta->id);
                 })
                 ->where('status', 'Aprobado')
-                ->where(function ($q) {
-                    $q->whereNull('caduca_en')->orWhere('caduca_en', '>', now());
-                })
+                ->where(fn($q) => $q->whereNull('caduca_en')->orWhere('caduca_en', '>', now()))
                 ->exists();
+
+            // 2. PermisoCarpeta directo (creado automáticamente al aprobar)
+            if (!$puede) {
+                $puede = (bool) ($carpeta->permisoEfectivo($usuario)?->puede_leer);
+            }
+
+            // 3. Acceso general aprobado a toda la empresa
+            if (!$puede) {
+                $puede = \App\Models\SolicitudAcceso::where('solicitante_id', $usuario->id)
+                    ->where('empresa_objetivo_id', $carpeta->empresa_id)
+                    ->whereNull('carpeta_id')
+                    ->whereNull('archivo_id')
+                    ->where('status', 'Aprobado')
+                    ->where(fn($q) => $q->whereNull('caduca_en')->orWhere('caduca_en', '>', now()))
+                    ->exists();
+            }
+
+            return $puede;
         }
 
         if ($carpeta->es_publico) return true;
@@ -144,18 +160,35 @@ class ArchivoPolicy
 
         // ── Cross-empresa (no corporativo) ────────────────────────────────
         if ($carpeta->empresa_id !== $usuario->empresa_id) {
-            return \App\Models\SolicitudAcceso::where('solicitante_id', $usuario->id)
+            // 1. Solicitud específica de descarga para este archivo o carpeta
+            $puede = \App\Models\SolicitudAcceso::where('solicitante_id', $usuario->id)
                 ->where(function ($q) use ($archivo, $carpeta) {
                     $q->where('archivo_id', $archivo->id)
                       ->orWhere('carpeta_id', $carpeta->id);
                 })
                 ->where('status', 'Aprobado')
                 ->where('tipo_acceso', 'Descargar')
-                ->where(function ($q) {
-                    $q->whereNull('caduca_en')
-                      ->orWhere('caduca_en', '>', now());
-                })
+                ->where(fn($q) => $q->whereNull('caduca_en')->orWhere('caduca_en', '>', now()))
                 ->exists();
+
+            // 2. PermisoCarpeta con puede_descargar (creado al aprobar)
+            if (!$puede) {
+                $puede = (bool) ($carpeta->permisoEfectivo($usuario)?->puede_descargar);
+            }
+
+            // 3. Acceso general aprobado con tipo_acceso=Descargar
+            if (!$puede) {
+                $puede = \App\Models\SolicitudAcceso::where('solicitante_id', $usuario->id)
+                    ->where('empresa_objetivo_id', $carpeta->empresa_id)
+                    ->whereNull('carpeta_id')
+                    ->whereNull('archivo_id')
+                    ->where('status', 'Aprobado')
+                    ->where('tipo_acceso', 'Descargar')
+                    ->where(fn($q) => $q->whereNull('caduca_en')->orWhere('caduca_en', '>', now()))
+                    ->exists();
+            }
+
+            return $puede;
         }
 
         // ── Carpeta en modo solo_lectura (misma empresa) ──────────────────
