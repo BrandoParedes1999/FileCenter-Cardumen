@@ -13,6 +13,7 @@ use App\Notifications\SolicitudAccesoResuelta;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class SolicitudAccesoController extends Controller
@@ -215,6 +216,12 @@ class SolicitudAccesoController extends Controller
         $solicitud->aprobar(Auth::id(), $request->comentario_revisor, $caduca);
         $solicitud->load(['carpeta', 'archivo', 'revisor', 'solicitante']);
 
+        // Descartar notificaciones pendientes de todos los admins para esta solicitud
+        DB::table('notifications')
+            ->whereNull('read_at')
+            ->whereJsonContains('data->solicitud_id', $solicitud->id)
+            ->update(['read_at' => now()]);
+
         RegistroActividad::registrar(
             'aprobar_solicitud', 'solicitud', $solicitud->id,
             "Aprobó solicitud de {$solicitud->solicitante->nombre_completo}"
@@ -247,6 +254,12 @@ class SolicitudAccesoController extends Controller
 
         $solicitud->rechazar(Auth::id(), $request->comentario_revisor);
         $solicitud->load(['carpeta', 'archivo', 'revisor', 'solicitante']);
+
+        // Descartar notificaciones pendientes de todos los admins para esta solicitud
+        DB::table('notifications')
+            ->whereNull('read_at')
+            ->whereJsonContains('data->solicitud_id', $solicitud->id)
+            ->update(['read_at' => now()]);
 
         RegistroActividad::registrar(
             'rechazar_solicitud', 'solicitud', $solicitud->id,

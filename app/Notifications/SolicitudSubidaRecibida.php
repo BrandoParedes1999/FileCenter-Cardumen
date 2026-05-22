@@ -38,10 +38,11 @@ class SolicitudSubidaRecibida extends Notification
         $carpeta = $this->solicitud->carpeta;
 
         return [
-            'tipo'    => 'solicitud_subida_recibida',
-            'titulo'  => 'Archivo pendiente de aprobación',
-            'mensaje' => "\"{$this->solicitud->nombre_original}\" espera aprobación en \"{$carpeta->nombre}\".",
-            'url'     => route('solicitudes-subida.show', $this->solicitud),
+            'tipo'         => 'solicitud_subida_recibida',
+            'titulo'       => 'Archivo pendiente de aprobación',
+            'mensaje'      => "\"{$this->solicitud->nombre_original}\" espera aprobación en \"{$carpeta->nombre}\".",
+            'url'          => route('solicitudes-subida.show', $this->solicitud),
+            'solicitud_id' => $this->solicitud->id,
         ];
     }
 }

@@ -182,6 +182,12 @@ class SolicitudSubidaController extends Controller
             "Aprobó subida de \"{$solicitudSubida->nombre_original}\" de {$usuario->nombre_completo}"
         );
 
+        // Descartar notificaciones pendientes de todos los admins para esta solicitud
+        DB::table('notifications')
+            ->whereNull('read_at')
+            ->whereJsonContains('data->solicitud_id', $solicitudSubida->id)
+            ->update(['read_at' => now()]);
+
         $solicitudSubida->load(['carpeta', 'solicitante']);
         $solicitudSubida->solicitante->notify(new SolicitudSubidaResuelta($solicitudSubida));
 
@@ -223,6 +229,12 @@ class SolicitudSubidaController extends Controller
             'rechazar_subida', 'carpeta', $solicitudSubida->carpeta_id,
             "Rechazó subida de \"{$solicitudSubida->nombre_original}\""
         );
+
+        // Descartar notificaciones pendientes de todos los admins para esta solicitud
+        DB::table('notifications')
+            ->whereNull('read_at')
+            ->whereJsonContains('data->solicitud_id', $solicitudSubida->id)
+            ->update(['read_at' => now()]);
 
         $solicitudSubida->load(['carpeta', 'solicitante']);
         $solicitudSubida->solicitante->notify(new SolicitudSubidaResuelta($solicitudSubida));

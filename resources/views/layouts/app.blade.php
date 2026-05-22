@@ -192,18 +192,57 @@
 </div>
 
 <script>
+// ── Audio Web API — sonido de notificación ───────────────────────
+var _fcAudioCtx = null;
+
+function _fcIniciarAudio() {
+    if (!_fcAudioCtx) {
+        try { _fcAudioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+    }
+}
+
+function _fcSonar() {
+    _fcIniciarAudio();
+    if (!_fcAudioCtx) return;
+    var play = function () {
+        try {
+            var t = _fcAudioCtx.currentTime;
+            // Dos tonos: agudo + grave (efecto "ding-dong" suave)
+            [[880, 0, 0.04, 0.28, 0.22], [660, 0.18, 0.22, 0.48, 0.14]].forEach(function (c) {
+                var o = _fcAudioCtx.createOscillator();
+                var g = _fcAudioCtx.createGain();
+                o.connect(g); g.connect(_fcAudioCtx.destination);
+                o.type = 'sine';
+                o.frequency.value = c[0];
+                g.gain.setValueAtTime(0, t + c[1]);
+                g.gain.linearRampToValueAtTime(c[4], t + c[2]);
+                g.gain.exponentialRampToValueAtTime(0.001, t + c[3]);
+                o.start(t + c[1]); o.stop(t + c[3] + 0.05);
+            });
+        } catch (e) {}
+    };
+    if (_fcAudioCtx.state === 'suspended') {
+        _fcAudioCtx.resume().then(play).catch(function () {});
+    } else {
+        play();
+    }
+}
+
+// Desbloquear AudioContext en la primera interacción del usuario
+['click', 'keydown', 'touchstart'].forEach(function (ev) {
+    document.addEventListener(ev, _fcIniciarAudio, { once: true });
+});
+
+// ── Polling de actualizaciones ───────────────────────────────────
 window.FcPoll = (function () {
     'use strict';
 
     var POLL_URL  = '{{ route("actualizaciones.recientes") }}';
     var INTERVALO = 30 * 1000;
+    var KEY       = 'fc_poll_v4_{{ Auth::id() }}';
 
-    // FIX 1: Key por usuario — evita que dos usuarios en el mismo
-    // navegador compartan el mismo localStorage y "contaminen" el baseline.
-    var KEY = 'fc_poll_v3_{{ Auth::id() }}';
-
-    var timer      = null;
-    var toastTimer = null;
+    var timer       = null;
+    var toastTimer  = null;
     var toastActivo = false;
 
     function guardar(d) {
@@ -217,6 +256,7 @@ window.FcPoll = (function () {
     function mostrarToast(titulo, detalle) {
         if (toastActivo) return;
         toastActivo = true;
+        _fcSonar();
         document.getElementById('fc-toast-titulo').textContent  = titulo;
         document.getElementById('fc-toast-detalle').textContent = detalle;
         document.getElementById('fc-poll-toast').classList.add('show');
@@ -230,12 +270,10 @@ window.FcPoll = (function () {
         if (toastTimer) clearTimeout(toastTimer);
     }
 
-    // FIX 3: comparar timestamps absolutos en vez de conteos
-    // con ventana deslizante.
     function analizar(nuevo, prev) {
         var partes = [];
 
-        // Solicitudes de subida — comparar conteo (no cambia con el tiempo)
+        // Solicitudes de subida pendientes
         var sn = nuevo.subidas_pendientes || 0;
         var sp = prev.subidas_pendientes  || 0;
         if (sn > sp) {
@@ -243,43 +281,53 @@ window.FcPoll = (function () {
             partes.push(d + ' solicitud' + (d > 1 ? 'es' : '') + ' de subida nueva' + (d > 1 ? 's' : ''));
         }
 
-        // Solicitudes de acceso — comparar conteo
+        // Solicitudes de acceso pendientes
         var an = nuevo.accesos_pendientes || 0;
         var ap = prev.accesos_pendientes  || 0;
         if (an > ap) {
             var d2 = an - ap;
-            partes.push(d2 + ' solicitud' + (d2 > 1 ? 'es' : '') + ' de acceso');
+            partes.push(d2 + ' solicitud' + (d2 > 1 ? 'es' : '') + ' de acceso nueva' + (d2 > 1 ? 's' : ''));
         }
 
-        // FIX 3A: comparar timestamp del archivo más reciente.
-        // Si el ts subió, significa que hay un archivo más nuevo que
-        // el que conocíamos. Funciona aunque abras la ventana días después.
+        // Archivo más reciente (evita notificar en el primer poll)
         var uan = nuevo.ultimo_archivo_ts || 0;
         var uap = prev.ultimo_archivo_ts  || 0;
         if (uan > uap && uap > 0) {
-            // uap > 0 evita notificar al primer poll (cuando no hay baseline aún)
             partes.push('hay archivos nuevos disponibles');
         }
 
-        // FIX 3B: igual para revisión de mis subidas
+        // Revisión de subida propia
         var rn = nuevo.ultima_revision_ts || 0;
         var rp = prev.ultima_revision_ts  || 0;
         if (rn > rp && rp > 0) {
             partes.push('una de tus subidas fue revisada');
         }
 
+        // Revisión de solicitud de acceso propia
+        var ran = nuevo.ultima_revision_acceso_ts || 0;
+        var rap = prev.ultima_revision_acceso_ts  || 0;
+        if (ran > rap && rap > 0) {
+            partes.push('tu solicitud de acceso fue revisada');
+        }
+
         return partes;
     }
 
     function actualizarBadges(datos) {
-        var badge = document.querySelector('.fc-nav-badge');
-        if (!badge) return;
-        var total = (datos.subidas_pendientes || 0) + (datos.accesos_pendientes || 0);
-        if (total > 0) {
-            badge.textContent    = total > 99 ? '99+' : total;
-            badge.style.display  = '';
-        } else {
-            badge.style.display  = 'none';
+        // Badge de notificaciones no leídas
+        var notifBadge = document.getElementById('fc-notif-badge');
+        if (notifBadge) {
+            var nn = datos.notif_no_leidas || 0;
+            notifBadge.textContent   = nn > 99 ? '99+' : nn;
+            notifBadge.style.display = nn > 0 ? '' : 'none';
+        }
+
+        // Badge de subidas pendientes
+        var subidasBadge = document.getElementById('fc-subidas-badge');
+        if (subidasBadge) {
+            var sp2 = datos.subidas_pendientes || 0;
+            subidasBadge.textContent   = sp2 > 99 ? '99+' : sp2;
+            subidasBadge.style.display = sp2 > 0 ? '' : 'none';
         }
     }
 
@@ -302,7 +350,7 @@ window.FcPoll = (function () {
             if (prev) {
                 var cambios = analizar(datos, prev);
                 if (cambios.length > 0) {
-                    var titulo  = cambios.length === 1
+                    var titulo = cambios.length === 1
                         ? 'Hay cambios en el sistema'
                         : cambios.length + ' cambios nuevos';
                     mostrarToast(titulo, cambios.join(' · '));
@@ -313,20 +361,13 @@ window.FcPoll = (function () {
             actualizarBadges(datos);
 
         } catch (e) {
-            // Red caída — silencioso, lo reintentará en el siguiente ciclo
+            // Red caída — silencioso, reintenta en el siguiente ciclo
         }
     }
 
     function iniciar() {
-        poll(); // primer poll inmediato para establecer baseline
-
-        // FIX 2: NO pausar el polling cuando la pestaña está en
-        // segundo plano. El intervalo de 30s ya es poco costoso;
-        // pausarlo causaba que el usuario nunca viera la notificación
-        // si tenía el foco en la ventana del admin.
+        poll();
         timer = setInterval(poll, INTERVALO);
-
-        // Solo reactivar al volver de offline
         window.addEventListener('online', poll);
     }
 
@@ -342,7 +383,7 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', FcPoll.iniciar);
 } else {
     FcPoll.iniciar();
-}  
+}
 </script>
 @endauth
     </body>
