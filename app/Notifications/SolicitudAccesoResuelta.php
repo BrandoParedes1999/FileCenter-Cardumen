@@ -67,9 +67,7 @@ class SolicitudAccesoResuelta extends Notification
             'mensaje'      => $aprobada
                 ? "Tu solicitud de \"{$recurso}\" fue aprobada."
                 : "Tu solicitud de \"{$recurso}\" fue rechazada.",
-            'url'          => $aprobada && $carpeta
-                ? route('carpetas.show', $carpeta)
-                : route('solicitudes.index'),
+            'url'          => route('solicitudes.show', $this->solicitud),
             'solicitud_id' => $this->solicitud->id,
         ];
     }

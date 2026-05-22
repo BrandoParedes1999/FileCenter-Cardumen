@@ -658,10 +658,23 @@ window.fcNotifDrawer = (function () {
     }
 
     function visitarUrl(id, event) {
-        // Mark as read silently; navigation follows the anchor naturally
+        event.preventDefault();
+        var href = event.currentTarget.href;
         _ajaxPost('{{ url("notificaciones") }}/' + id + '/leer').then(function (data) {
             _actualizarBadgeGlobal(data.notif_no_leidas);
-        }).catch(function () {});
+            var item = document.getElementById('fc-nd-' + id);
+            if (item) {
+                item.classList.remove('unread');
+                item.classList.add('read');
+                var dot = item.querySelector('.fc-nd-dot');
+                if (dot) dot.style.background = 'transparent';
+                var btn = item.querySelector('.fc-nd-btn-read');
+                if (btn) btn.style.display = 'none';
+            }
+            window.location.href = href;
+        }).catch(function () {
+            window.location.href = href;
+        });
     }
 
     document.addEventListener('keydown', function (e) {
