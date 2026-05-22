@@ -192,18 +192,57 @@
 </div>
 
 <script>
+// ── Audio Web API — sonido de notificación ───────────────────────
+var _fcAudioCtx = null;
+
+function _fcIniciarAudio() {
+    if (!_fcAudioCtx) {
+        try { _fcAudioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+    }
+}
+
+function _fcSonar() {
+    _fcIniciarAudio();
+    if (!_fcAudioCtx) return;
+    var play = function () {
+        try {
+            var t = _fcAudioCtx.currentTime;
+            // Dos tonos: agudo + grave (efecto "ding-dong" suave)
+            [[880, 0, 0.04, 0.28, 0.22], [660, 0.18, 0.22, 0.48, 0.14]].forEach(function (c) {
+                var o = _fcAudioCtx.createOscillator();
+                var g = _fcAudioCtx.createGain();
+                o.connect(g); g.connect(_fcAudioCtx.destination);
+                o.type = 'sine';
+                o.frequency.value = c[0];
+                g.gain.setValueAtTime(0, t + c[1]);
+                g.gain.linearRampToValueAtTime(c[4], t + c[2]);
+                g.gain.exponentialRampToValueAtTime(0.001, t + c[3]);
+                o.start(t + c[1]); o.stop(t + c[3] + 0.05);
+            });
+        } catch (e) {}
+    };
+    if (_fcAudioCtx.state === 'suspended') {
+        _fcAudioCtx.resume().then(play).catch(function () {});
+    } else {
+        play();
+    }
+}
+
+// Desbloquear AudioContext en la primera interacción del usuario
+['click', 'keydown', 'touchstart'].forEach(function (ev) {
+    document.addEventListener(ev, _fcIniciarAudio, { once: true });
+});
+
+// ── Polling de actualizaciones ───────────────────────────────────
 window.FcPoll = (function () {
     'use strict';
 
     var POLL_URL  = '{{ route("actualizaciones.recientes") }}';
     var INTERVALO = 30 * 1000;
+    var KEY       = 'fc_poll_v4_{{ Auth::id() }}';
 
-    // FIX 1: Key por usuario — evita que dos usuarios en el mismo
-    // navegador compartan el mismo localStorage y "contaminen" el baseline.
-    var KEY = 'fc_poll_v3_{{ Auth::id() }}';
-
-    var timer      = null;
-    var toastTimer = null;
+    var timer       = null;
+    var toastTimer  = null;
     var toastActivo = false;
 
     function guardar(d) {
@@ -217,6 +256,7 @@ window.FcPoll = (function () {
     function mostrarToast(titulo, detalle) {
         if (toastActivo) return;
         toastActivo = true;
+        _fcSonar();
         document.getElementById('fc-toast-titulo').textContent  = titulo;
         document.getElementById('fc-toast-detalle').textContent = detalle;
         document.getElementById('fc-poll-toast').classList.add('show');
@@ -230,12 +270,10 @@ window.FcPoll = (function () {
         if (toastTimer) clearTimeout(toastTimer);
     }
 
-    // FIX 3: comparar timestamps absolutos en vez de conteos
-    // con ventana deslizante.
     function analizar(nuevo, prev) {
         var partes = [];
 
-        // Solicitudes de subida — comparar conteo (no cambia con el tiempo)
+        // Solicitudes de subida pendientes
         var sn = nuevo.subidas_pendientes || 0;
         var sp = prev.subidas_pendientes  || 0;
         if (sn > sp) {
@@ -243,43 +281,58 @@ window.FcPoll = (function () {
             partes.push(d + ' solicitud' + (d > 1 ? 'es' : '') + ' de subida nueva' + (d > 1 ? 's' : ''));
         }
 
-        // Solicitudes de acceso — comparar conteo
+        // Solicitudes de acceso pendientes
         var an = nuevo.accesos_pendientes || 0;
         var ap = prev.accesos_pendientes  || 0;
         if (an > ap) {
             var d2 = an - ap;
-            partes.push(d2 + ' solicitud' + (d2 > 1 ? 'es' : '') + ' de acceso');
+            partes.push(d2 + ' solicitud' + (d2 > 1 ? 'es' : '') + ' de acceso nueva' + (d2 > 1 ? 's' : ''));
         }
 
-        // FIX 3A: comparar timestamp del archivo más reciente.
-        // Si el ts subió, significa que hay un archivo más nuevo que
-        // el que conocíamos. Funciona aunque abras la ventana días después.
+        // Archivo más reciente (evita notificar en el primer poll)
         var uan = nuevo.ultimo_archivo_ts || 0;
         var uap = prev.ultimo_archivo_ts  || 0;
         if (uan > uap && uap > 0) {
-            // uap > 0 evita notificar al primer poll (cuando no hay baseline aún)
             partes.push('hay archivos nuevos disponibles');
         }
 
-        // FIX 3B: igual para revisión de mis subidas
+        // Revisión de subida propia
         var rn = nuevo.ultima_revision_ts || 0;
         var rp = prev.ultima_revision_ts  || 0;
         if (rn > rp && rp > 0) {
             partes.push('una de tus subidas fue revisada');
         }
 
+        // Revisión de solicitud de acceso propia
+        var ran = nuevo.ultima_revision_acceso_ts || 0;
+        var rap = prev.ultima_revision_acceso_ts  || 0;
+        if (ran > rap && rap > 0) {
+            partes.push('tu solicitud de acceso fue revisada');
+        }
+
         return partes;
     }
 
     function actualizarBadges(datos) {
-        var badge = document.querySelector('.fc-nav-badge');
-        if (!badge) return;
-        var total = (datos.subidas_pendientes || 0) + (datos.accesos_pendientes || 0);
-        if (total > 0) {
-            badge.textContent    = total > 99 ? '99+' : total;
-            badge.style.display  = '';
-        } else {
-            badge.style.display  = 'none';
+        // Badge de notificaciones no leídas
+        var nn = datos.notif_no_leidas || 0;
+        var notifBadge = document.getElementById('fc-notif-badge');
+        if (notifBadge) {
+            notifBadge.textContent   = nn > 99 ? '99+' : nn;
+            notifBadge.style.display = nn > 0 ? '' : 'none';
+        }
+        var drawerCount = document.getElementById('fc-drawer-count');
+        if (drawerCount) {
+            drawerCount.textContent   = nn > 99 ? '99+' : nn;
+            drawerCount.style.display = nn > 0 ? '' : 'none';
+        }
+
+        // Badge de subidas pendientes
+        var subidasBadge = document.getElementById('fc-subidas-badge');
+        if (subidasBadge) {
+            var sp2 = datos.subidas_pendientes || 0;
+            subidasBadge.textContent   = sp2 > 99 ? '99+' : sp2;
+            subidasBadge.style.display = sp2 > 0 ? '' : 'none';
         }
     }
 
@@ -302,7 +355,7 @@ window.FcPoll = (function () {
             if (prev) {
                 var cambios = analizar(datos, prev);
                 if (cambios.length > 0) {
-                    var titulo  = cambios.length === 1
+                    var titulo = cambios.length === 1
                         ? 'Hay cambios en el sistema'
                         : cambios.length + ' cambios nuevos';
                     mostrarToast(titulo, cambios.join(' · '));
@@ -313,20 +366,13 @@ window.FcPoll = (function () {
             actualizarBadges(datos);
 
         } catch (e) {
-            // Red caída — silencioso, lo reintentará en el siguiente ciclo
+            // Red caída — silencioso, reintenta en el siguiente ciclo
         }
     }
 
     function iniciar() {
-        poll(); // primer poll inmediato para establecer baseline
-
-        // FIX 2: NO pausar el polling cuando la pestaña está en
-        // segundo plano. El intervalo de 30s ya es poco costoso;
-        // pausarlo causaba que el usuario nunca viera la notificación
-        // si tenía el foco en la ventana del admin.
+        poll();
         timer = setInterval(poll, INTERVALO);
-
-        // Solo reactivar al volver de offline
         window.addEventListener('online', poll);
     }
 
@@ -342,7 +388,288 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', FcPoll.iniciar);
 } else {
     FcPoll.iniciar();
-}  
+}
+</script>
+
+{{-- ═══════════════════════════════════════════════════════════
+     NOTIFICATION DRAWER
+     ═══════════════════════════════════════════════════════════ --}}
+<style>
+/* ── Drawer backdrop ───────────────────────────────────────── */
+#fc-notif-bd {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 8000;
+    cursor: pointer;
+}
+#fc-notif-bd.open { display: block; }
+
+/* ── Drawer panel ──────────────────────────────────────────── */
+#fc-notif-drawer {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: 380px; max-width: 100vw;
+    background: #0f172a;
+    border-left: 1px solid rgba(255,255,255,.08);
+    box-shadow: -8px 0 40px rgba(0,0,0,.5);
+    z-index: 8100;
+    display: flex; flex-direction: column;
+    transform: translateX(100%);
+    transition: transform .3s cubic-bezier(.4,0,.2,1);
+}
+#fc-notif-drawer.open { transform: translateX(0); }
+
+/* ── Header ────────────────────────────────────────────────── */
+.fc-nd-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 18px 16px 14px;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    flex-shrink: 0;
+}
+.fc-nd-title {
+    font-size: 15px; font-weight: 700; color: #f1f5f9;
+    flex: 1; margin: 0;
+}
+#fc-drawer-count {
+    font-size: 10px; font-weight: 700;
+    background: #ef4444; color: #fff;
+    border-radius: 999px; padding: 1px 7px;
+    display: none;
+}
+.fc-nd-mark-all {
+    background: none; border: 1px solid rgba(99,102,241,.5);
+    color: #a5b4fc; font-size: 11px; font-weight: 600;
+    border-radius: 6px; padding: 4px 10px; cursor: pointer;
+    transition: background .15s, color .15s;
+}
+.fc-nd-mark-all:hover { background: rgba(99,102,241,.2); color: #e0e7ff; }
+.fc-nd-close {
+    background: none; border: none;
+    color: rgba(241,245,249,.4); font-size: 20px; line-height: 1;
+    cursor: pointer; padding: 2px 6px;
+    transition: color .15s;
+}
+.fc-nd-close:hover { color: #f1f5f9; }
+
+/* ── Notification list ─────────────────────────────────────── */
+.fc-nd-list {
+    flex: 1; overflow-y: auto;
+    padding: 8px 0;
+}
+.fc-nd-empty {
+    padding: 40px 24px;
+    text-align: center;
+    color: rgba(241,245,249,.35);
+    font-size: 13px;
+}
+
+/* ── Notification item ─────────────────────────────────────── */
+.fc-nd-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+    transition: background .12s;
+}
+.fc-nd-item:hover { background: rgba(255,255,255,.04); }
+.fc-nd-item.unread { background: rgba(99,102,241,.07); }
+.fc-nd-item.unread:hover { background: rgba(99,102,241,.12); }
+
+.fc-nd-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #6366f1; flex-shrink: 0; margin-top: 5px;
+}
+.fc-nd-item.read .fc-nd-dot { background: transparent; }
+
+.fc-nd-body { flex: 1; min-width: 0; }
+.fc-nd-msg {
+    font-size: 12px; color: #e2e8f0; line-height: 1.45;
+    word-break: break-word;
+}
+.fc-nd-time {
+    font-size: 10px; color: rgba(241,245,249,.35);
+    margin-top: 3px;
+}
+
+.fc-nd-btn-read {
+    background: none; border: 1px solid rgba(255,255,255,.1);
+    color: rgba(241,245,249,.5); font-size: 10px; font-weight: 600;
+    border-radius: 5px; padding: 3px 8px; cursor: pointer;
+    white-space: nowrap; flex-shrink: 0; align-self: center;
+    transition: background .15s, color .15s, border-color .15s;
+}
+.fc-nd-btn-read:hover {
+    background: rgba(99,102,241,.2); color: #e0e7ff;
+    border-color: rgba(99,102,241,.5);
+}
+.fc-nd-item.read .fc-nd-btn-read { display: none; }
+
+/* ── Footer ────────────────────────────────────────────────── */
+.fc-nd-footer {
+    padding: 12px 16px;
+    border-top: 1px solid rgba(255,255,255,.07);
+    flex-shrink: 0;
+}
+.fc-nd-footer a {
+    display: block; text-align: center;
+    font-size: 12px; font-weight: 600; color: #a5b4fc;
+    text-decoration: none;
+    padding: 7px; border-radius: 7px;
+    transition: background .15s;
+}
+.fc-nd-footer a:hover { background: rgba(99,102,241,.15); }
+</style>
+
+{{-- Drawer backdrop --}}
+<div id="fc-notif-bd" onclick="fcNotifDrawer.close()"></div>
+
+{{-- Drawer panel --}}
+<div id="fc-notif-drawer" role="dialog" aria-label="Notificaciones">
+    <div class="fc-nd-header">
+        <span class="fc-nd-title">Notificaciones</span>
+        <span id="fc-drawer-count"></span>
+        <button class="fc-nd-mark-all" onclick="fcNotifDrawer.marcarTodas()">Marcar todas</button>
+        <button class="fc-nd-close" onclick="fcNotifDrawer.close()" aria-label="Cerrar">✕</button>
+    </div>
+
+    <div class="fc-nd-list" id="fc-nd-list">
+        @php
+            $ndItems = Auth::user()->notifications()->latest()->take(15)->get();
+        @endphp
+
+        @forelse($ndItems as $n)
+            @php
+                $nData   = $n->data ?? [];
+                $nTitulo = $nData['titulo']  ?? 'Notificación';
+                $nMsg    = $nData['mensaje'] ?? ($nData['body'] ?? '');
+                $nUrl    = $nData['url']     ?? null;
+                $nTime   = $n->created_at->diffForHumans();
+                $nRead   = ! is_null($n->read_at);
+            @endphp
+            <div class="fc-nd-item {{ $nRead ? 'read' : 'unread' }}" id="fc-nd-{{ $n->id }}">
+                <div class="fc-nd-dot"></div>
+                <div class="fc-nd-body">
+                    <div style="font-size:12px;font-weight:600;color:#e2e8f0;margin-bottom:2px">
+                        @if($nUrl)
+                            <a href="{{ $nUrl }}" style="color:inherit;text-decoration:none"
+                               onclick="fcNotifDrawer.visitarUrl('{{ $n->id }}', event)">{{ $nTitulo }}</a>
+                        @else
+                            {{ $nTitulo }}
+                        @endif
+                    </div>
+                    @if($nMsg)
+                    <div class="fc-nd-msg">{{ $nMsg }}</div>
+                    @endif
+                    <div class="fc-nd-time">{{ $nTime }}</div>
+                </div>
+                @if(! $nRead)
+                <button class="fc-nd-btn-read"
+                        onclick="fcNotifDrawer.marcarLeida('{{ $n->id }}', this)">✓ Leído</button>
+                @endif
+            </div>
+        @empty
+            <div class="fc-nd-empty">No tienes notificaciones.</div>
+        @endforelse
+    </div>
+
+    <div class="fc-nd-footer">
+        <a href="{{ route('notificaciones.index') }}">Ver todas las notificaciones →</a>
+    </div>
+</div>
+
+<script>
+window.fcNotifDrawer = (function () {
+    'use strict';
+
+    var CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+    function open() {
+        document.getElementById('fc-notif-bd').classList.add('open');
+        document.getElementById('fc-notif-drawer').classList.add('open');
+    }
+
+    function close() {
+        document.getElementById('fc-notif-bd').classList.remove('open');
+        document.getElementById('fc-notif-drawer').classList.remove('open');
+    }
+
+    function toggle() {
+        var drawer = document.getElementById('fc-notif-drawer');
+        if (drawer.classList.contains('open')) { close(); } else { open(); }
+    }
+
+    function _ajaxPost(url) {
+        return fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept':           'application/json',
+                'X-CSRF-TOKEN':     CSRF,
+            },
+            credentials: 'same-origin',
+        }).then(function (r) { return r.ok ? r.json() : Promise.reject(r); });
+    }
+
+    function _actualizarBadgeGlobal(count) {
+        var badge       = document.getElementById('fc-notif-badge');
+        var drawerCount = document.getElementById('fc-drawer-count');
+        var n = count || 0;
+
+        if (badge) {
+            badge.textContent   = n > 99 ? '99+' : n;
+            badge.style.display = n > 0 ? '' : 'none';
+        }
+        if (drawerCount) {
+            drawerCount.textContent   = n > 99 ? '99+' : n;
+            drawerCount.style.display = n > 0 ? '' : 'none';
+        }
+    }
+
+    function marcarLeida(id, btn) {
+        _ajaxPost('{{ url("notificaciones") }}/' + id + '/leer')
+            .then(function (data) {
+                var item = document.getElementById('fc-nd-' + id);
+                if (item) {
+                    item.classList.remove('unread');
+                    item.classList.add('read');
+                    var dot = item.querySelector('.fc-nd-dot');
+                    if (dot) dot.style.background = 'transparent';
+                    if (btn) btn.style.display = 'none';
+                }
+                _actualizarBadgeGlobal(data.notif_no_leidas);
+            })
+            .catch(function () {});
+    }
+
+    function marcarTodas() {
+        _ajaxPost('{{ route("notificaciones.leer-todas") }}')
+            .then(function (data) {
+                document.querySelectorAll('.fc-nd-item.unread').forEach(function (item) {
+                    item.classList.remove('unread');
+                    item.classList.add('read');
+                    var dot = item.querySelector('.fc-nd-dot');
+                    if (dot) dot.style.background = 'transparent';
+                    var btn = item.querySelector('.fc-nd-btn-read');
+                    if (btn) btn.style.display = 'none';
+                });
+                _actualizarBadgeGlobal(0);
+            })
+            .catch(function () {});
+    }
+
+    function visitarUrl(id, event) {
+        // Mark as read silently; navigation follows the anchor naturally
+        _ajaxPost('{{ url("notificaciones") }}/' + id + '/leer').then(function (data) {
+            _actualizarBadgeGlobal(data.notif_no_leidas);
+        }).catch(function () {});
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') close();
+    });
+
+    return { open: open, close: close, toggle: toggle, marcarLeida: marcarLeida, marcarTodas: marcarTodas, visitarUrl: visitarUrl };
+})();
 </script>
 @endauth
     </body>

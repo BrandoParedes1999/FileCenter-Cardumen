@@ -241,9 +241,21 @@ class DashboardController extends Controller
             $data['ultima_revision_ts'] = $ultimaRevision
                 ? \Carbon\Carbon::parse($ultimaRevision)->timestamp
                 : 0;
+
+            $ultimaRevisionAcceso = SolicitudAcceso::where('solicitante_id', $usuario->id)
+                ->whereIn('status', ['Aprobado', 'Rechazado'])
+                ->max('revisado_en');
+
+            $data['ultima_revision_acceso_ts'] = $ultimaRevisionAcceso
+                ? \Carbon\Carbon::parse($ultimaRevisionAcceso)->timestamp
+                : 0;
         } else {
-            $data['ultima_revision_ts'] = 0;
+            $data['ultima_revision_ts']        = 0;
+            $data['ultima_revision_acceso_ts'] = 0;
         }
+
+        // Notificaciones no leídas del usuario actual
+        $data['notif_no_leidas'] = $usuario->unreadNotifications()->count();
 
         // Usuarios en línea (solo Superadmin)
         if ($rol === 'Superadmin') {

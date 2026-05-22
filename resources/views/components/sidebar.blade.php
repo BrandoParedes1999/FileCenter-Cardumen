@@ -162,16 +162,18 @@
             Mis Áreas
         </a>
 
-        <a href="{{ route('notificaciones.index') }}"
-           class="fc-nav-item {{ request()->routeIs('notificaciones.*') ? 'active' : '' }}">
+        <button type="button" onclick="fcNotifDrawer.toggle()"
+           class="fc-nav-item {{ request()->routeIs('notificaciones.*') ? 'active' : '' }}"
+           style="width:100%;background:none;border:none;text-align:left;cursor:pointer">
             <svg viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
             </svg>
             Notificaciones
-            @if($notifNoLeidas > 0)
-                <span class="fc-nav-badge">{{ $notifNoLeidas }}</span>
-            @endif
-        </a>
+            <span id="fc-notif-badge" class="fc-nav-badge"
+                  @if($notifNoLeidas <= 0) style="display:none" @endif>
+                {{ $notifNoLeidas > 99 ? '99+' : $notifNoLeidas }}
+            </span>
+        </button>
 
         {{-- NAV PRINCIPAL: después del item "Mis Áreas" --}}
             @if(in_array(Auth::user()->rol, ['Superadmin', 'Aux_QHSE', 'Admin', 'Gerente']))
@@ -195,9 +197,10 @@
                 <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
             </svg>
             Subidas pendientes
-            @if($solSubidaPendientes > 0)
-                <span class="fc-nav-badge">{{ $solSubidaPendientes }}</span>
-            @endif
+            <span id="fc-subidas-badge" class="fc-nav-badge"
+                  @if($solSubidaPendientes <= 0) style="display:none" @endif>
+                {{ $solSubidaPendientes > 99 ? '99+' : $solSubidaPendientes }}
+            </span>
         </a>
         <a href="{{ route('papelera.index') }}"
            class="fc-nav-item {{ request()->routeIs('papelera.*') ? 'active' : '' }}">

@@ -41,35 +41,50 @@ class CompanyScope
         if ($carpetaId = $request->route('carpeta') ?? $request->route('carpeta_id')) {
             $id = is_object($carpetaId) ? $carpetaId->id : $carpetaId;
 
+            // Obtenemos empresa_id una sola vez para reutilizar en todos los checks.
+            $empresaIdCarpeta = \App\Models\Carpeta::withTrashed()->where('id', $id)->value('empresa_id');
+
             // Carpeta de la misma empresa → OK
-            $esPropiaEmpresa = \App\Models\Carpeta::where('id', $id)
-                ->where('empresa_id', $usuario->empresa_id)
-                ->withTrashed()
-                ->exists();
-
-            if (!$esPropiaEmpresa) {
-                // ¿Es carpeta del corporativo? → todos los usuarios activos pueden acceder
-                $esCorporativo = \App\Models\Carpeta::where('id', $id)
-                    ->whereHas('empresa', fn($q) => $q->where('es_corporativo', true))
-                    ->withTrashed()
+            if ((int) $empresaIdCarpeta === (int) $usuario->empresa_id) {
+                // continúa
+            } else {
+                // ¿Es carpeta del corporativo?
+                $esCorporativo = \App\Models\Empresa::where('id', $empresaIdCarpeta)
+                    ->where('es_corporativo', true)
                     ->exists();
 
-                if ($esCorporativo) {
-                    return; // Permitido: corporativo es accesible para todos
-                }
+                if (!$esCorporativo) {
+                    // 1. Solicitud aprobada y vigente para esta carpeta específica
+                    $permitido = \App\Models\SolicitudAcceso::where('solicitante_id', $usuario->id)
+                        ->where('carpeta_id', $id)
+                        ->where('status', 'Aprobado')
+                        ->where(fn($q) => $q->whereNull('caduca_en')->orWhere('caduca_en', '>', now()))
+                        ->exists();
 
-                // ¿Tiene solicitud de acceso aprobada y vigente para esta carpeta?
-                $tieneAcceso = \App\Models\SolicitudAcceso::where('solicitante_id', $usuario->id)
-                    ->where('carpeta_id', $id)
-                    ->where('status', 'Aprobado')
-                    ->where(function ($q) {
-                        $q->whereNull('caduca_en')
-                        ->orWhere('caduca_en', '>', now());
-                    })
-                    ->exists();
+                    // 2. PermisoCarpeta directo otorgado al usuario
+                    //    (cubre aprobaciones de archivo-only y acceso general a la empresa)
+                    if (!$permitido) {
+                        $permitido = \App\Models\PermisoCarpeta::where('carpeta_id', $id)
+                            ->where('usuario_id', $usuario->id)
+                            ->where('puede_leer', true)
+                            ->exists();
+                    }
 
-                if (!$tieneAcceso) {
-                    abort(403, 'No tienes acceso a esta carpeta.');
+                    // 3. Acceso general aprobado a toda la empresa
+                    //    (cubre sub-carpetas cuyo PermisoCarpeta se hereda de la raíz)
+                    if (!$permitido && $empresaIdCarpeta) {
+                        $permitido = \App\Models\SolicitudAcceso::where('solicitante_id', $usuario->id)
+                            ->where('empresa_objetivo_id', $empresaIdCarpeta)
+                            ->whereNull('carpeta_id')
+                            ->whereNull('archivo_id')
+                            ->where('status', 'Aprobado')
+                            ->where(fn($q) => $q->whereNull('caduca_en')->orWhere('caduca_en', '>', now()))
+                            ->exists();
+                    }
+
+                    if (!$permitido) {
+                        abort(403, 'No tienes acceso a esta carpeta.');
+                    }
                 }
             }
         }
@@ -112,6 +127,36 @@ class CompanyScope
                         ->orWhere('caduca_en', '>', now());
                     })
                     ->exists();
+
+                // PermisoCarpeta directo del usuario en la carpeta del archivo
+                // (cubre: aprobaciones de carpeta y de archivo específico)
+                if (!$tieneAcceso) {
+                    $tieneAcceso = \App\Models\PermisoCarpeta::where('usuario_id', $usuario->id)
+                        ->where('puede_leer', true)
+                        ->whereIn('carpeta_id', function ($sub) use ($id) {
+                            $sub->select('carpeta_id')
+                                ->from('archivos')
+                                ->where('id', $id);
+                        })
+                        ->exists();
+                }
+
+                // Acceso general aprobado a la empresa del archivo
+                if (!$tieneAcceso) {
+                    $empresaIdArchivo = \App\Models\Archivo::where('archivos.id', $id)
+                        ->join('carpetas', 'archivos.carpeta_id', '=', 'carpetas.id')
+                        ->value('carpetas.empresa_id');
+
+                    if ($empresaIdArchivo) {
+                        $tieneAcceso = \App\Models\SolicitudAcceso::where('solicitante_id', $usuario->id)
+                            ->where('empresa_objetivo_id', $empresaIdArchivo)
+                            ->whereNull('carpeta_id')
+                            ->whereNull('archivo_id')
+                            ->where('status', 'Aprobado')
+                            ->where(fn($q) => $q->whereNull('caduca_en')->orWhere('caduca_en', '>', now()))
+                            ->exists();
+                    }
+                }
 
                 if (!$tieneAcceso) {
                     abort(403, 'No tienes acceso a este archivo.');
