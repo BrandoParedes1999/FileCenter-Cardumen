@@ -23,22 +23,26 @@ class SolicitudAccesoResuelta extends Notification
         $aprobada = $this->solicitud->fueAprobada();
         $carpeta  = $this->solicitud->carpeta;
         $revisor  = $this->solicitud->revisor;
+        $recurso  = $carpeta?->nombre
+                 ?? $this->solicitud->archivo?->nombre_original
+                 ?? 'el recurso solicitado';
 
         $message = (new MailMessage)
             ->subject(($aprobada ? '✓ Acceso aprobado' : '✗ Acceso denegado') . ' — FileCenter')
             ->greeting('Hola, ' . $notifiable->nombre_completo);
 
         if ($aprobada) {
-            $message
-                ->line("Tu solicitud de acceso a la carpeta \"{$carpeta->nombre}\" fue **aprobada** por {$revisor->nombre_completo}.")
-                ->action('Ver carpeta', route('carpetas.show', $carpeta));
+            $message->line("Tu solicitud de acceso a \"{$recurso}\" fue **aprobada** por {$revisor->nombre_completo}.");
+
+            if ($carpeta) {
+                $message->action('Ver carpeta', route('carpetas.show', $carpeta));
+            }
 
             if ($this->solicitud->caduca_en) {
                 $message->line('El acceso expira el: ' . $this->solicitud->caduca_en->format('d/m/Y'));
             }
         } else {
-            $message
-                ->line("Tu solicitud de acceso a la carpeta \"{$carpeta->nombre}\" fue **rechazada**.");
+            $message->line("Tu solicitud de acceso a \"{$recurso}\" fue **rechazada**.");
         }
 
         if ($this->solicitud->comentario_revisor) {
@@ -52,14 +56,19 @@ class SolicitudAccesoResuelta extends Notification
     {
         $aprobada = $this->solicitud->fueAprobada();
         $carpeta  = $this->solicitud->carpeta;
+        $recurso  = $carpeta?->nombre
+                 ?? $this->solicitud->archivo?->nombre_original
+                 ?? 'el recurso solicitado';
 
         return [
             'tipo'    => 'solicitud_acceso_resuelta',
             'titulo'  => $aprobada ? 'Acceso aprobado' : 'Acceso denegado',
             'mensaje' => $aprobada
-                ? "Tu acceso a \"{$carpeta->nombre}\" fue aprobado."
-                : "Tu solicitud de acceso a \"{$carpeta->nombre}\" fue rechazada.",
-            'url'     => $aprobada ? route('carpetas.show', $carpeta) : route('solicitudes.index'),
+                ? "Tu acceso a \"{$recurso}\" fue aprobado."
+                : "Tu solicitud de acceso a \"{$recurso}\" fue rechazada.",
+            'url'     => $aprobada && $carpeta
+                ? route('carpetas.show', $carpeta)
+                : route('solicitudes.index'),
         ];
     }
 }

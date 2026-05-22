@@ -182,7 +182,7 @@ class SolicitudAccesoController extends Controller
         );
 
         // Notificar a Admin y Gerente de la empresa objetivo
-        $solicitud->load(['carpeta', 'solicitante']);
+        $solicitud->load(['carpeta', 'archivo', 'solicitante']);
         Usuario::where('empresa_id', $validated['empresa_objetivo_id'])
             ->whereIn('rol', ['Admin', 'Gerente'])
             ->where('es_activo', true)
@@ -213,7 +213,7 @@ class SolicitudAccesoController extends Controller
         $caduca = $request->caduca_en ? \Carbon\Carbon::parse($request->caduca_en) : null;
 
         $solicitud->aprobar(Auth::id(), $request->comentario_revisor, $caduca);
-        $solicitud->load(['carpeta', 'revisor', 'solicitante']);
+        $solicitud->load(['carpeta', 'archivo', 'revisor', 'solicitante']);
 
         RegistroActividad::registrar(
             'aprobar_solicitud', 'solicitud', $solicitud->id,
@@ -246,7 +246,7 @@ class SolicitudAccesoController extends Controller
         ]);
 
         $solicitud->rechazar(Auth::id(), $request->comentario_revisor);
-        $solicitud->load(['carpeta', 'revisor', 'solicitante']);
+        $solicitud->load(['carpeta', 'archivo', 'revisor', 'solicitante']);
 
         RegistroActividad::registrar(
             'rechazar_solicitud', 'solicitud', $solicitud->id,

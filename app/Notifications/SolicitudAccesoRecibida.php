@@ -21,12 +21,14 @@ class SolicitudAccesoRecibida extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $solicitante = $this->solicitud->solicitante;
-        $carpeta     = $this->solicitud->carpeta;
+        $recurso     = $this->solicitud->carpeta?->nombre
+                    ?? $this->solicitud->archivo?->nombre_original
+                    ?? 'un recurso';
 
         return (new MailMessage)
             ->subject('Nueva solicitud de acceso — FileCenter')
             ->greeting('Hola, ' . $notifiable->nombre_completo)
-            ->line("{$solicitante->nombre_completo} ha solicitado acceso ({$this->solicitud->tipo_acceso}) a la carpeta \"{$carpeta->nombre}\".")
+            ->line("{$solicitante->nombre_completo} ha solicitado acceso ({$this->solicitud->tipo_acceso}) a \"{$recurso}\".")
             ->line('Motivo: ' . $this->solicitud->razon)
             ->action('Revisar solicitud', route('solicitudes.show', $this->solicitud))
             ->line('Puedes aprobar o rechazar la solicitud desde el panel de administración.')
@@ -36,12 +38,14 @@ class SolicitudAccesoRecibida extends Notification
     public function toArray(object $notifiable): array
     {
         $solicitante = $this->solicitud->solicitante;
-        $carpeta     = $this->solicitud->carpeta;
+        $recurso     = $this->solicitud->carpeta?->nombre
+                    ?? $this->solicitud->archivo?->nombre_original
+                    ?? 'un recurso';
 
         return [
             'tipo'         => 'solicitud_acceso_recibida',
             'titulo'       => 'Nueva solicitud de acceso',
-            'mensaje'      => "{$solicitante->nombre_completo} solicita acceso a \"{$carpeta->nombre}\".",
+            'mensaje'      => "{$solicitante->nombre_completo} solicita acceso a \"{$recurso}\".",
             'url'          => route('solicitudes.show', $this->solicitud),
             'solicitud_id' => $this->solicitud->id,
         ];
