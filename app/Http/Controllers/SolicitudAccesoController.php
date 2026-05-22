@@ -190,8 +190,8 @@ class SolicitudAccesoController extends Controller
             ->each(fn($admin) => $admin->notify(new SolicitudAccesoRecibida($solicitud)));
 
         return redirect()
-            ->route('solicitudes.show', $solicitud)
-            ->with('success', 'Solicitud enviada correctamente. Será revisada por un administrador.');
+            ->route('solicitudes.index')
+            ->with('success', 'Tu solicitud de acceso fue enviada correctamente y está pendiente de revisión por parte del administrador.');
     }
 
     // ─────────────────────────────────────────────

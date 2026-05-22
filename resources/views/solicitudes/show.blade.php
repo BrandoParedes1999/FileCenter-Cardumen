@@ -249,11 +249,12 @@
     </div>
 </div>
 
+@if($solicitud->status === 'Pendiente' && in_array(Auth::user()->rol, ['Superadmin','Aux_QHSE','Admin','Gerente']))
 {{-- Modal Aprobar --}}
 <div class="fc-modal-overlay" id="modalAprobarShow">
     <div class="fc-modal">
         <div class="fc-modal-title">Aprobar solicitud #{{ $solicitud->id }}</div>
-        <form method="POST" action="{{ route('solicitudes.aprobar', $solicitud) }}">
+        <form method="POST" action="{{ route('solicitudes.aprobar', ['solicitud' => $solicitud->id]) }}">
             @csrf
             <div class="fc-modal-sub">
                 <div class="fc-field" style="margin-bottom:12px">
@@ -278,7 +279,7 @@
 <div class="fc-modal-overlay" id="modalRechazarShow">
     <div class="fc-modal">
         <div class="fc-modal-title">Rechazar solicitud #{{ $solicitud->id }}</div>
-        <form method="POST" action="{{ route('solicitudes.rechazar', $solicitud) }}">
+        <form method="POST" action="{{ route('solicitudes.rechazar', ['solicitud' => $solicitud->id]) }}">
             @csrf
             <div class="fc-modal-sub">
                 <div class="fc-field">
@@ -294,6 +295,7 @@
         </form>
     </div>
 </div>
+@endif
 
 <script>
 document.addEventListener('keydown', e => {
